@@ -3,7 +3,7 @@ name = "textiles_and_garments"
 authors = [
     { name = "Aravind", email = "aravindsprint@gmail.com"}
 ]
-description = "Textiles and Garments"
+description = "ERPNext for Textiles and Garments"
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
