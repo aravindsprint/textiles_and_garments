@@ -2,17 +2,15 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "naming_series:naming_series",
- "creation": "2024-09-16 21:39:46.217921",
+ "creation": "2024-09-17 15:45:40.669167",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "section_break_jgni",
   "naming_series",
   "item",
-  "jobcard",
-  "lot_weight",
-  "dye_receipe",
-  "dye_chart_item",
+  "dye_receipe_item",
+  "is_default",
   "amended_from"
  ],
  "fields": [
@@ -21,20 +19,10 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Dye Chart",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
-  },
-  {
-   "fieldname": "lot_weight",
-   "fieldtype": "Float",
-   "label": "Lot Weight",
-   "precision": "3"
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "DR/.####"
   },
   {
    "fieldname": "item",
@@ -43,37 +31,45 @@
    "options": "Item"
   },
   {
-   "fieldname": "naming_series",
-   "fieldtype": "Select",
-   "label": "Series",
-   "options": "DC/.####"
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Dye Receipe",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   },
   {
-   "fieldname": "dye_chart_item",
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Dye Receipe",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "dye_receipe_item",
    "fieldtype": "Table",
-   "label": "Dye Chart Item",
-   "options": "Dye Chart Item"
+   "label": "Dye Receipe Item",
+   "options": "Dye Receipe Item"
   },
   {
-   "fieldname": "jobcard",
-   "fieldtype": "Link",
-   "label": "JobCard",
-   "options": "Job Card"
-  },
-  {
-   "fieldname": "dye_receipe",
-   "fieldtype": "Link",
-   "label": "Dye Receipe",
-   "options": "Dye Receipe"
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "label": "Is Default"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-17 17:31:10.216358",
+ "modified": "2024-09-25 16:22:59.004865",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
- "name": "Dye Chart",
+ "name": "Dye Receipe",
  "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
