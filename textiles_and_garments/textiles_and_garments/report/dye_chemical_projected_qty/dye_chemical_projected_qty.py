@@ -203,10 +203,12 @@ def execute(filters=None):
         {'fieldname': 'work_order', 'label': 'Work Order', 'fieldtype': 'Link', 'options': 'Work Order'},
         {'fieldname': 'finished_goods', 'label': 'Finished Goods', 'fieldtype': 'Data'},
         {'fieldname': 'requested_qty', 'label': 'Requested Qty', 'fieldtype': 'Float'},
+        {'fieldname': 'fg_stock_uom', 'label': 'FG UOM', 'fieldtype': 'Data'},
         {'fieldname': 'raw_material', 'label': 'Raw Material', 'fieldtype': 'Data'},
         {'fieldname': 'projected_raw_material_qty', 'label': 'Projected Raw Material Qty', 'fieldtype': 'Float'},
         {'fieldname': 'stock_qty', 'label': 'Stock Qty', 'fieldtype': 'Float'},
-        {'fieldname': 'required_qty', 'label': 'Required Qty', 'fieldtype': 'Float'}  # New column for required quantity
+        {'fieldname': 'required_qty', 'label': 'Required Qty', 'fieldtype': 'Float'},  # New column for required quantity
+        {'fieldname': 'stock_uom', 'label': 'RM UOM', 'fieldtype': 'Data'}
     ]
 
     # Initialize data list
@@ -217,7 +219,8 @@ def execute(filters=None):
         SELECT 
             wo_item.production_item AS finished_goods,
             wo_item.qty AS requested_qty,
-            wo_item.name AS work_order
+            wo_item.name AS work_order,
+            wo_item.stock_uom AS fg_stock_uom
         FROM 
             `tabWork Order` AS wo_item
         WHERE 
@@ -236,13 +239,15 @@ def execute(filters=None):
                 dr_item.item AS raw_material,
                 dr_item.dosage AS dosage,
                 dr_item.mlr AS mlr,
-                dr_item.uom AS uom
+                dr_item.uom AS uom,
+                dr_item.stock_uom AS stock_uom
             FROM 
                 `tabDye Receipe` AS dr
             JOIN 
                 `tabDye Receipe Item` AS dr_item ON dr_item.parent = dr.name
             WHERE 
                 dr.item = %(finished_goods)s
+                AND dr.is_default = 1
                 AND dr_item.item IS NOT NULL
         """, {'finished_goods': dic_p["finished_goods"], 'requested_qty': dic_p["requested_qty"]}, as_dict=1)
 

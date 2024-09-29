@@ -12,7 +12,8 @@
   "function",
   "item",
   "dosage",
-  "uom"
+  "uom",
+  "stock_uom"
  ],
  "fields": [
   {
@@ -63,12 +64,18 @@
    "in_list_view": 1,
    "label": "Function",
    "options": "Deoiling\nLubricant\nDyes 1\nDyes 2\nDyes 3\nLubricant\nLevelling agent\nDispersing Agent\nAcid Buffer\nAlkali\nReduction Clearing Agent\nAcetic Acid\nWicking\nAntimicrobial\nCaustic Soda\nHydros"
+  },
+  {
+   "fetch_from": "item.stock_uom",
+   "fieldname": "stock_uom",
+   "fieldtype": "Data",
+   "label": "Stock UOM"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-09-29 18:31:24.842525",
+ "modified": "2024-09-29 19:09:11.787148",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Dye Receipe Item",
