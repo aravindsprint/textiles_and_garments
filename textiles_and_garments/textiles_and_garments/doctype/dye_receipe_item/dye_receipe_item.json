@@ -25,7 +25,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Bath no",
-   "options": "1\n2\n3\n4"
+   "options": "1\n2\n3\n4\n5"
   },
   {
    "columns": 2,
@@ -62,13 +62,13 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Function",
-   "options": "Deoiling\nLubricant\nDyes 1\nDyes 2\nDyes 3\nLubricant\nLevelling agent\nDispersing Agent\nAcid Buffer\nAlkali\nReduction Clearing Agent\nAcetic Acid"
+   "options": "Deoiling\nLubricant\nDyes 1\nDyes 2\nDyes 3\nLubricant\nLevelling agent\nDispersing Agent\nAcid Buffer\nAlkali\nReduction Clearing Agent\nAcetic Acid\nWicking\nAntimicrobial\nCaustic Soda\nHydros"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-09-27 09:29:32.644804",
+ "modified": "2024-09-29 18:31:24.842525",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Dye Receipe Item",
