@@ -22,7 +22,8 @@ frappe.ui.form.on("Stock Entry", {
 
                             // Iterate through the returned items and add them to stock_entry_items
                             response.message.forEach(function(item) {
-                                
+                                console.log("item",item);
+                                var qty = 0;
                                 qty = item.required_qty - item.transferred_qty;
                                 if(qty > 0){
                                     let child = frm.add_child("items");
