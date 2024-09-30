@@ -239,7 +239,7 @@ class DyeChart(Document):
                     "custom_dye_chart": self.name,
                     "custom_dye_chart_item_name": i.name,
                     "custom_mlr": i.mlr,
-                    "custom_bath": i.bath,
+                    "custom_bath": i.bath_no,
                     "custom_dosage": i.dosage,
                     "custom_uoms": i.uom,
                     "custom_functions": i.chemicals,
