@@ -16,7 +16,7 @@ frappe.ui.form.on("Stock Entry", {
                 callback: function(response) {
                     console.log("inside response",response);
                     if(response.message) {
-                        if(!frm.doc.name.includes("MAT-STE") ){
+                        if(frm.doc.stock_entry_type.includes("Material Transfer for Manufacture") ){
                             // Clear existing items from stock_entry_items table
                             frm.clear_table("items");
 
