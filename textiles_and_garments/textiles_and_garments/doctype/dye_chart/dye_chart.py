@@ -235,7 +235,7 @@ class DyeChart(Document):
                     "item_code": i.item,
                     "doctype": "Job Card Item",
                     "parenttype": "Job Card",
-                    "source_warehouse": "",
+                    "source_warehouse": "DYE/CHEMICAL STORES - PSS",
                     "custom_dye_chart": self.name,
                     "custom_dye_chart_item_name": i.name,
                     "custom_mlr": i.mlr,
