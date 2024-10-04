@@ -28,8 +28,8 @@ frappe.ui.form.on("Stock Entry", {
                                     child.transfer_qty = qty;
                                     child.uom = item.stock_uom;
                                     child.conversion_factor = 1;
-                                    child.s_warehouse = "Stores - PSS";
-                                    child.t_warehouse = "Work In Progress - PSS";
+                                    child.s_warehouse = "DYE/LOT SECTION - PSS";
+                                    // child.t_warehouse = "Work In Progress - PSS";
                                     child.parentfield = "items";
                                     child.parenttype = "Stock Entry";
                                     child.job_card_item = item.name;
