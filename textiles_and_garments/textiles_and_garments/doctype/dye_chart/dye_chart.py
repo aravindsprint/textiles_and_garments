@@ -281,6 +281,65 @@ def create_stock_entry_items(docname):
     # Return the items child table
     return doc.items
 
+@frappe.whitelist()
+def update_work_order_in_stock_entry(docname, work_order, qty):
+    print("update_work_order_in_stock_entry")
+    
+    # Fetch the entire Batch document using frappe.get_doc
+    doc1 = frappe.get_doc("Batch", docname)
+
+    wo = work_order
+    stock_qty = qty
+    
+    if doc1:
+        print("\n\n\ndoc1\n\n\n", doc1)    
+        # Set the new document's custom field for work order
+        # doc1.custom_work_order = work_order
+        
+        # Check if the batch_reference child table exists and add a row
+        doc1.append("custom_batch_reference", {
+            "work_order": wo,
+            "qty": stock_qty
+        })
+        
+        # Save the document to apply changes
+        doc1.save()
+        
+        # # Optionally submit the document if required
+        # # doc1.submit()
+        
+        # frappe.db.commit()  # Ensure that the changes are saved to the database
+    else:
+        print("No document found with name:", docname)
+
+
+
+# @frappe.whitelist()
+# def update_work_order_in_stock_entry(docname, work_order, qty):
+#     print("update_work_order_in_stock_entry")
+    
+#     # Fetch the entire Batch document using frappe.get_doc
+#     doc1 = frappe.get_doc("Batch", docname)
+    
+#     if doc1:
+#         print("\n\n\ndoc1\n\n\n", doc1)    
+#         # Set the new document's field
+#         doc1.custom_work_order = work_order
+        
+#         # Save the document to apply changes
+#         doc1.save()
+        
+#         # Optionally submit the document if required
+#         # doc1.submit()
+        
+#         frappe.db.commit()  # Ensure that the changes are saved to the database
+#     else:
+#         print("No document found with name:", docname)
+
+#     # Save the new document
+#     doc1.save(ignore_permissions=True)
+#     return doc1    
+
 # @frappe.whitelist()
 # def set_additional_cost(docname):
 #     # Fetch the Work Order document
