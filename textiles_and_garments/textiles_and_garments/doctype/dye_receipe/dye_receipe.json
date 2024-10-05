@@ -57,7 +57,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-29 19:10:46.287955",
+ "modified": "2024-10-05 11:18:24.122465",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Dye Receipe",
@@ -78,6 +78,7 @@
    "write": 1
   }
  ],
+ "search_fields": "item, is_default",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
