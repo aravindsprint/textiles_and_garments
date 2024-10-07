@@ -272,7 +272,7 @@ def execute(filters=None):
             # Query to fetch stock quantity for the raw material in the specified warehouse "Stores - PSS"
             stock_qty = frappe.db.get_value(
                 'Bin', 
-                {'item_code': dic_c["raw_material"], 'warehouse': 'Stores - PSS'}, 
+                {'item_code': dic_c["raw_material"], 'warehouse': 'DYE/CHEMICAL STORES - PSS'}, 
                 'actual_qty'
             ) or 0
             dic_c["stock_qty"] = stock_qty

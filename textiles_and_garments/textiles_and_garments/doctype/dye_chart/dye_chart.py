@@ -282,6 +282,14 @@ def create_stock_entry_items(docname):
     return doc.items
 
 @frappe.whitelist()
+def get_work_order_data(docname):
+    # Fetch the entire Job Card document
+    doc = frappe.get_doc('Work Order', docname)
+    
+    # Return the items child table
+    return doc    
+
+@frappe.whitelist()
 def update_work_order_in_stock_entry(docname, work_order, qty):
     print("update_work_order_in_stock_entry")
     

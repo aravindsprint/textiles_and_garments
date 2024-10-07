@@ -49,34 +49,52 @@ frappe.ui.form.on("Stock Entry", {
         }
     },
 
-    validate: function(frm) {
-        if (frm.doc.custom_work_order) {
-            console.log("inside validate");
+    refresh: function(frm) {
+        console.log("frm",frm);
+        // if (frm.doc.custom_work_order) {
+        //     console.log("inside validate");
             
-            // frm.doc.items.forEach(d => {
-            //     console.log("d", d);
-            //     console.log("inside validate",frm.doc.custom_work_order);
-            //     console.log("inside validate",d.batch_no);
-            //     console.log("inside validate",d.qty);
-            //     frappe.call({
-            //         method: "textiles_and_garments.textiles_and_garments.doctype.dye_chart.dye_chart.update_work_order_in_stock_entry",
-            //         args: {
-            //             docname: d.batch_no,
-            //             work_order: frm.doc.custom_work_order,
-            //             qty: d.qty
-            //         },
-            //         callback: function(response) {
-            //             console.log("inside response", response);
-            //             if (response.message) {
-            //                 // Iterate through the returned items (if needed)
-            //                 response.message.forEach(function(item) {
-            //                     console.log("item", item);
-            //                 });
-            //             }
-            //         }
-            //     });
-            // });
-        }
+        //     // frm.doc.items.forEach(d => {
+        //     //     console.log("d", d);
+        //     //     console.log("inside validate",frm.doc.custom_work_order);
+        //     //     console.log("inside validate",d.batch_no);
+        //     //     console.log("inside validate",d.qty);
+        //     //     frappe.call({
+        //     //         method: "textiles_and_garments.textiles_and_garments.doctype.dye_chart.dye_chart.update_work_order_in_stock_entry",
+        //     //         args: {
+        //     //             docname: d.batch_no,
+        //     //             work_order: frm.doc.custom_work_order,
+        //     //             qty: d.qty
+        //     //         },
+        //     //         callback: function(response) {
+        //     //             console.log("inside response", response);
+        //     //             if (response.message) {
+        //     //                 // Iterate through the returned items (if needed)
+        //     //                 response.message.forEach(function(item) {
+        //     //                     console.log("item", item);
+        //     //                 });
+        //     //             }
+        //     //         }
+        //     //     });
+        //     // });
+        // }
+    },
+    work_order: function(frm){
+        if (frm.doc.work_order) {
+            frappe.call({
+                method: "textiles_and_garments.textiles_and_garments.doctype.dye_chart.dye_chart.get_work_order_data",
+                args: {
+                    docname: frm.doc.work_order,
+                },
+                callback: function(response) {
+                    console.log("inside response", response);
+                    if (response.message) {
+                        console.log("response.message",response.message);
+                    }
+                }
+            })
+        }                
+
     }
 });
 
