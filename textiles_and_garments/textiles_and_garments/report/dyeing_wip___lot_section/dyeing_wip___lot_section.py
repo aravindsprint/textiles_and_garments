@@ -88,6 +88,12 @@ def get_columns(filters):
                 "options": "Batch",
             },
             {
+                "label": _("Work Order Qty"),
+                "fieldname": "wo_qty",
+                "fieldtype": "Float",
+                "width": 150,
+            },
+            {
                 "label": _("Stock Entry Qty"),
                 "fieldname": "ste_qty",
                 "fieldtype": "Float",
@@ -169,7 +175,8 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             ste_entry_item.batch_no AS batch_no,
             ste.posting_date AS posting_date,
             ste.work_order AS work_order,
-            wo.production_item AS production_item,  -- Fetching production item from work order
+            wo.production_item AS production_item,
+            wo.qty AS wo_qty,  -- Fetching production item from work order
             wori.item_code AS required_item_code,    -- Fetching item code from Work Order Required Items
             wori.consumed_qty AS consumed_qty        -- Fetching consumed quantity from Work Order Required Items
         FROM 
@@ -190,7 +197,7 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
         WHERE 
             ste_entry_item.docstatus = 1
             AND ste_entry_item.item_code LIKE '%KF%/%'
-            AND ste_entry_item.t_warehouse = 'Work In Progress - PSS'
+            AND ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
     """, as_dict=1)
 
     return stock_entry_detail_data

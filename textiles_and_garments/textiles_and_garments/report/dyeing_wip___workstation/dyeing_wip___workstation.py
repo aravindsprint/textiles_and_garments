@@ -43,10 +43,10 @@ def get_columns(filters):
     columns.extend(
         [
             {
-                "label": _("WIP Warehouse"),
-                "fieldname": "wip_warehouse",
+                "label": _("Workstation"),
+                "fieldname": "workstation",
                 "fieldtype": "Link",
-                "options": "Warehouse",
+                "options": "Workstation",
                 "width": 200,
             },
             {
@@ -157,7 +157,7 @@ def get_job_card_data_from_stock_entry(filters):
         WHERE 
             job_card.status = "Work In Progress"
             AND job_card.production_item LIKE '%KF%/%'
-            AND job_card.wip_warehouse = "Work In Progress - PSS"
+            AND job_card.workstation LIKE "HTHP Softflow%"
     """, as_dict=1)
 
     return job_card_data
