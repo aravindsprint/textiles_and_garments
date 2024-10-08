@@ -93,12 +93,12 @@ def get_columns(filters):
                 "fieldtype": "Date",
                 "width": 150,
             },
-            {
-                "label": _("Job Card Start Date"),
-                "fieldname": "actual_start_date",
-                "fieldtype": "Date",
-                "width": 150
-            },
+            # {
+            #     "label": _("Job Card Start Date"),
+            #     "fieldname": "actual_start_date",
+            #     "fieldtype": "Date",
+            #     "width": 150
+            # },
             {
                 "label": _("UOM"),
                 "fieldname": "stock_uom",
@@ -144,7 +144,6 @@ def get_job_card_data_from_stock_entry(filters):
             job_card.wip_warehouse AS wip_warehouse,
             job_card.for_quantity AS for_qty,
             job_card.total_completed_qty AS total_completed_qty,
-            job_card.actual_start_date AS actual_start_date,
             job_card.workstation AS workstation,
             job_card.posting_date AS posting_date,
             job_card.custom_add_on_qty AS custom_add_on_qty
