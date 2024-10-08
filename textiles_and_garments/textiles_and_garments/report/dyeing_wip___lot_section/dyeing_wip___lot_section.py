@@ -125,14 +125,14 @@ def get_data(filters):
     print("\n\n\nstock_entry_data\n\n\n", stock_entry_data)
     
     # Get batch-wise stock data
-    batchwise_data = get_batchwise_data_from_stock_ledger(filters)
-    batchwise_data = get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters)
+    # batchwise_data = get_batchwise_data_from_stock_ledger(filters)
+    # batchwise_data = get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters)
 
-    # # Parse batch-wise data to include only 'Work In Progress - PSS' warehouse
-    stock_data = parse_batchwise_data(batchwise_data)
+    # # # Parse batch-wise data to include only 'Work In Progress - PSS' warehouse
+    # stock_data = parse_batchwise_data(batchwise_data)
     
     # Combine stock entry data with balance_qty
-    final_data = combine_stock_and_batchwise_data(stock_entry_data, stock_data)
+    final_data = combine_stock_and_batchwise_data(stock_entry_data,)
     data.extend(final_data)
     
     return data
@@ -308,16 +308,17 @@ def parse_batchwise_data(batchwise_data):
 
     return data
 
-def combine_stock_and_batchwise_data(stock_entry_data, batchwise_data):
+def combine_stock_and_batchwise_data(stock_entry_data):
     final_data = []
     
     for ste in stock_entry_data:
+    	final_data.append(ste)
         # Find matching batchwise data by item_code and batch_no
-        for batch in batchwise_data:
-            if ste['item_code'] == batch['item_code'] and ste['batch_no'] == batch['batch_no']:
-                # Add ste_qty and balance_qty together
-                ste['balance_qty'] = batch['balance_qty']
-                final_data.append(ste)
+        # for batch in batchwise_data:
+        #     if ste['item_code'] == batch['item_code'] and ste['batch_no'] == batch['batch_no']:
+        #         # Add ste_qty and balance_qty together
+        #         ste['balance_qty'] = batch['balance_qty']
+        #         final_data.append(ste)
     
     return final_data
 
