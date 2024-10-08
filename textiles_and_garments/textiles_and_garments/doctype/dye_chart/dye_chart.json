@@ -55,6 +55,7 @@
    "options": "Dye Chart Item"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "jobcard",
    "fieldtype": "Link",
    "label": "JobCard",
@@ -70,7 +71,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-17 17:31:10.216358",
+ "modified": "2024-10-08 12:11:38.519537",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Dye Chart",

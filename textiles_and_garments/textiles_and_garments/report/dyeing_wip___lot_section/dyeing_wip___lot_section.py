@@ -17,13 +17,13 @@ def execute(filters=None):
 
 def get_columns(filters):
     columns = [
-        {
-            "label": _("Item Code"),
-            "fieldname": "item_code",
-            "fieldtype": "Link",
-            "options": "Item",
-            "width": 200,
-        }
+        # {
+        #     "label": _("Item Code"),
+        #     "fieldname": "item_code",
+        #     "fieldtype": "Link",
+        #     "options": "Item",
+        #     "width": 200,
+        # }
     ]
 
     if filters.show_item_name:
@@ -74,6 +74,13 @@ def get_columns(filters):
             "width": 200,
             },
             {
+            "label": _("Item Code"),
+            "fieldname": "item_code",
+            "fieldtype": "Link",
+            "options": "Item",
+            "width": 200,
+            },
+            {
                 "label": _("Batch No"),
                 "fieldname": "batch_no",
                 "fieldtype": "Link",
@@ -87,12 +94,18 @@ def get_columns(filters):
                 "width": 150
             },
             {
+                "label": _("Consumed Qty"),
+                "fieldname": "consumed_qty",
+                "fieldtype": "Float",
+                "width": 150
+            },
+            {
                 "label": _("UOM"),
                 "fieldname": "stock_uom",
                 "fieldtype": "Data",
                 "width": 150
             },
-            {"label": _("Balance Qty"), "fieldname": "balance_qty", "fieldtype": "Float", "width": 150},
+            # {"label": _("Balance Qty"), "fieldname": "balance_qty", "fieldtype": "Float", "width": 150},
         ]
     )
 
@@ -118,6 +131,34 @@ def get_data(filters):
     
     return data
 
+# def get_stock_entry_detail_data_from_stock_entry(filters):
+#     stock_entry_detail_data = frappe.db.sql("""
+#         SELECT 
+#             ste_entry_item.item_code AS item_code,
+#             ste_entry_item.parent AS stock_entry,
+#             ste_entry_item.qty AS ste_qty,
+#             ste_entry_item.stock_uom AS stock_uom,
+#             ste_entry_item.batch_no AS batch_no,
+#             ste.posting_date AS posting_date,
+#             ste.work_order AS work_order,
+#             wo.production_item AS production_item  -- Fetching production item from work order
+#         FROM 
+#             `tabStock Entry Detail` AS ste_entry_item
+#         INNER JOIN 
+#             `tabStock Entry` AS ste
+#         ON 
+#             ste_entry_item.parent = ste.name
+#         LEFT JOIN 
+#             `tabWork Order` AS wo
+#         ON 
+#             ste.work_order = wo.name
+#         WHERE 
+#             ste_entry_item.docstatus = 1
+#             AND ste_entry_item.t_warehouse = 'Work In Progress - PSS'
+#     """, as_dict=1)
+
+#     return stock_entry_detail_data 
+
 def get_stock_entry_detail_data_from_stock_entry(filters):
     stock_entry_detail_data = frappe.db.sql("""
         SELECT 
@@ -128,7 +169,9 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             ste_entry_item.batch_no AS batch_no,
             ste.posting_date AS posting_date,
             ste.work_order AS work_order,
-            wo.production_item AS production_item  -- Fetching production item from work order
+            wo.production_item AS production_item,  -- Fetching production item from work order
+            wori.item_code AS required_item_code,    -- Fetching item code from Work Order Required Items
+            wori.consumed_qty AS consumed_qty        -- Fetching consumed quantity from Work Order Required Items
         FROM 
             `tabStock Entry Detail` AS ste_entry_item
         INNER JOIN 
@@ -139,12 +182,20 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             `tabWork Order` AS wo
         ON 
             ste.work_order = wo.name
+        LEFT JOIN 
+            `tabWork Order Item` AS wori
+        ON 
+            wo.name = wori.parent  -- Join Work Order with Work Order Required Items
+            AND wori.item_code = ste_entry_item.item_code  -- Match based on item_code
         WHERE 
             ste_entry_item.docstatus = 1
+            AND ste_entry_item.item_code LIKE '%KF%/%'
             AND ste_entry_item.t_warehouse = 'Work In Progress - PSS'
     """, as_dict=1)
 
-    return stock_entry_detail_data    
+    return stock_entry_detail_data
+
+
 
 def get_batchwise_data_from_stock_ledger(filters):
     batchwise_data = frappe._dict({})

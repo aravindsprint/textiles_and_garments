@@ -1,0 +1,36 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2024-10-07 15:24:47.554574",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letterhead": null,
+ "modified": "2024-10-07 15:24:47.554574",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Dyeing WIP - WorkStation",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT \n    mr_item.item_code AS \"Finished Goods\",\n    mr_item.qty AS \"Requested Qty\",\n    mr_item.parent AS \"Material Request\",\n    dr_item.item AS \"Raw Material\",\n    (dr_item.dosage * mr_item.qty) AS \"Projected Raw Material Qty\"\nFROM \n    `tabMaterial Request Item` AS mr_item\nJOIN \n    `tabDye Receipe` AS dr ON dr.item = mr_item.item_code\nJOIN \n    `tabDye Receipe Item` AS dr_item ON dr_item.parent = dr.name\nWHERE \n    mr_item.parenttype = 'Material Request'\n    AND dr_item.item IS NOT NULL;",
+ "ref_doctype": "Job Card",
+ "report_name": "Dyeing WIP - WorkStation",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Purchase Manager"
+  },
+  {
+   "role": "Stock Manager"
+  },
+  {
+   "role": "Stock User"
+  },
+  {
+   "role": "Purchase User"
+  }
+ ]
+}
