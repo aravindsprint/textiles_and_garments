@@ -125,11 +125,11 @@ def get_data(filters):
     print("\n\n\nstock_entry_data\n\n\n", stock_entry_data)
     
     # Get batch-wise stock data
-    # batchwise_data = get_batchwise_data_from_stock_ledger(filters)
-    # batchwise_data = get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters)
+    batchwise_data = get_batchwise_data_from_stock_ledger(filters)
+    batchwise_data = get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters)
 
     # # Parse batch-wise data to include only 'Work In Progress - PSS' warehouse
-    # stock_data = parse_batchwise_data(batchwise_data)
+    stock_data = parse_batchwise_data(batchwise_data)
     
     # Combine stock entry data with balance_qty
     final_data = combine_stock_and_batchwise_data(stock_entry_data, stock_data)

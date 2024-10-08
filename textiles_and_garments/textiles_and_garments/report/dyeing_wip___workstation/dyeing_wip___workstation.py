@@ -145,6 +145,7 @@ def get_job_card_data_from_stock_entry(filters):
             job_card.for_quantity AS for_qty,
             job_card.total_completed_qty AS total_completed_qty,
             job_card.workstation AS workstation,
+            job_card.stock_uom AS stock_uom,
             job_card.posting_date AS posting_date,
             job_card.custom_add_on_qty AS custom_add_on_qty
         FROM 
