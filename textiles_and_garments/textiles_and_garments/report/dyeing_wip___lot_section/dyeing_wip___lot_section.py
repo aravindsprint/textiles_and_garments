@@ -196,6 +196,7 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             AND wori.item_code = ste_entry_item.item_code  -- Match based on item_code
         WHERE 
             ste_entry_item.docstatus = 1
+            AND ste_entry_item.parent LIKE 'MT/%'
             AND ste_entry_item.item_code LIKE '%KF%/%'
             AND ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
     """, as_dict=1)
