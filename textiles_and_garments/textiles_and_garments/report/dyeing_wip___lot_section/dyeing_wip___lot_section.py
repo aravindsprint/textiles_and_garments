@@ -199,6 +199,7 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             AND ste_entry_item.parent LIKE 'MT/%'
             AND ste_entry_item.item_code LIKE '%KF%/%'
             AND ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
+            AND wori.consumed_qty = 0
     """, as_dict=1)
 
     return stock_entry_detail_data
