@@ -155,7 +155,8 @@ def get_job_card_data_from_stock_entry(filters):
         ON 
             job_card.work_order = wo.name
         WHERE 
-            job_card.status = "Work In Progress"
+            job_card.status = "Work In Progress" 
+            AND job_card.status != "Cancelled"
             AND job_card.production_item LIKE '%KF%/%'
             AND job_card.workstation LIKE "HTHP Softflow%"
     """, as_dict=1)
