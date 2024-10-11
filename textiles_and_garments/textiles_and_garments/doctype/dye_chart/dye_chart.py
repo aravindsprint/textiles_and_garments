@@ -378,12 +378,12 @@ def set_additional_cost(docname):
     
     # Initialize the total water reading value
     total_water_reading_value = 0
-    total_outgoing_value = 0
+    custom_total_outgoing_values = 0
 
     # Fetch all Job Cards linked to the Work Order
     job_cards = frappe.get_all('Job Card', filters={'work_order': docname}, fields=['name', 'custom_water_reading_value'])
 
-    stock_entry = frappe.get_all('Stock Entry', filters={'work_order': docname, 'stock_entry_type': 'Manufacture'}, fields=['name', 'total_outgoing_value'])
+    stock_entry = frappe.get_all('Stock Entry', filters={'work_order': docname, 'stock_entry_type': 'Manufacture'}, fields=['name', 'custom_total_outgoing_values'])
 
     # Loop through each Job Card to sum the water reading value and access the operations table
     for job_card in job_cards:
@@ -401,9 +401,9 @@ def set_additional_cost(docname):
         # Sum the custom_water_reading_value from all linked Job Cards
         total_water_reading_value += job_card.get('custom_water_reading_value', 0) * workstation_doc.custom_water_cost
 
-    # Loop through each Stock Entry and sum the total_outgoing_value
+    # Loop through each Stock Entry and sum the custom_total_outgoing_values
     for stock_entries in stock_entry:
-        total_outgoing_value += stock_entries.get('total_outgoing_value', 0)  # Corrected access
+        custom_total_outgoing_values += stock_entries.get('custom_total_outgoing_values', 0)  # Corrected access
 
     # Update the total water reading value in the Work Order
     print(f"\n\nTotal Water Reading Value: {total_water_reading_value}\n\n")
@@ -413,7 +413,7 @@ def set_additional_cost(docname):
     # Update the Work Order with calculated costs
     frappe.db.set_value("Work Order", docname, "custom_total_operating_cost_include_water", total_water_reading_value)
     frappe.db.set_value("Work Order", docname, "total_operating_cost", final_total_operting_cost)
-    frappe.db.set_value("Work Order", docname, "custom_total_consumption_cost", total_outgoing_value)
+    frappe.db.set_value("Work Order", docname, "custom_total_consumption_cost", custom_total_outgoing_values)
 
     # Display a message for the user
     frappe.msgprint(f"Total Operating Cost Include Water updated to {total_water_reading_value}.")
