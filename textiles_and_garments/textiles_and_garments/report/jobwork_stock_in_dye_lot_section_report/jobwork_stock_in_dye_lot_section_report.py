@@ -33,7 +33,7 @@ def get_columns(filters):
         },
         {
             "label": _("Commercial Name"),
-            "fieldname": "custom_commercial_name",
+            "fieldname": "commercial_name",
             "fieldtype": "Data",
             "width": 200,
         }
@@ -121,7 +121,7 @@ def get_batchwise_data_from_stock_ledger(filters):
         .on(table.item_code == item.item_code)  # Match item_code
         .select(
             table.item_code,
-            item.custom_commercial_name,  # Include commercial_name from the Item table
+            item.commercial_name,  # Include commercial_name from the Item table
             table.batch_no,
             table.stock_uom,
             table.warehouse,
@@ -159,7 +159,7 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
         .on(table.item_code == item.item_code)  # Match item_code
         .select(
             table.item_code,
-            item.custom_commercial_name,  # Fetch commercial_name from Item table
+            item.commercial_name,  # Fetch commercial_name from Item table
             ch_table.batch_no,
             table.warehouse,
             table.stock_uom,
@@ -187,9 +187,9 @@ def get_query_based_on_filters(query, batch, table, filters, item):
     if filters.item_code:
         query = query.where(table.item_code == filters.item_code)
 
-    # Apply the like condition for custom_commercial_name filter
-    if filters.custom_commercial_name:
-        query = query.where(item.custom_commercial_name.like(f"%{filters.custom_commercial_name}%"))
+    # Apply the like condition for commercial_name filter
+    if filters.commercial_name:
+        query = query.where(item.commercial_name.like(f"%{filters.commercial_name}%"))
 
     if filters.batch_no:
         query = query.where(batch.name == filters.batch_no)
@@ -204,7 +204,7 @@ def get_query_based_on_filters(query, batch, table, filters, item):
 #     query = """
 #         SELECT 
 #             sle.item_code,
-#             i.custom_commercial_name,
+#             i.commercial_name,
 #             sle.batch_no,
 #             sle.stock_uom,
 #             sle.warehouse,
@@ -244,7 +244,7 @@ def get_query_based_on_filters(query, batch, table, filters, item):
 #     query = """
 #         SELECT 
 #             sle.item_code,
-#             i.custom_commercial_name,
+#             i.commercial_name,
 #             c.batch_no,
 #             sle.warehouse,
 #             sle.stock_uom,
@@ -290,8 +290,8 @@ def get_query_based_on_filters(query, batch, table, filters, item):
 #     if filters.item_code:
 #         conditions.append(f"sle.item_code = '{filters.item_code}'")
 
-#     if filters.custom_commercial_name:
-#         conditions.append(f"i.custom_commercial_name LIKE '%{filters.custom_commercial_name}%'")
+#     if filters.commercial_name:
+#         conditions.append(f"i.commercial_name LIKE '%{filters.commercial_name}%'")
 
 #     if filters.batch_no:
 #         conditions.append(f"b.name = '{filters.batch_no}'")

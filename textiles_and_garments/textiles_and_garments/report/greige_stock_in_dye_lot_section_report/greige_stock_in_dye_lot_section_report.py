@@ -33,7 +33,7 @@ def get_columns(filters):
         },
         {
             "label": _("Commercial Name"),
-            "fieldname": "custom_commercial_name",
+            "fieldname": "commercial_name",
             "fieldtype": "Data",
             "width": 200,
         }
@@ -121,7 +121,7 @@ def get_batchwise_data_from_stock_ledger(filters):
         .on(table.item_code == item.item_code)  # Match item_code
         .select(
             table.item_code,
-            item.custom_commercial_name,  # Include commercial_name from the Item table
+            item.commercial_name,  # Include commercial_name from the Item table
             table.batch_no,
             table.stock_uom,
             table.warehouse,
@@ -159,7 +159,7 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
         .on(table.item_code == item.item_code)  # Match item_code
         .select(
             table.item_code,
-            item.custom_commercial_name,  # Fetch commercial_name from Item table
+            item.commercial_name,  # Fetch commercial_name from Item table
             ch_table.batch_no,
             table.warehouse,
             table.stock_uom,
@@ -188,8 +188,8 @@ def get_query_based_on_filters(query, batch, table, filters, item):
         query = query.where(table.item_code == filters.item_code)
 
     # Apply the like condition for custom_commercial_name filter
-    if filters.custom_commercial_name:
-        query = query.where(item.custom_commercial_name.like(f"%{filters.custom_commercial_name}%"))
+    if filters.commercial_name:
+        query = query.where(item.commercial_name.like(f"%{filters.commercial_name}%"))
 
     if filters.batch_no:
         query = query.where(batch.name == filters.batch_no)
