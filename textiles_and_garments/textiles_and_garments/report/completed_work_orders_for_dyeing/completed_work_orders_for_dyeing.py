@@ -2,7 +2,6 @@
 # For license information, please see license.txt
 
 from collections import defaultdict
-
 import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
@@ -22,7 +21,9 @@ def get_columns(filters):
         {'fieldname': 'requested_qty', 'label': 'Requested Qty', 'fieldtype': 'Float'},
         {'fieldname': 'transferred_qty', 'label': 'Transferred Qty', 'fieldtype': 'Data'},
         {'fieldname': 'fabric_completed_qty', 'label': 'Completed Qty', 'fieldtype': 'Float'},
-        {'fieldname': 'fg_stock_uom', 'label': 'UOM', 'fieldtype': 'Data'}
+        {'fieldname': 'fg_stock_uom', 'label': 'UOM', 'fieldtype': 'Data'},
+        {'fieldname': 'from_date', 'label': 'From Date', 'fieldtype': 'Date'},
+        {'fieldname': 'to_date', 'label': 'To Date', 'fieldtype': 'Date'}
     ]
     return columns
 
@@ -30,16 +31,12 @@ def get_columns(filters):
 def get_data(filters):
     data = []
     work_order_data = get_work_order_data(filters)
-    
     # Add work order data to the list
     data.extend(work_order_data)
-
     # Calculate totals for requested_qty, transferred_qty, and fabric_completed_qty
     totals = calculate_totals(work_order_data)
-
     # Append the totals as a summary row
     data.append(totals)
-
     return data
 
 
@@ -52,7 +49,9 @@ def get_work_order_data(filters):
             wo.material_transferred_for_manufacturing AS transferred_qty,
             wo.produced_qty AS fabric_completed_qty,
             wo.name AS work_order,
-            wo.stock_uom AS fg_stock_uom
+            wo.stock_uom AS fg_stock_uom,
+            wo.expected_delivery_date AS from_date,
+            wo.expected_delivery_date AS to_date
         FROM 
             `tabWork Order` AS wo
         WHERE 
@@ -70,16 +69,25 @@ def get_work_order_data(filters):
     
     if filters.get("stock_uom"):
         conditions.append("wo.stock_uom = %(stock_uom)s")
+
+    if filters.get("to_date"):
+        conditions.append("wo.expected_delivery_date <= %(to_date)s")
+
+    if filters.get("from_date"):
+        conditions.append("wo.expected_delivery_date >= %(from_date)s")        
     
     # If any conditions were added, append them to the query
     if conditions:
         query += " AND " + " AND ".join(conditions)
+        print("\n\n\nquery\n\n\n",query)
     
     # Add filter values to pass as parameters
     filter_values = {
         "finished_goods": filters.get("finished_goods", "%DKF%"),  # Defaults to 'DKF%' if not provided
         "work_order": filters.get("work_order"),
-        "stock_uom": filters.get("stock_uom")
+        "stock_uom": filters.get("stock_uom"),
+        "from_date": filters.get("from_date"),
+        "to_date": filters.get("to_date"),
     }
     
     # Execute the query with filters
@@ -105,7 +113,8 @@ def calculate_totals(work_order_data):
         'requested_qty': total_requested_qty,
         'transferred_qty': total_transferred_qty,
         'fabric_completed_qty': total_completed_qty,
-        'fg_stock_uom': ''
+        'fg_stock_uom': '',
+        'expected_delivery_date': ''
     }
 
     

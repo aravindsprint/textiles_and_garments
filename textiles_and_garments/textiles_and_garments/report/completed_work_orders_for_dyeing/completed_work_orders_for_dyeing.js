@@ -7,7 +7,7 @@ frappe.query_reports["Completed Work Orders For Dyeing"] = {
 			fieldname: "finished_goods",
 			label: __("Item"),
 			fieldtype: "Link",
-			width: "80",
+			width: "280",
 			options: "Item",
 			// get_query: () => {
 			// 	return {
@@ -17,6 +17,22 @@ frappe.query_reports["Completed Work Orders For Dyeing"] = {
 			// 		},
 			// 	};
 			// },
+		},
+		{
+			fieldname: "from_date",
+			label: __("From This Date"),
+			fieldtype: "Date",
+			width: "80",
+			reqd: 1,
+			default: frappe.datetime.add_days(frappe.datetime.get_today(), -7),
+		},
+		{
+			fieldname: "to_date",
+			label: __("To This Date"),
+			fieldtype: "Date",
+			width: "80",
+			reqd: 1,
+			default: frappe.datetime.get_today(),
 		},
 
 	]
