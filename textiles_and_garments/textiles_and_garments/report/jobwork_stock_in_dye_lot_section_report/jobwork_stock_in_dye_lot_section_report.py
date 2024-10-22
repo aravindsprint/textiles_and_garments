@@ -79,13 +79,12 @@ def get_columns(filters):
 
     return columns
 
-
 def get_data(filters):
-    data = []
+    # Fetch batchwise data from stock ledger only
     batchwise_data = get_batchwise_data_from_stock_ledger(filters)
     print("\n\n\nbatchwise_data\n\n\n", batchwise_data)
-    batchwise_data = get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters)
 
+    # Parse and filter the batchwise data
     data = parse_batchwise_data(batchwise_data)
     print("\n\n\ndata\n\n\n", data)
 
@@ -94,6 +93,8 @@ def get_data(filters):
 
 def parse_batchwise_data(batchwise_data):
     data = []
+    
+    # Iterate through batchwise data and filter out entries with zero balance
     for key in batchwise_data:
         d = batchwise_data[key]
         if d.balance_qty == 0:
@@ -104,8 +105,6 @@ def parse_batchwise_data(batchwise_data):
     return data
 
 
-
-
 def get_batchwise_data_from_stock_ledger(filters):
     batchwise_data = frappe._dict({})
 
@@ -113,6 +112,7 @@ def get_batchwise_data_from_stock_ledger(filters):
     batch = frappe.qb.DocType("Batch")
     item = frappe.qb.DocType("Item")  # Reference to the Item table
 
+    # Query to fetch batchwise data from stock ledger entries
     query = (
         frappe.qb.from_(table)
         .inner_join(batch)
@@ -128,14 +128,15 @@ def get_batchwise_data_from_stock_ledger(filters):
             Sum(table.actual_qty).as_("balance_qty"),
         )
         .where(table.is_cancelled == 0)
-        .where(table.item_code.like('JOBWORK%'))  # Ensure item_code starts with GKF
+        .where(table.item_code.like('JOBWORK%'))  # Ensure item_code starts with JOBWORK
         .where(table.warehouse.like("DYE/LOT%"))  # Filter for "DYE/LOT SECTION"
         .groupby(table.batch_no, table.item_code, table.warehouse)
     )
 
-    # Pass the `item` argument here
+    # Apply additional filters if provided
     query = get_query_based_on_filters(query, batch, table, filters, item)
 
+    # Execute the query and store the results
     for d in query.run(as_dict=True):
         key = (d.item_code, d.warehouse, d.batch_no, d.stock_uom)
         batchwise_data.setdefault(key, d)
@@ -143,51 +144,11 @@ def get_batchwise_data_from_stock_ledger(filters):
     return batchwise_data
 
 
-def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
-    table = frappe.qb.DocType("Stock Ledger Entry")
-    ch_table = frappe.qb.DocType("Serial and Batch Entry")
-    batch = frappe.qb.DocType("Batch")
-    item = frappe.qb.DocType("Item")  # Join the Item table
-
-    query = (
-        frappe.qb.from_(table)
-        .inner_join(ch_table)
-        .on(table.serial_and_batch_bundle == ch_table.parent)
-        .inner_join(batch)
-        .on(ch_table.batch_no == batch.name)
-        .inner_join(item)  # Join the Item table
-        .on(table.item_code == item.item_code)  # Match item_code
-        .select(
-            table.item_code,
-            item.commercial_name,  # Fetch commercial_name from Item table
-            ch_table.batch_no,
-            table.warehouse,
-            table.stock_uom,
-            Sum(ch_table.qty).as_("balance_qty"),
-        )
-        .where((table.is_cancelled == 0) & (table.docstatus == 1))
-        .where(table.item_code.like('JOBWORK/%'))  # Ensure item_code starts with GKF
-        .where(table.warehouse.like("DYE/LOT%"))  # Filter for "DYE/LOT SECTION"
-        .groupby(ch_table.batch_no, table.item_code, ch_table.warehouse)
-    )
-
-    query = get_query_based_on_filters(query, batch, table, filters, item)
-
-    for d in query.run(as_dict=True):
-        key = (d.item_code, d.warehouse, d.batch_no, d.stock_uom)
-        if key in batchwise_data:
-            batchwise_data[key].balance_qty += flt(d.balance_qty)
-        else:
-            batchwise_data.setdefault(key, d)
-
-    return batchwise_data
-
-
 def get_query_based_on_filters(query, batch, table, filters, item):
+    # Apply filters based on the provided parameters
     if filters.item_code:
         query = query.where(table.item_code == filters.item_code)
 
-    # Apply the like condition for commercial_name filter
     if filters.commercial_name:
         query = query.where(item.commercial_name.like(f"%{filters.commercial_name}%"))
 
@@ -198,6 +159,126 @@ def get_query_based_on_filters(query, batch, table, filters, item):
         query = query.select(batch.item_name)
 
     return query
+
+####################version 15##################
+# def get_data(filters):
+#     data = []
+#     batchwise_data = get_batchwise_data_from_stock_ledger(filters)
+#     print("\n\n\nbatchwise_data\n\n\n", batchwise_data)
+#     batchwise_data = get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters)
+
+#     data = parse_batchwise_data(batchwise_data)
+#     print("\n\n\ndata\n\n\n", data)
+
+#     return data
+
+
+# def parse_batchwise_data(batchwise_data):
+#     data = []
+#     for key in batchwise_data:
+#         d = batchwise_data[key]
+#         if d.balance_qty == 0:
+#             continue
+
+#         data.append(d)
+
+#     return data
+
+
+
+
+# def get_batchwise_data_from_stock_ledger(filters):
+#     batchwise_data = frappe._dict({})
+
+#     table = frappe.qb.DocType("Stock Ledger Entry")
+#     batch = frappe.qb.DocType("Batch")
+#     item = frappe.qb.DocType("Item")  # Reference to the Item table
+
+#     query = (
+#         frappe.qb.from_(table)
+#         .inner_join(batch)
+#         .on(table.batch_no == batch.name)
+#         .inner_join(item)  # Join the Item table
+#         .on(table.item_code == item.item_code)  # Match item_code
+#         .select(
+#             table.item_code,
+#             item.commercial_name,  # Include commercial_name from the Item table
+#             table.batch_no,
+#             table.stock_uom,
+#             table.warehouse,
+#             Sum(table.actual_qty).as_("balance_qty"),
+#         )
+#         .where(table.is_cancelled == 0)
+#         .where(table.item_code.like('JOBWORK%'))  # Ensure item_code starts with GKF
+#         .where(table.warehouse.like("DYE/LOT%"))  # Filter for "DYE/LOT SECTION"
+#         .groupby(table.batch_no, table.item_code, table.warehouse)
+#     )
+
+#     # Pass the `item` argument here
+#     query = get_query_based_on_filters(query, batch, table, filters, item)
+
+#     for d in query.run(as_dict=True):
+#         key = (d.item_code, d.warehouse, d.batch_no, d.stock_uom)
+#         batchwise_data.setdefault(key, d)
+
+#     return batchwise_data
+
+
+# def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
+#     table = frappe.qb.DocType("Stock Ledger Entry")
+#     ch_table = frappe.qb.DocType("Serial and Batch Entry")
+#     batch = frappe.qb.DocType("Batch")
+#     item = frappe.qb.DocType("Item")  # Join the Item table
+
+#     query = (
+#         frappe.qb.from_(table)
+#         .inner_join(ch_table)
+#         .on(table.serial_and_batch_bundle == ch_table.parent)
+#         .inner_join(batch)
+#         .on(ch_table.batch_no == batch.name)
+#         .inner_join(item)  # Join the Item table
+#         .on(table.item_code == item.item_code)  # Match item_code
+#         .select(
+#             table.item_code,
+#             item.commercial_name,  # Fetch commercial_name from Item table
+#             ch_table.batch_no,
+#             table.warehouse,
+#             table.stock_uom,
+#             Sum(ch_table.qty).as_("balance_qty"),
+#         )
+#         .where((table.is_cancelled == 0) & (table.docstatus == 1))
+#         .where(table.item_code.like('JOBWORK/%'))  # Ensure item_code starts with GKF
+#         .where(table.warehouse.like("DYE/LOT%"))  # Filter for "DYE/LOT SECTION"
+#         .groupby(ch_table.batch_no, table.item_code, ch_table.warehouse)
+#     )
+
+#     query = get_query_based_on_filters(query, batch, table, filters, item)
+
+#     for d in query.run(as_dict=True):
+#         key = (d.item_code, d.warehouse, d.batch_no, d.stock_uom)
+#         if key in batchwise_data:
+#             batchwise_data[key].balance_qty += flt(d.balance_qty)
+#         else:
+#             batchwise_data.setdefault(key, d)
+
+#     return batchwise_data
+
+
+# def get_query_based_on_filters(query, batch, table, filters, item):
+#     if filters.item_code:
+#         query = query.where(table.item_code == filters.item_code)
+
+#     # Apply the like condition for commercial_name filter
+#     if filters.commercial_name:
+#         query = query.where(item.commercial_name.like(f"%{filters.commercial_name}%"))
+
+#     if filters.batch_no:
+#         query = query.where(batch.name == filters.batch_no)
+
+#     if filters.show_item_name:
+#         query = query.select(batch.item_name)
+
+#     return query
 
 
 # def get_batchwise_data_from_stock_ledger(filters):
@@ -303,6 +384,7 @@ def get_query_based_on_filters(query, batch, table, filters, item):
 
 #     return " AND " + " AND ".join(conditions) if conditions else ""
 
+####################version 15##################
 
 
 
