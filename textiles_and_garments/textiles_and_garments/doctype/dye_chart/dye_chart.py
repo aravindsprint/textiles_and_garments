@@ -379,6 +379,11 @@ def set_additional_cost(docname):
     # Initialize the total water reading value
     total_water_reading_value = 0
     custom_total_outgoing_values = 0
+    custom_planned_cost_per_kg = 0
+    custom_actual_cost_per_kg = 0
+    custom_profit_and_loss = 0
+
+
 
     # Fetch all Job Cards linked to the Work Order
     job_cards = frappe.get_all('Job Card', filters={'work_order': docname}, fields=['name', 'custom_water_reading_value'])
@@ -410,10 +415,17 @@ def set_additional_cost(docname):
 
     final_total_operting_cost = total_water_reading_value + work_order.actual_operating_cost
 
+    custom_planned_cost_per_kg = (total_water_reading_value + work_order.actual_operating_cost)/work_order.produced_qty
+    custom_actual_cost_per_kg = (final_total_operting_cost + custom_total_outgoing_values)/work_order.produced_qty
+    custom_profit_and_loss = custom_planned_cost_per_kg - custom_profit_and_loss
     # Update the Work Order with calculated costs
     frappe.db.set_value("Work Order", docname, "custom_total_operating_cost_include_water", total_water_reading_value)
     frappe.db.set_value("Work Order", docname, "total_operating_cost", final_total_operting_cost)
     frappe.db.set_value("Work Order", docname, "custom_total_consumption_cost", custom_total_outgoing_values)
+
+    frappe.db.set_value("Work Order", docname, "custom_planned_cost_per_kg", custom_planned_cost_per_kg)
+    frappe.db.set_value("Work Order", docname, "custom_actual_cost_per_kg", custom_actual_cost_per_kg)
+    frappe.db.set_value("Work Order", docname, "custom_profit_and_loss", custom_profit_and_loss)
 
     # Display a message for the user
     frappe.msgprint(f"Total Operating Cost Include Water updated to {total_water_reading_value}.")
