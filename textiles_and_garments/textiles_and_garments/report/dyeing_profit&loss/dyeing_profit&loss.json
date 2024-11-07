@@ -1,0 +1,29 @@
+{
+ "add_total_row": 1,
+ "columns": [],
+ "creation": "2024-11-07 12:09:47.242789",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letterhead": null,
+ "modified": "2024-11-07 12:11:14.575358",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Dyeing Profit&Loss",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Work Order",
+ "report_name": "Dyeing Profit&Loss",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Manufacturing User"
+  },
+  {
+   "role": "Stock User"
+  }
+ ]
+}
