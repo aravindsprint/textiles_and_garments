@@ -7,6 +7,42 @@ from frappe import _
 from frappe.query_builder.functions import Sum
 from frappe.utils import flt, today
 
+def execute(filters=None):
+    columns, data = [], []
+    data = get_data(filters)
+    columns = get_columns(filters)
+    return columns, data
+
+
+def get_columns(filters):
+    columns = [
+        {'fieldname': 'work_order', 'label': 'Work Order', 'fieldtype': 'Link', 'options': 'Work Order'},
+        {'fieldname': 'finished_goods', 'label': 'Finished Goods', 'fieldtype': 'Data'},
+        {'fieldname': 'requested_qty', 'label': 'Requested Qty', 'fieldtype': 'Float'},
+        {'fieldname': 'transferred_qty', 'label': 'Transferred Qty', 'fieldtype': 'Data'},
+        {'fieldname': 'fabric_completed_qty', 'label': 'Completed Qty', 'fieldtype': 'Float'},
+        {'fieldname': 'fg_stock_uom', 'label': 'UOM', 'fieldtype': 'Data'},
+        {'fieldname': 'custom_planned_cost_per_kg', 'label': 'Planned Cost Per Kg', 'fieldtype': 'Float'},
+        {'fieldname': 'custom_actual_cost_per_kg', 'label': 'Actual Cost Per Kg', 'fieldtype': 'Float'},
+        {'fieldname': 'custom_profit_and_loss', 'label': 'Profit', 'fieldtype': 'Float'},
+        {'fieldname': 'custom_profit_and_loss_per_work_order', 'label': 'Profit', 'fieldtype': 'Float'},
+        # {'fieldname': 'from_date', 'label': 'From Date', 'fieldtype': 'Date'},
+        # {'fieldname': 'to_date', 'label': 'To Date', 'fieldtype': 'Date'}
+    ]
+    return columns
+
+
+def get_data(filters):
+    data = []
+    work_order_data = get_work_order_data(filters)
+    # Add work order data to the list
+    data.extend(work_order_data)
+    # Calculate totals for requested_qty, transferred_qty, and fabric_completed_qty
+    totals = calculate_totals(work_order_data)
+    # Append the totals as a summary row
+    # data.append(totals)
+    return data
+
 def get_work_order_data(filters):
     # Base query to fetch data from the Work Order
     query = """
@@ -27,10 +63,11 @@ def get_work_order_data(filters):
             `tabWork Order` AS wo
         WHERE 
             wo.status = 'Completed'
+            AND (wo.production_item LIKE '%%DKF%%' OR wo.production_item LIKE '%%WKF%%')
     """
     
     # Dynamically append additional filter conditions
-    conditions = ["(wo.production_item LIKE '%DKF%' OR wo.production_item LIKE '%WKF%')"]
+    conditions = []
     
     if filters.get("work_order"):
         conditions.append("wo.name = %(work_order)s")
@@ -59,44 +96,6 @@ def get_work_order_data(filters):
     # Execute the query with filters
     return frappe.db.sql(query, filter_values, as_dict=1)
 
-
-# def execute(filters=None):
-#     columns, data = [], []
-#     data = get_data(filters)
-#     columns = get_columns(filters)
-#     return columns, data
-
-
-# def get_columns(filters):
-#     columns = [
-#         {'fieldname': 'work_order', 'label': 'Work Order', 'fieldtype': 'Link', 'options': 'Work Order'},
-#         {'fieldname': 'finished_goods', 'label': 'Finished Goods', 'fieldtype': 'Data'},
-#         {'fieldname': 'requested_qty', 'label': 'Requested Qty', 'fieldtype': 'Float'},
-#         {'fieldname': 'transferred_qty', 'label': 'Transferred Qty', 'fieldtype': 'Data'},
-#         {'fieldname': 'fabric_completed_qty', 'label': 'Completed Qty', 'fieldtype': 'Float'},
-#         {'fieldname': 'fg_stock_uom', 'label': 'UOM', 'fieldtype': 'Data'},
-#         {'fieldname': 'custom_planned_cost_per_kg', 'label': 'Planned Cost Per Kg', 'fieldtype': 'Float'},
-#         {'fieldname': 'custom_actual_cost_per_kg', 'label': 'Actual Cost Per Kg', 'fieldtype': 'Float'},
-#         {'fieldname': 'custom_profit_and_loss', 'label': 'Profit', 'fieldtype': 'Float'},
-#         {'fieldname': 'custom_profit_and_loss_per_work_order', 'label': 'Profit', 'fieldtype': 'Float'},
-#         # {'fieldname': 'from_date', 'label': 'From Date', 'fieldtype': 'Date'},
-#         # {'fieldname': 'to_date', 'label': 'To Date', 'fieldtype': 'Date'}
-#     ]
-#     return columns
-
-
-# def get_data(filters):
-#     data = []
-#     work_order_data = get_work_order_data(filters)
-#     # Add work order data to the list
-#     data.extend(work_order_data)
-#     # Calculate totals for requested_qty, transferred_qty, and fabric_completed_qty
-#     totals = calculate_totals(work_order_data)
-#     # Append the totals as a summary row
-#     # data.append(totals)
-#     return data
-
-
 # def get_work_order_data(filters):
 #     # Base query to fetch data from the Work Order
 #     query = """
@@ -116,8 +115,7 @@ def get_work_order_data(filters):
 #         FROM 
 #             `tabWork Order` AS wo
 #         WHERE 
-#             wo.status = 'Completed' AND
-
+#             wo.status = 'Completed'
 #     """
     
 #     # Dynamically append additional filter conditions
@@ -156,28 +154,28 @@ def get_work_order_data(filters):
 #     return frappe.db.sql(query, filter_values, as_dict=1)
 
 
-# def calculate_totals(work_order_data):
-#     # Initialize total counters
-#     total_requested_qty = 0
-#     total_transferred_qty = 0
-#     total_completed_qty = 0
+def calculate_totals(work_order_data):
+    # Initialize total counters
+    total_requested_qty = 0
+    total_transferred_qty = 0
+    total_completed_qty = 0
 
-#     # Iterate over the work order data to calculate totals
-#     for row in work_order_data:
-#         total_requested_qty += row.get('requested_qty', 0)
-#         total_transferred_qty += row.get('transferred_qty', 0)
-#         total_completed_qty += row.get('fabric_completed_qty', 0)
+    # Iterate over the work order data to calculate totals
+    for row in work_order_data:
+        total_requested_qty += row.get('requested_qty', 0)
+        total_transferred_qty += row.get('transferred_qty', 0)
+        total_completed_qty += row.get('fabric_completed_qty', 0)
 
-#     # Return a summary row with totals (no work_order, finished_goods, or uom in the totals row)
-#     return {
-#         'work_order': 'Total',  # Label row as "Total"
-#         'finished_goods': '',
-#         'requested_qty': total_requested_qty,
-#         'transferred_qty': total_transferred_qty,
-#         'fabric_completed_qty': total_completed_qty,
-#         'fg_stock_uom': '',
-#         'expected_delivery_date': ''
-#     }
+    # Return a summary row with totals (no work_order, finished_goods, or uom in the totals row)
+    return {
+        'work_order': 'Total',  # Label row as "Total"
+        'finished_goods': '',
+        'requested_qty': total_requested_qty,
+        'transferred_qty': total_transferred_qty,
+        'fabric_completed_qty': total_completed_qty,
+        'fg_stock_uom': '',
+        'expected_delivery_date': ''
+    }
 
     
 
