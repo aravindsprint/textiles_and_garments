@@ -382,6 +382,7 @@ def set_additional_cost(docname):
     custom_planned_cost_per_kg = 0
     custom_actual_cost_per_kg = 0
     custom_profit_and_loss = 0
+    custom_profit_and_loss_per_work_order = 0
 
 
 
@@ -419,6 +420,7 @@ def set_additional_cost(docname):
     custom_actual_cost_per_kg = (final_total_operting_cost + custom_total_outgoing_values)/work_order.produced_qty
     # Ensure both variables are converted to float before performing subtraction
     custom_profit_and_loss = float(custom_planned_cost_per_kg) - float(custom_actual_cost_per_kg)
+    custom_profit_and_loss_per_work_order = float(custom_profit_and_loss) * work_order.produced_qty
 
     print("\n\n\ncustom_profit_and_loss\n\n\n",custom_planned_cost_per_kg)
     print("\n\n\ncustom_profit_and_loss\n\n\n",custom_profit_and_loss)
@@ -431,6 +433,7 @@ def set_additional_cost(docname):
     frappe.db.set_value("Work Order", docname, "custom_planned_cost_per_kg", custom_planned_cost_per_kg)
     frappe.db.set_value("Work Order", docname, "custom_actual_cost_per_kg", custom_actual_cost_per_kg)
     frappe.db.set_value("Work Order", docname, "custom_profit_and_loss", custom_profit_and_loss)
+    frappe.db.set_value("Work Order", docname, "custom_profit_and_loss_per_work_order", custom_profit_and_loss_per_work_order)
 
     # Display a message for the user
     frappe.msgprint(f"Total Operating Cost Include Water updated to {total_water_reading_value}.")

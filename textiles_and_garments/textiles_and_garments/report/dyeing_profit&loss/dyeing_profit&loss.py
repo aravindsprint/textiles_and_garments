@@ -25,6 +25,7 @@ def get_columns(filters):
         {'fieldname': 'custom_planned_cost_per_kg', 'label': 'Planned Cost Per Kg', 'fieldtype': 'Float'},
         {'fieldname': 'custom_actual_cost_per_kg', 'label': 'Actual Cost Per Kg', 'fieldtype': 'Float'},
         {'fieldname': 'custom_profit_and_loss', 'label': 'Profit', 'fieldtype': 'Float'},
+        {'fieldname': 'custom_profit_and_loss_per_work_order', 'label': 'Profit', 'fieldtype': 'Float'},
         # {'fieldname': 'from_date', 'label': 'From Date', 'fieldtype': 'Date'},
         # {'fieldname': 'to_date', 'label': 'To Date', 'fieldtype': 'Date'}
     ]
@@ -56,6 +57,7 @@ def get_work_order_data(filters):
             wo.custom_planned_cost_per_kg AS custom_planned_cost_per_kg,
             wo.custom_actual_cost_per_kg AS custom_actual_cost_per_kg,
             wo.custom_profit_and_loss AS custom_profit_and_loss,
+            wo.custom_profit_and_loss_per_work_order AS custom_profit_and_loss_per_work_order,
             wo.expected_delivery_date AS from_date,
             wo.expected_delivery_date AS to_date
         FROM 
