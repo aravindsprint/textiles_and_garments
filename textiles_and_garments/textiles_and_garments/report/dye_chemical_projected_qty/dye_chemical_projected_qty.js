@@ -7,12 +7,22 @@ frappe.query_reports["Dye Chemical Projected Qty"] = {
     value = default_formatter(value, row, column, data);
     
     // Log detailed info about the columns and value
-    console.log("Column:", column.fieldname, "Value:", value);
+    // console.log("Column:", column.fieldname, "Value:", value);
+
+
 
     // Check if the field being formatted is 'required_qty'
     if (column.fieldname === 'required_qty') {
         // Apply green color if required_qty contains a '-' character
-        if (value.includes('-')) {
+        // console.log( "Value:", value);
+        const match = value.match(/-?\d{1,3}(?:,\d{3})*(?:\.\d+)?/);
+
+        // If a match is found, remove the commas and convert to float
+        const number = match ? parseFloat(match[0].replace(/,/g, '')) : null;
+
+        console.log(number); // -9985.8
+        if (number >= 0) {
+            console.log("value",value);
             value = `<b style="color:green">${value}</b>`;
         } else {
             // Apply red color if required_qty does not contain a '-'
