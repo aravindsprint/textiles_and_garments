@@ -170,6 +170,7 @@ def get_job_card_data_from_stock_entry(filters):
 
 
 # def get_job_card_data_from_stock_entry(filters):
+#     # job_card.completed_date AS completed_date,
 #     job_card_data = frappe.db.sql("""
 #         SELECT 
 #             job_card.production_item AS item_code,
