@@ -84,8 +84,8 @@ def execute():
         stock_entry_doc.append("custom_stock_entry_custom_fields", {
             "name": custom_field.name,  # Add the reference to the new custom field in the child table
             "work_order": stock_entry.work_order,
-            "stock_entry": stock_entry.name
-               "gg":stock_entry.gg,
+            "stock_entry": stock_entry.name,
+            "gg":stock_entry.gg,
             "gsm":stock_entry.gsm,
             "city":stock_entry.city,
             "team":stock_entry.team,
