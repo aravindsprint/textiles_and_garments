@@ -1,6 +1,6 @@
 import frappe
 
-def revert():
+def execute():
     # Step 1: Define the date range for filtering
     start_date = "2024-06-01"  # Replace with your desired start date
     end_date = "2024-12-31"    # Replace with your desired end date
