@@ -1,17 +1,17 @@
 import frappe
 
 def execute():
-    # Step 1: Fetch all stock entries with all fields
     # Define the date range for filtering
     start_date = "2024-06-01"  # Replace with your desired start date
     end_date = "2024-12-31"    # Replace with your desired end date
 
-    # Step 1: Fetch all stock entries with the specified posting_date range
+    # Fetch all stock entries with the specified posting_date range
     stock_entries = frappe.get_all(
         "Stock Entry",
         fields=["*"],
         filters={
-            "posting_date": ["between", [start_date, end_date]]
+            "posting_date": ["between", [start_date, end_date]],
+            "name": "BM/24/67740"
         },
     )
 
@@ -22,9 +22,22 @@ def execute():
                 print(f"Skipping cancelled stock entry: {stock_entry.name}")
                 continue  # Skip the cancelled entry
 
-            # Step 2: Create a dictionary for new "Stock Entry Custom Fields" record
-            custom_field_data = {
-                "doctype": "Stock Entry Custom Fields",
+            # Check if a row already exists in the child table
+            stock_entry_doc = frappe.get_doc("Stock Entry", stock_entry.name)
+            existing_row = next(
+                (
+                    row for row in stock_entry_doc.custom_stock_entry_custom_fields
+                    if row.parent == stock_entry.name
+                ),
+                None
+            )
+
+            if existing_row:
+                print(f"Skipping Stock Entry {stock_entry.name}, as it already has a row in custom_stock_entry_custom_fields.")
+                continue  # Skip if a row already exists
+
+            # Prepare data for the new row
+            child_row_data = {
                 "parent": stock_entry.name,
                 "parenttype": "Stock Entry",
                 "parentfield": "custom_stock_entry_custom_fields",
@@ -47,21 +60,9 @@ def execute():
 
             # Copy fields if they exist and are not None
             for field in fields_to_copy:
-                custom_field_data[field] = stock_entry.get(field) or None
-
-            # Step 3: Create and insert the new record
-            custom_field = frappe.get_doc(custom_field_data)
-            custom_field.insert(ignore_permissions=True)
-
-            print("\n\ncustom_field\n\n", custom_field.name)
-
-            # Step 4: Append the new custom field to the child table of Stock Entry
-            stock_entry_doc = frappe.get_doc("Stock Entry", stock_entry.name)
-            
-            child_row_data = {}
-            for field in fields_to_copy:
                 child_row_data[field] = stock_entry.get(field) or None
 
+            # Append the new row to the child table
             stock_entry_doc.append("custom_stock_entry_custom_fields", child_row_data)
 
             # Add required fields for saving Stock Entry
@@ -73,16 +74,14 @@ def execute():
 
             if not stock_entry_doc.vehicle_number:
                 stock_entry_doc.vehicle_number = "-"
-           
-
-            
 
             # Save the Stock Entry document with the updated child table
             stock_entry_doc.save()
+            print(f"Row added to Stock Entry {stock_entry.name}")
         except Exception as e:
             print(f"Error processing stock entry {stock_entry.name}: {e}")
 
-    # Step 5: Commit changes to the database
+    # Commit changes to the database
     frappe.db.commit()
 
 
