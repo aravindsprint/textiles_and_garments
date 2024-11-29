@@ -2,7 +2,7 @@ import frappe
 
 def execute():
     # Define the date range for filtering
-    start_date = "2024-06-01"  # Replace with your desired start date
+    start_date = "2024-10-01"  # Replace with your desired start date
     end_date = "2024-12-31"    # Replace with your desired end date
 
     # Fetch all stock entries with the specified posting_date range
@@ -11,7 +11,7 @@ def execute():
         fields=["*"],
         filters={
             "posting_date": ["between", [start_date, end_date]],
-            "name": "BM/24/67740"
+            # "name": "BM/24/67740"
         },
     )
 
