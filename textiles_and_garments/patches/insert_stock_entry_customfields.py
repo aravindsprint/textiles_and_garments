@@ -1,8 +1,10 @@
 import frappe
 
 def execute():
+    import frappe
+
     # Define the date range for filtering
-    start_date = "2024-10-01"  # Replace with your desired start date
+    start_date = "2024-11-01"  # Replace with your desired start date
     end_date = "2024-12-31"    # Replace with your desired end date
 
     # Fetch all stock entries with the specified posting_date range
@@ -11,7 +13,6 @@ def execute():
         fields=["*"],
         filters={
             "posting_date": ["between", [start_date, end_date]],
-            # "name": "BM/24/67740"
         },
     )
 
@@ -20,10 +21,12 @@ def execute():
             # Skip cancelled stock entries
             if stock_entry.docstatus == 2:
                 print(f"Skipping cancelled stock entry: {stock_entry.name}")
-                continue  # Skip the cancelled entry
+                continue
+
+            # Fetch the full Stock Entry document
+            stock_entry_doc = frappe.get_doc("Stock Entry", stock_entry.name)
 
             # Check if a row already exists in the child table
-            stock_entry_doc = frappe.get_doc("Stock Entry", stock_entry.name)
             existing_row = next(
                 (
                     row for row in stock_entry_doc.custom_stock_entry_custom_fields
@@ -34,7 +37,7 @@ def execute():
 
             if existing_row:
                 print(f"Skipping Stock Entry {stock_entry.name}, as it already has a row in custom_stock_entry_custom_fields.")
-                continue  # Skip if a row already exists
+                continue
 
             # Prepare data for the new row
             child_row_data = {
@@ -68,21 +71,20 @@ def execute():
             # Add required fields for saving Stock Entry
             if not stock_entry_doc.party_dc_numer:
                 stock_entry_doc.party_dc_numer = "-"
-
             if not stock_entry_doc.value_of_goods:
                 stock_entry_doc.value_of_goods = "0"
-
             if not stock_entry_doc.vehicle_number:
                 stock_entry_doc.vehicle_number = "-"
 
             # Save the Stock Entry document with the updated child table
             stock_entry_doc.save()
+            frappe.db.commit()  # Commit changes after each save
             print(f"Row added to Stock Entry {stock_entry.name}")
-        except Exception as e:
-            print(f"Error processing stock entry {stock_entry.name}: {e}")
 
-    # Commit changes to the database
-    frappe.db.commit()
+        except Exception as e:
+            # Log the error and continue processing
+            print(f"Error processing stock entry {stock_entry.name}: {e}")
+            frappe.db.rollback()  # Rollback changes for the current stock entry
 
 
    
