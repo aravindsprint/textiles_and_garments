@@ -4,8 +4,8 @@ def execute():
     import frappe
 
     # Define the date range for filtering
-    start_date = "2024-11-01"  # Replace with your desired start date
-    end_date = "2024-12-31"    # Replace with your desired end date
+    start_date = "2024-01-01"  # Replace with your desired start date
+    end_date = "2024-10-31"    # Replace with your desired end date
 
     # Fetch all stock entries with the specified posting_date range
     stock_entries = frappe.get_all(
