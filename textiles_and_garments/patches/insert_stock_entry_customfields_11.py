@@ -5,7 +5,7 @@ def execute():
 
     # Define the date range for filtering
     start_date = "2016-01-01"  # Replace with your desired start date
-    end_date = "2016-12-31"    # Replace with your desired end date
+    end_date = "2018-01-01"    # Replace with your desired end date
 
     # Fetch all stock entries with the specified posting_date range
     stock_entries = frappe.get_all(
