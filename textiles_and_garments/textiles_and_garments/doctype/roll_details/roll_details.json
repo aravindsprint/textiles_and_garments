@@ -6,18 +6,210 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "section_break_bxnz"
+  "report_no",
+  "roll_no",
+  "reportroll",
+  "greige_roll_no",
+  "width",
+  "gsm",
+  "total_points",
+  "length_mtr",
+  "total_mtr",
+  "roll_weight",
+  "wpi_actual",
+  "cpi_actual",
+  "stock_uom",
+  "dyeing_machine",
+  "dyeing_chamber_no",
+  "column_break_nkrx",
+  "pointpercentage",
+  "grade",
+  "machine_no",
+  "name_of_the_checker",
+  "sample",
+  "scrap",
+  "approved_sample_checked",
+  "gold_seal_sample_checked",
+  "shade_checked",
+  "wicking",
+  "crow_feet",
+  "patta_problem",
+  "vertical_line",
+  "rope_mark",
+  "inspected_datetime"
  ],
  "fields": [
   {
-   "fieldname": "section_break_bxnz",
-   "fieldtype": "Section Break"
+   "fieldname": "report_no",
+   "fieldtype": "Data",
+   "label": "Report No"
+  },
+  {
+   "fieldname": "roll_no",
+   "fieldtype": "Data",
+   "label": "Roll No"
+  },
+  {
+   "fieldname": "reportroll",
+   "fieldtype": "Data",
+   "label": "ReportRoll"
+  },
+  {
+   "fieldname": "greige_roll_no",
+   "fieldtype": "Data",
+   "label": "Greige Roll No"
+  },
+  {
+   "fieldname": "width",
+   "fieldtype": "Data",
+   "label": "Width"
+  },
+  {
+   "fieldname": "gsm",
+   "fieldtype": "Int",
+   "label": "GSM"
+  },
+  {
+   "fieldname": "total_points",
+   "fieldtype": "Float",
+   "label": "Total Points"
+  },
+  {
+   "fieldname": "length_mtr",
+   "fieldtype": "Float",
+   "label": "Length Mtr"
+  },
+  {
+   "fieldname": "total_mtr",
+   "fieldtype": "Float",
+   "label": "Total Mtr"
+  },
+  {
+   "fieldname": "roll_weight",
+   "fieldtype": "Float",
+   "label": "Roll Weight"
+  },
+  {
+   "fieldname": "wpi_actual",
+   "fieldtype": "Float",
+   "label": "WPI Actual"
+  },
+  {
+   "fieldname": "cpi_actual",
+   "fieldtype": "Float",
+   "label": "CPI Actual"
+  },
+  {
+   "fieldname": "stock_uom",
+   "fieldtype": "Data",
+   "label": "Stock Uom"
+  },
+  {
+   "fieldname": "dyeing_machine",
+   "fieldtype": "Link",
+   "label": "Dyeing Machine",
+   "options": "Workstation"
+  },
+  {
+   "fieldname": "dyeing_chamber_no",
+   "fieldtype": "Select",
+   "label": "Dyeing Chamber No",
+   "options": "\n1\n2\n3\n4\n5\n6\n7\n8"
+  },
+  {
+   "fieldname": "column_break_nkrx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pointpercentage",
+   "fieldtype": "Data",
+   "label": "PointPercentage"
+  },
+  {
+   "fieldname": "grade",
+   "fieldtype": "Select",
+   "label": "Grade",
+   "options": "1\n2\n3\nDirect"
+  },
+  {
+   "fieldname": "machine_no",
+   "fieldtype": "Select",
+   "label": "Machine No",
+   "options": "1\n2\n3\n4\n5\n6\n7\n8"
+  },
+  {
+   "fieldname": "name_of_the_checker",
+   "fieldtype": "Data",
+   "label": "Name of the Checker"
+  },
+  {
+   "fieldname": "sample",
+   "fieldtype": "Data",
+   "label": "Sample"
+  },
+  {
+   "fieldname": "scrap",
+   "fieldtype": "Data",
+   "label": "Scrap"
+  },
+  {
+   "fieldname": "approved_sample_checked",
+   "fieldtype": "Select",
+   "label": "Approved Sample Checked",
+   "options": "Accepted\nCond Accepted\nNot Accepted\nNot Applicable"
+  },
+  {
+   "fieldname": "gold_seal_sample_checked",
+   "fieldtype": "Select",
+   "label": "Gold Seal Sample Checked",
+   "options": "Accepted\nCond Accepted\nNot Accepted\nNot Applicable"
+  },
+  {
+   "fieldname": "shade_checked",
+   "fieldtype": "Select",
+   "label": "Shade Checked",
+   "options": "Accepted\nCond Accepted\nNot Accepted\nNot Applicable"
+  },
+  {
+   "fieldname": "wicking",
+   "fieldtype": "Select",
+   "label": "Wicking",
+   "options": "Accepted\nCond Accepted\nNot Accepted\nNot Applicable"
+  },
+  {
+   "fieldname": "crow_feet",
+   "fieldtype": "Data",
+   "label": "Crow Feet",
+   "options": "-\nMild\nHeavy"
+  },
+  {
+   "fieldname": "patta_problem",
+   "fieldtype": "Data",
+   "label": "Patta Problem",
+   "options": "-\nMild\nHeavy"
+  },
+  {
+   "fieldname": "vertical_line",
+   "fieldtype": "Data",
+   "label": "Vertical Line",
+   "options": "-\nMild\nHeavy"
+  },
+  {
+   "fieldname": "rope_mark",
+   "fieldtype": "Data",
+   "label": "Rope Mark",
+   "options": "-\nMild\nHeavy"
+  },
+  {
+   "fieldname": "inspected_datetime",
+   "fieldtype": "Data",
+   "label": "Inspected Datetime"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-12-12 11:20:02.763056",
+ "modified": "2024-12-13 17:20:17.260886",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Details",
