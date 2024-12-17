@@ -74,6 +74,18 @@ def get_columns(filters):
                 "width": 70
             },
             {
+                "label": _("Supplier2"),
+                "fieldname": "supplier2",
+                "fieldtype": "Data",
+                "width": 70
+            },
+            {
+                "label": _("Supplier3"),
+                "fieldname": "supplier3",
+                "fieldtype": "Data",
+                "width": 70
+            },
+            {
                 "label": _("Knitting Mac No"),
                 "fieldname": "knitting_machine_no",
                 "fieldtype": "Data",
@@ -94,6 +106,12 @@ def get_columns(filters):
             {
                 "label": _("Roll No"),
                 "fieldname": "roll_no",
+                "fieldtype": "Data",
+                "width": 80
+            },
+            {
+                "label": _("Greige Roll No"),
+                "fieldname": "greige_roll_no",
                 "fieldtype": "Data",
                 "width": 80
             },
@@ -135,7 +153,10 @@ def get_sales_data_from_stock_entry(filters):
             mistake_details.total_points AS total_points,\
             qi_report_details.fabric AS fabric,\
             qi_report_details.supplier1 AS supplier1,\
+            qi_report_details.supplier2 AS supplier2,\
+            qi_report_details.supplier3 AS supplier3,\
             mistake_details.roll_no AS roll_no,\
+            roll_details.greige_roll_no AS greige_roll_no,\
             roll.work_order AS work_order,\
             roll.knitting_machine_no AS knitting_machine_no,\
             roll_details.roll_weight AS roll_weight,\
@@ -161,7 +182,7 @@ def get_sales_data_from_stock_entry(filters):
             roll.name = roll_details.roll_no \
         WHERE \
             qi_report_details.docstatus = 1 AND\
-            qi_report_details.item_code LIKE 'GKF%%'\
+            qi_report_details.item_code NOT LIKE 'GKF%%'\
     "
 
 

@@ -56,6 +56,12 @@ def get_columns(filters):
                 "width": 50
             },
             {
+                "label": _("Roll No"),
+                "fieldname": "roll_no",
+                "fieldtype": "Data",
+                "width": 50
+            },
+            {
                 "label": _("Vertical Line"),
                 "fieldname": "vertical_line",
                 "fieldtype": "Data",
@@ -67,15 +73,27 @@ def get_columns(filters):
                 "fieldtype": "Data",
                 "width": 50
             },
+            # {
+            #     "label": _("Crow Feet"),
+            #     "fieldname": "crow_feet",
+            #     "fieldtype": "Data",
+            #     "width": 50
+            # },
             {
                 "label": _("Crow Feet"),
-                "fieldname": "crow_feet",
+                "fieldname": "crow_feet1",
                 "fieldtype": "Data",
                 "width": 50
             },
+            # {
+            #     "label": _("Patta Problem"),
+            #     "fieldname": "patta_problem",
+            #     "fieldtype": "Data",
+            #     "width": 50
+            # },
             {
                 "label": _("Patta Problem"),
-                "fieldname": "patta_problem",
+                "fieldname": "patta_problem1",
                 "fieldtype": "Data",
                 "width": 50
             },
@@ -107,10 +125,13 @@ def get_sales_data_from_stock_entry(filters):
             si.vertical_line AS vertical_line,
             si.rope_mark AS rope_mark,
             si.crow_feet AS crow_feet,
+            roll_details.roll_no AS roll_no,
+            roll_details.crow_feet AS crow_feet1,
             si.patta_problem AS patta_problem,
+            roll_details.patta_problem AS patta_problem1,
             si.parent AS qi_report_details,
             qi_report_details_item.batch_no AS batch_no,
-            qi_report_details_item.lot_weight AS qty,
+            roll_details.roll_weight AS qty,
             qi_report_details_item.stock_uom AS stock_uom,
             qi_report_details_item.date AS posting_date,
             qi_report_details_item.docstatus AS status
@@ -120,6 +141,10 @@ def get_sales_data_from_stock_entry(filters):
             `tabQI Summary` AS si
         ON 
             qi_report_details_item.name = si.parent
+        LEFT JOIN 
+            `tabRoll Details` AS roll_details
+        ON 
+            qi_report_details_item.name = roll_details.parent      
         WHERE 
             qi_report_details_item.docstatus = 1
     """
