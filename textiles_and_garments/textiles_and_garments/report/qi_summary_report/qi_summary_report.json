@@ -9,7 +9,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letterhead": null,
- "modified": "2024-12-12 17:09:58.632620",
+ "modified": "2024-12-18 10:03:51.683850",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "QI Summary Report",
@@ -21,6 +21,9 @@
  "roles": [
   {
    "role": "System Manager"
+  },
+  {
+   "role": "Quality Manager"
   }
  ]
 }
