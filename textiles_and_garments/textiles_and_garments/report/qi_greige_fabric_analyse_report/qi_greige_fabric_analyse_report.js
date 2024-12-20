@@ -12,7 +12,7 @@ frappe.query_reports["QI Greige Fabric Analyse Report"] = {
 			options: "Item",
 		},
 		{
-			fieldname: "posting_date",
+			fieldname: "from_date",
 			label: __("From This Date"),
 			fieldtype: "Date",
 			width: "80",
@@ -20,7 +20,7 @@ frappe.query_reports["QI Greige Fabric Analyse Report"] = {
 			default: frappe.datetime.add_days(frappe.datetime.get_today(), -7),
 		},
 		{
-			fieldname: "posting_date",
+			fieldname: "to_date",
 			label: __("To This Date"),
 			fieldtype: "Date",
 			width: "80",

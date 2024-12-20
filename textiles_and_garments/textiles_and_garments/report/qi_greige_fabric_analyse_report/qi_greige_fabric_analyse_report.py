@@ -181,10 +181,10 @@ def get_sales_data_from_stock_entry(filters):
         conditions.append("mistake_details.custom_work_order = %(work_order)s")
     
     if filters.get("from_date"):
-        conditions.append("mistake_details.posting_date >= %(from_date)s")
+        conditions.append("qi_report_details.date >= %(from_date)s")
 
     if filters.get("to_date"):
-        conditions.append("mistake_details.posting_date <= %(to_date)s")
+        conditions.append("qi_report_details.date <= %(to_date)s")
     
     if filters.get("status"):
         conditions.append("mistake_details.status = %(status)s")

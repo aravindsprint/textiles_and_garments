@@ -37,6 +37,13 @@ def get_columns(filters):
                 "width": 200,
             },
             {
+                "label": _("Fabric"),
+                "fieldname": "fabric",
+                "fieldtype": "Link",
+                "options": "Item",
+                "width": 200,
+            },
+            {
                 "label": _("Batch No"),
                 "fieldname": "batch_no",
                 "fieldtype": "Link",
@@ -121,6 +128,7 @@ def get_sales_data_from_stock_entry(filters):
     query = """
         SELECT 
             qi_report_details_item.item_code AS item_code,
+            qi_report_details_item.fabric AS fabric,
             si.weight AS work_order,
             si.vertical_line AS vertical_line,
             si.rope_mark AS rope_mark,
@@ -165,10 +173,12 @@ def get_sales_data_from_stock_entry(filters):
         conditions.append("si.custom_work_order = %(work_order)s")
     
     if filters.get("from_date"):
-        conditions.append("si.posting_date >= %(from_date)s")
+        # print("\n\n\n\nfrom_date\n\n\n",from_date)
+        conditions.append("qi_report_details_item.date >= %(from_date)s")
 
     if filters.get("to_date"):
-        conditions.append("si.posting_date <= %(to_date)s")
+        # print("\n\n\n\nto_date\n\n\n", to_date)
+        conditions.append("qi_report_details_item.date <= %(to_date)s")
     
     if filters.get("status"):
         conditions.append("si.status = %(status)s")
