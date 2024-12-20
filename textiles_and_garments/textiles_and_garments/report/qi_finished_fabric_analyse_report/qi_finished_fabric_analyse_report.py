@@ -179,7 +179,7 @@ def get_sales_data_from_stock_entry(filters):
         LEFT JOIN \
             `tabRoll` AS roll\
         ON \
-            roll.name = roll_details.roll_no \
+            roll.name = roll_details.greige_roll_no \
         WHERE \
             qi_report_details.docstatus = 1 AND\
             qi_report_details.item_code NOT LIKE 'GKF%%'\
