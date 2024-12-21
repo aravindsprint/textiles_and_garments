@@ -98,6 +98,12 @@ def get_columns(filters):
                 "width": 70
             },
             {
+                "label": _("Fabric Required Width"),
+                "fieldname": "fabric_required_width",
+                "fieldtype": "Data",
+                "width": 70
+            },
+            {
                 "label": _("Total Qty"),
                 "fieldname": "total_qty",
                 "fieldtype": "Data",
@@ -158,6 +164,12 @@ def get_columns(filters):
                 "width": 80
             },
             {
+                "label": _("Width"),
+                "fieldname": "width",
+                "fieldtype": "Data",
+                "width": 80
+            },
+            {
                 "label": _("Roll Weight"),
                 "fieldname": "roll_weight",
                 "fieldtype": "Data",
@@ -211,6 +223,7 @@ def get_sales_data_from_stock_entry(filters):
             qi_report_details.supplier3 AS supplier3,\
             qi_report_details.lot_no AS lot_no,\
             qi_report_details.total_qty AS total_qty,\
+            qi_report_details.fabric_required_width AS fabric_required_width,\
             qi_report_details.total_accepted_qty AS total_accepted_qty,\
             qi_report_details.total_rejected_qty AS total_rejected_qty,\
             qi_report_details.shade AS shade,\
@@ -224,6 +237,7 @@ def get_sales_data_from_stock_entry(filters):
             roll_details.total_qty AS total_qty,\
             roll_details.accepted_qty AS accepted_qty,\
             roll_details.rejected_qty AS rejected_qty,\
+            roll_details.width AS width,\
             qi_report_details.name AS qi_report_details,\
             qi_report_details.batch_no AS batch_no,\
             qi_report_details.lot_weight AS qty,\
