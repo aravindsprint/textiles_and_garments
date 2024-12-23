@@ -44,6 +44,27 @@ def get_columns(filters):
                 "width": 200,
             },
             {
+                "label": _("Supplier1"),
+                "fieldname": "supplier",
+                "fieldtype": "Link",
+                "options": "Supplier",
+                "width": 200,
+            },
+            {
+                "label": _("Supplier2"),
+                "fieldname": "supplier2",
+                "fieldtype": "Link",
+                "options": "Supplier",
+                "width": 200,
+            },
+            {
+                "label": _("Supplier3"),
+                "fieldname": "supplier3",
+                "fieldtype": "Link",
+                "options": "Supplier",
+                "width": 200,
+            },
+            {
                 "label": _("Batch No"),
                 "fieldname": "batch_no",
                 "fieldtype": "Link",
@@ -129,6 +150,9 @@ def get_sales_data_from_stock_entry(filters):
         SELECT 
             qi_report_details_item.item_code AS item_code,
             qi_report_details_item.fabric AS fabric,
+            qi_report_details_item.fabric AS supplier1,
+            qi_report_details_item.supplier2 AS supplier2,
+            qi_report_details_item.supplier3 AS supplier3,
             si.weight AS work_order,
             si.vertical_line AS vertical_line,
             si.rope_mark AS rope_mark,
