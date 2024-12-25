@@ -122,6 +122,18 @@ def get_columns(filters):
                 "width": 80
             },
             {
+                "label": _("Length Mtr"),
+                "fieldname": "length_mtr",
+                "fieldtype": "Data",
+                "width": 80
+            },
+            {
+                "label": _("Total Mtr"),
+                "fieldname": "total_mtr",
+                "fieldtype": "Data",
+                "width": 80
+            },
+            {
                 "label": _("Status"),
                 "fieldname": "status",
                 "fieldtype": "Data",
@@ -160,6 +172,8 @@ def get_sales_data_from_stock_entry(filters):
             roll.work_order AS work_order,\
             roll.knitting_machine_no AS knitting_machine_no,\
             roll_details.roll_weight AS roll_weight,\
+            roll_details.length_mtr AS length_mtr,\
+            roll_details.total_mtr AS total_mtr,\
             qi_report_details.name AS qi_report_details,\
             qi_report_details.batch_no AS batch_no,\
             qi_report_details.lot_weight AS qty,\
