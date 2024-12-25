@@ -450,6 +450,15 @@ def update_batch(docname, duplicate_stock_entry_name):
     duplicate_stock_entry = frappe.get_doc('Stock Entry', duplicate_stock_entry_name)
 
     return duplicate_stock_entry.items
+
+@frappe.whitelist()
+def update_batch_sbb(duplicate_stock_entry_name):
+    # Fetch the Stock Entry document
+    # stock_entry = frappe.get_doc('Stock Entry', docname)
+
+    duplicate_stock_entry = frappe.get_doc('Stock Entry', duplicate_stock_entry_name)
+
+    return duplicate_stock_entry.items    
     
     # # Iterate over the child table `items` (default fieldname for Stock Entry Details)
     # for duplicate_item in duplicate_stock_entry.items:

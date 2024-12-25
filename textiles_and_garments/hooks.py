@@ -31,7 +31,8 @@ app_license = "mit"
 doctype_js = {
     "Stock Entry": "public/js/stock_entry.js",
     "Job Card": "public/js/job_card.js",
-    "Work Order": "public/js/work_order.js"
+    "Work Order": "public/js/work_order.js",
+    "Serial and Batch Bundle": "public/js/serial_and_batch_bundle.js"
 }
 
 
@@ -140,23 +141,34 @@ doctype_js = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"textiles_and_garments.tasks.all"
-# 	],
-# 	"daily": [
-# 		"textiles_and_garments.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"textiles_and_garments.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"textiles_and_garments.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"textiles_and_garments.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+    "cron": {
+        "*/1 * * * *": [
+            "textiles_and_garments.textiles_and_garments.doctype.dye_chart.dye_chart.every_five_minutes",
+        ],
+        "50 14 * * *": [
+            "textiles_and_garments.tasks.every_five_minutes",
+        ],
+        "*/1 * * * *": [
+            "textiles_and_garments.tasks.every_five_minutes",
+        ]
+    }
+	# "all": [
+	# 	"textiles_and_garments.tasks.all"
+	# ],
+	# "daily": [
+	# 	"textiles_and_garments.tasks.daily"
+	# ],
+	# "hourly": [
+	# 	"textiles_and_garments.tasks.hourly"
+	# ],
+	# "weekly": [
+	# 	"textiles_and_garments.tasks.weekly"
+	# ],
+	# "monthly": [
+	# 	"textiles_and_garments.tasks.monthly"
+	# ],
+}
 
 # Testing
 # -------
