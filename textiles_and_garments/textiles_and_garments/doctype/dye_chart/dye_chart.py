@@ -442,6 +442,31 @@ def set_additional_cost(docname):
 
 
 
+@frappe.whitelist()
+def update_batch(docname, duplicate_stock_entry_name):
+    # Fetch the Stock Entry document
+    stock_entry = frappe.get_doc('Stock Entry', docname)
+
+    duplicate_stock_entry = frappe.get_doc('Stock Entry', duplicate_stock_entry_name)
+
+    return duplicate_stock_entry.items
+    
+    # # Iterate over the child table `items` (default fieldname for Stock Entry Details)
+    # for duplicate_item in duplicate_stock_entry.items:
+    #     print("\n\n\nitem\n\n\n",duplicate_item.item_code)
+    #     print("\n\n\nbatch\n\n\n",duplicate_item.batch_no)
+    #     return duplicate_item.
+    #     for item in stock_entry.items:
+    #         if(duplicate_item.item_code == item.item_code):
+    #             return duplicate_item.batch_no
+
+
+def every_five_minutes():
+    print("\n\n\nevery_1_minutes\n\n\n")
+
+
+
+
 
 
     
