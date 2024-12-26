@@ -93,8 +93,8 @@ frappe.ui.form.on("Stock Entry", {
             frappe.call({
                 method: "textiles_and_garments.textiles_and_garments.doctype.dye_chart.dye_chart.update_batch",
                 args: {
-                    docname: frm.doc.name,
-                    duplicate_stock_entry_name: frm.doc.custom_duplicate_stock_entry
+                    // docname: frm.doc.name,
+                    custom_duplicate_stock_entry: frm.doc.custom_duplicate_stock_entry
                 },
                 callback: function(response) {
                     console.log("response", response);

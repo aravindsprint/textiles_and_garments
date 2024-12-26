@@ -443,22 +443,22 @@ def set_additional_cost(docname):
 
 
 @frappe.whitelist()
-def update_batch(docname, duplicate_stock_entry_name):
+def update_batch(custom_duplicate_stock_entry):
     # Fetch the Stock Entry document
-    stock_entry = frappe.get_doc('Stock Entry', docname)
+    # stock_entry = frappe.get_doc('Stock Entry', docname)
 
-    duplicate_stock_entry = frappe.get_doc('Stock Entry', duplicate_stock_entry_name)
+    duplicate_stock_entry = frappe.get_doc('Stock Entry', custom_duplicate_stock_entry)
 
     return duplicate_stock_entry.items
 
 @frappe.whitelist()
-def update_batch_sbb(duplicate_stock_entry_name):
+def update_batch_sbb(custom_duplicate_serial_and_batch_bundle):
     # Fetch the Stock Entry document
     # stock_entry = frappe.get_doc('Stock Entry', docname)
 
-    duplicate_stock_entry = frappe.get_doc('Stock Entry', duplicate_stock_entry_name)
+    duplicate_stock_entry = frappe.get_doc('Serial and Batch Bundle', custom_duplicate_serial_and_batch_bundle)
 
-    return duplicate_stock_entry.items    
+    return duplicate_stock_entry.entries    
     
     # # Iterate over the child table `items` (default fieldname for Stock Entry Details)
     # for duplicate_item in duplicate_stock_entry.items:
