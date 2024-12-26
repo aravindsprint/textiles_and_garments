@@ -58,7 +58,7 @@ frappe.ui.form.on("Serial and Batch Bundle", {
                             
                             // newRow.item_code = item.item_code; // Example: Set item_code
                             newRow.batch_no = item.batch_no;   // Example: Set batch_no
-                            newRow.qty = item.qty * -1;            // Example: Set qty
+                            newRow.qty = item.qty;            // Example: Set qty
                             newRow.warehouse = frm.doc.warehouse; // 
                             
                         });
