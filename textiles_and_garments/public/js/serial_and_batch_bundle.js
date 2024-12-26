@@ -15,11 +15,12 @@ frappe.ui.form.on("Serial and Batch Bundle", {
                         var resp = response.message;
 
                         console.log("resp", resp);
+                        frm.clear_table("entries");
 
                         // Loop through frm.doc.items
                         resp.forEach(item => {
                             console.log("item",item);
-                            frm.clear_table("entries");
+                            
                             let newRow = frm.add_child('entries');
                             
                             // newRow.item_code = item.item_code; // Example: Set item_code
