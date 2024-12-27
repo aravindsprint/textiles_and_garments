@@ -311,6 +311,7 @@ frappe.ui.form.on("Stock Entry Detail", {
         }
 
         item = child.item_code;
+        console.log("item",item);
         if (child.commercial_name && (child.commercial_name.includes("POLO") 
             || child.commercial_name.includes("MARS")) &&
             child.stock_uom == "Kgs" && item.includes("WOC")) {
@@ -323,11 +324,11 @@ frappe.ui.form.on("Stock Entry Detail", {
             child.stock_uom == "Kgs" && item.includes("WC")){
             batchNo = project +'/'+ work_order +'/'+ 'WC'; 
             child.batch_no = batchNo;
-        }else if(child.commercial_name && (child.commercial_name.includes("Collar")) &&
+        }else if(child.commercial_name && (child.commercial_name.includes("COLLAR")) &&
             child.stock_uom == "Pcs"){
             batchNo = project +'/'+ work_order +'/'+ 'C'; 
             child.batch_no = batchNo;
-        }else if(child.commercial_name && (child.commercial_name.includes("Cuff")) &&
+        }else if(child.commercial_name && (child.commercial_name.includes("CUFF")) &&
             child.stock_uom == "Pcs"){
             batchNo = project +'/'+ work_order +'/'+ 'U'; 
             child.batch_no = batchNo;
