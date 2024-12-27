@@ -311,8 +311,8 @@ frappe.ui.form.on("Stock Entry Detail", {
         }
 
         item = child.item_code;
-        if (child.commercial_name && (child.commercial_name.includes("Polo") 
-            || child.commercial_name.includes("Mars")) &&
+        if (child.commercial_name && (child.commercial_name.includes("POLO") 
+            || child.commercial_name.includes("MARS")) &&
             child.stock_uom == "Kgs" && item.includes("WOC")) {
         // if(child){    
             // Your logic here
