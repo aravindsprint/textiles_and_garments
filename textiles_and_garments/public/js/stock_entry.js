@@ -318,8 +318,8 @@ frappe.ui.form.on("Stock Entry Detail", {
             // Your logic here
             batchNo = project +'/'+ work_order +'/'+ 'WOC'; // Replace with the desired batch number or logic to generate it
             child.batch_no = batchNo;
-        }else if(child.commercial_name && (child.commercial_name.includes("Polo") 
-            || child.commercial_name.includes("Mars")) &&
+        }else if(child.commercial_name && (child.commercial_name.includes("POLO") 
+            || child.commercial_name.includes("MARS")) &&
             child.stock_uom == "Kgs" && item.includes("WC")){
             batchNo = project +'/'+ work_order +'/'+ 'WC'; 
             child.batch_no = batchNo;
