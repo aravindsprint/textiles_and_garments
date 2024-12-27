@@ -253,3 +253,118 @@ frappe.ui.form.on("Stock Entry", {
 //         }
 //     })
 // });
+
+
+
+// frappe.ui.form.on("Stock Entry Item", {
+//     custom_create_batch(frm, cdt, cdn) {
+//         // Get the specific row in the child table
+//         let row = frappe.get_doc(cdt, cdn);
+
+//         // Perform actions when the button is clicked
+//         frappe.msgprint(`Button clicked for Item Code: ${row.item_code}`);
+//         console.log("Row data:", row);
+
+//         // Example: Perform any other logic or actions here
+//         // You can access and manipulate row properties like row.qty, row.rate, etc.
+//     }   
+// });  
+
+// frappe.ui.form.on("Stock Entry Detail", {
+//     custom_create_batch(frm, cdt, cdn) {
+//         console.log("frm Stock Entry Detail",frm);
+//         var child = locals[cdt][cdn];
+        
+//         // // Perform actions when the button is clicked
+//         // // frappe.model.set_value("Batch", d.batch_no, "custom_work_order", frm.doc.custom_work_order);
+//         // frappe.msgprint(`Button clicked for Item Code: ${child.item_code}`);
+//         // console.log("Row data:", child);
+//         // Example: Set the batch_no value
+
+//         if(frm.doc.work_order){
+//            // console.log("work_order",work_order);
+//            // console.log("project",project);
+//         }
+//         item = child.item_code;
+//         child.batch_no = "BATCH-001"; // Replace with the desired batch number or logic to generate it
+        
+//         // Refresh the field to reflect changes in the UI
+//         frm.refresh_field("items"); // Ensure "items" 
+        
+//     },
+// });
+
+
+frappe.ui.form.on("Stock Entry Detail", {
+    custom_create_batch(frm, cdt, cdn) {
+        console.log("frm Stock Entry Detail", frm);
+        var child = locals[cdt][cdn];
+        var work_order;
+        var project;
+        var batchNo;
+        var item;
+
+        if (frm.doc.work_order) {
+            // Additional logic if needed
+             work_order = frm.doc.work_order;
+             project = frm.doc.project;
+        }
+
+        item = child.item_code;
+        if (child.commercial_name && (child.commercial_name.includes("Polo") 
+            || child.commercial_name.includes("Mars")) &&
+            child.stock_uom == "Kgs" && item.includes("WOC")) {
+        // if(child){    
+            // Your logic here
+            batchNo = project +'/'+ work_order +'/'+ 'WOC'; // Replace with the desired batch number or logic to generate it
+            child.batch_no = batchNo;
+        }else if(child.commercial_name && (child.commercial_name.includes("Polo") 
+            || child.commercial_name.includes("Mars")) &&
+            child.stock_uom == "Kgs" && item.includes("WC")){
+            batchNo = project +'/'+ work_order +'/'+ 'WC'; 
+            child.batch_no = batchNo;
+        }else if(child.commercial_name && (child.commercial_name.includes("Collar")) &&
+            child.stock_uom == "Pcs"){
+            batchNo = project +'/'+ work_order +'/'+ 'C'; 
+            child.batch_no = batchNo;
+        }else if(child.commercial_name && (child.commercial_name.includes("Cuff")) &&
+            child.stock_uom == "Pcs"){
+            batchNo = project +'/'+ work_order +'/'+ 'U'; 
+            child.batch_no = batchNo;
+        }else{
+            batchNo = project +'/'+ work_order; 
+            child.batch_no = batchNo;
+        }    
+
+        // let batchNo = "BATCH-001"; // Replace with the desired batch number or logic to generate it
+        // child.batch_no = batchNo;
+
+        // Call server-side method to create the Batch document
+        frappe.call({
+            method: "frappe.client.insert",
+            args: {
+                doc: {
+                    doctype: "Batch",
+                    batch_id: batchNo,
+                    item: item,
+                    manufacturing_date: frappe.datetime.now_date(), // Example: Set the manufacturing date
+                    // expiry_date: frappe.datetime.add_days(frappe.datetime.now_date(), 365), // Example: Set expiry date
+                },
+            },
+            callback: function(response) {
+                if (response.message) {
+                    frappe.msgprint(`Batch ${batchNo} created successfully for Item ${item}`);
+                    console.log("Batch created:", response.message);
+                } else {
+                    frappe.msgprint(`Failed to create Batch for Item ${item}`);
+                }
+            },
+            error: function(err) {
+                console.error("Error creating Batch:", err);
+            }
+        });
+
+        // Refresh the field to reflect changes in the UI
+        frm.refresh_field("items");
+    },
+});
