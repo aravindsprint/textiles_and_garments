@@ -143,13 +143,13 @@ doctype_js = {
 
 scheduler_events = {
     "cron": {
-        "*/1 * * * *": [
-            "textiles_and_garments.textiles_and_garments.doctype.dye_chart.dye_chart.every_five_minutes",
-        ],
-        "50 14 * * *": [
-            "textiles_and_garments.tasks.every_five_minutes",
-        ],
-        "*/1 * * * *": [
+        # "*/1 * * * *": [
+        #     "textiles_and_garments.textiles_and_garments.doctype.dye_chart.dye_chart.every_five_minutes",
+        # ],
+        # "50 14 * * *": [
+        #     "textiles_and_garments.tasks.every_five_minutes",
+        # ],
+        "10 11 * * 3": [
             "textiles_and_garments.tasks.every_five_minutes",
         ]
     }
