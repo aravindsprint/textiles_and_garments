@@ -102,7 +102,7 @@ def every_five_minutes():
                 print(f"Total Outstanding matches Outstanding: {total_outstanding} == {outstanding}")
 
 
-            if customer_email and total_outstanding > 0 and total_outstanding == outstanding:
+            if customer_email and total_outstanding > 0 and round(total_outstanding, 2) == round(float(outstanding), 2):
                 # Enqueue the email sending task
                 frappe.enqueue(
                     send_outstanding_email_to_customers,
