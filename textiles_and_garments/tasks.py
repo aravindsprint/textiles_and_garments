@@ -51,32 +51,10 @@ def every_five_minutes():
         print("\n\nCustomer:\n", customer)
         print("\n\nOutstanding Amount:\n", outstanding)
 
-        if customer:
+        if customer and outstanding > 0:
             # Fetch customer email from Customer doctype
             customer_email = frappe.db.get_value("Customer", customer, "email_id")
-            print("\n\nCustomer Email from Customer Doctype:\n\n", customer_email)
-
-            # # Fetch email from Address master linked to the customer
-            # address_email = frappe.db.get_value(
-            #     "Address",
-            #     {"customer": customer, "is_primary_address": 1},  # Filters for primary address of the customer
-            #     "email_id"
-            # )
-            # print("\n\nCustomer Email from Address Master:\n\n", address_email)
-
-            # # Fetch email from Contact master linked to the customer
-            # contact_email = frappe.db.get_value(
-            #     "Contact",
-            #     {"link_doctype": "Customer", "link_name": customer},  # Filters for contact linked to the customer
-            #     "email_id"
-            # )
-            # print("\n\nCustomer Email from Contact Master:\n\n", contact_email)
-
-            # # Use a fallback if no email is found
-            # final_email = customer_email or address_email or contact_email
-            # print("\n\nFinal Email Selected:\n\n", final_email)
-
-            
+            print("\n\nCustomer Email from Customer Doctype:\n\n", customer_email)    
             sales_invoice_details = frappe.db.sql("""
                 SELECT 
                     posting_date, 
@@ -98,24 +76,26 @@ def every_five_minutes():
                 print(f"Customer Email: {customer_email}")
             if total_outstanding > 0:
                 print(f"Total Outstanding: {total_outstanding}")
-            if total_outstanding == outstanding:
+            if round(total_outstanding, 2) == round(float(outstanding), 2):
                 print(f"Total Outstanding matches Outstanding: {total_outstanding} == {outstanding}")
 
 
             if customer_email and total_outstanding > 0 and round(total_outstanding, 2) == round(float(outstanding), 2):
                 # Enqueue the email sending task
+                print("\n\nsending mail for the customer\n\n", customer_email)
                 frappe.enqueue(
                     send_outstanding_email_to_customers,
-                    queue="long",
+                    queue="short",
                     customer=customer,
                     outstanding=outstanding,
                     customer_email=customer_email,
                     sales_invoice_details=sales_invoice_details
                 )
             else:
+                print("\n\nsending mail for the accounts team\n\n", customer_email)
                 frappe.enqueue(
                     send_outstanding_email_to_accounts_team,
-                    queue="long",
+                    queue="short",
                     customer=customer,
                     outstanding=outstanding,
                     customer_email="accounts@praneraservices.com, jose@praneraservices.com",
@@ -127,13 +107,8 @@ def every_five_minutes():
 
 def send_outstanding_email_to_customers(customer, outstanding, customer_email, sales_invoice_details):
     """Function to send outstanding email to a customer."""
+    print("\n\nsend_outstanding_email_to_customers\n\n", customer_email)
     subject = f"Outstanding Payment Reminder for {customer} from Pranera Services and Solutions Pvt Ltd"
-    
-    # # Create a detailed table of sales invoice data
-    # invoice_table = "<br>".join(
-    #     f"Date: {invoice['posting_date']}, Invoice: {invoice['name']}, Outstanding: {invoice['outstanding_amount']}" 
-    #     for invoice in sales_invoice_details
-    # )
     # Create a detailed HTML table for sales invoice data
     invoice_table = """
     <table style="border-collapse: collapse; width: 100%; text-align: left;">
@@ -191,13 +166,6 @@ def send_outstanding_email_to_customers(customer, outstanding, customer_email, s
 def send_outstanding_email_to_accounts_team(customer, outstanding, customer_email, sales_invoice_details):
     """Function to send outstanding email to a customer."""
     subject = f"Need to do the payment reconciliation for Outstanding Payment of {customer} from Pranera Services and Solutions Pvt Ltd"
-    
-    # # Create a detailed table of sales invoice data
-    # invoice_table = "<br>".join(
-    #     f"Date: {invoice['posting_date']}, Invoice: {invoice['name']}, Outstanding: {invoice['outstanding_amount']}" 
-    #     for invoice in sales_invoice_details
-    # )
-    # Create a detailed HTML table for sales invoice data
     invoice_table = """
     <table style="border-collapse: collapse; width: 100%; text-align: left;">
         <thead>
