@@ -42,14 +42,14 @@ def every_five_minutes():
         as_list=1
     )
 
-    print("\n\n\noutstanding_data\n\n\n",outstanding_data)
+    # print("\n\n\noutstanding_data\n\n\n",outstanding_data)
     
     for record in outstanding_data:
         customer = record[0]  # Party (Customer name)
         outstanding = record[1]  # Outstanding amount
 
-        print("\n\nCustomer:\n", customer)
-        print("\n\nOutstanding Amount:\n", outstanding)
+        # print("\n\nCustomer:\n", customer)
+        # print("\n\nOutstanding Amount:\n", outstanding)
 
         if customer and outstanding > 0:
             # Fetch customer email from Customer doctype
