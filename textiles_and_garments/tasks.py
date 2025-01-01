@@ -56,7 +56,20 @@ def every_five_minutes():
             customer_email = frappe.db.get_value("Customer", customer, "email_id")
             
             # Fetch sales invoice details
-            sales_invoice_details = frappe.db.sql(f"""
+            # sales_invoice_details = frappe.db.sql(f"""
+            #     SELECT 
+            #         posting_date, 
+            #         name, 
+            #         outstanding_amount 
+            #     FROM 
+            #         `tabSales Invoice` 
+            #     WHERE 
+            #         customer = '{customer}' 
+            #         AND outstanding_amount > 0 
+            #         AND docstatus = 1
+            # """, as_dict=True)
+
+            sales_invoice_details = frappe.db.sql("""
                 SELECT 
                     posting_date, 
                     name, 
@@ -64,10 +77,11 @@ def every_five_minutes():
                 FROM 
                     `tabSales Invoice` 
                 WHERE 
-                    customer = '{customer}' 
+                    customer = %s 
                     AND outstanding_amount > 0 
                     AND docstatus = 1
-            """, as_dict=True)
+            """, (customer,), as_dict=True)
+
 
             print(f"\n\nSales Invoice Details for {customer}:\n", sales_invoice_details)
             total_outstanding = sum(invoice['outstanding_amount'] for invoice in sales_invoice_details)
