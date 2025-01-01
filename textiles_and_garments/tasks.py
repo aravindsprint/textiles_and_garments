@@ -54,7 +54,7 @@ def every_five_minutes():
         if customer:
             # Fetch customer email
             customer_email = frappe.db.get_value("Customer", customer, "email_id")
-            
+            print("\n\ncustomer_email\n\n",customer_email)
             # Fetch sales invoice details
             # sales_invoice_details = frappe.db.sql(f"""
             #     SELECT 
