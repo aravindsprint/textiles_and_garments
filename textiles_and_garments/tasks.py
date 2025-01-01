@@ -52,23 +52,31 @@ def every_five_minutes():
         print("\n\nOutstanding Amount:\n", outstanding)
 
         if customer:
-            # Fetch customer email
+            # Fetch customer email from Customer doctype
             customer_email = frappe.db.get_value("Customer", customer, "email_id")
-            print("\n\ncustomer_email\n\n",customer_email)
-            # Fetch sales invoice details
-            # sales_invoice_details = frappe.db.sql(f"""
-            #     SELECT 
-            #         posting_date, 
-            #         name, 
-            #         outstanding_amount 
-            #     FROM 
-            #         `tabSales Invoice` 
-            #     WHERE 
-            #         customer = '{customer}' 
-            #         AND outstanding_amount > 0 
-            #         AND docstatus = 1
-            # """, as_dict=True)
+            print("\n\nCustomer Email from Customer Doctype:\n\n", customer_email)
 
+            # # Fetch email from Address master linked to the customer
+            # address_email = frappe.db.get_value(
+            #     "Address",
+            #     {"customer": customer, "is_primary_address": 1},  # Filters for primary address of the customer
+            #     "email_id"
+            # )
+            # print("\n\nCustomer Email from Address Master:\n\n", address_email)
+
+            # # Fetch email from Contact master linked to the customer
+            # contact_email = frappe.db.get_value(
+            #     "Contact",
+            #     {"link_doctype": "Customer", "link_name": customer},  # Filters for contact linked to the customer
+            #     "email_id"
+            # )
+            # print("\n\nCustomer Email from Contact Master:\n\n", contact_email)
+
+            # # Use a fallback if no email is found
+            # final_email = customer_email or address_email or contact_email
+            # print("\n\nFinal Email Selected:\n\n", final_email)
+
+            
             sales_invoice_details = frappe.db.sql("""
                 SELECT 
                     posting_date, 
@@ -86,6 +94,13 @@ def every_five_minutes():
             print(f"\n\nSales Invoice Details for {customer}:\n", sales_invoice_details)
             total_outstanding = sum(invoice['outstanding_amount'] for invoice in sales_invoice_details)
             print("\n\ntotal_outstanding\n\n",total_outstanding)
+            if customer_email:
+                print(f"Customer Email: {customer_email}")
+            if total_outstanding > 0:
+                print(f"Total Outstanding: {total_outstanding}")
+            if total_outstanding == outstanding:
+                print(f"Total Outstanding matches Outstanding: {total_outstanding} == {outstanding}")
+
 
             if customer_email and total_outstanding > 0 and total_outstanding == outstanding:
                 # Enqueue the email sending task
