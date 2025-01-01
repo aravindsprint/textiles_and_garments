@@ -87,7 +87,7 @@ def every_five_minutes():
             total_outstanding = sum(invoice['outstanding_amount'] for invoice in sales_invoice_details)
             print("\n\ntotal_outstanding\n\n",total_outstanding)
 
-            if customer_email and total_outstanding == outstanding:
+            if customer_email and total_outstanding > 0 and total_outstanding == outstanding:
                 # Enqueue the email sending task
                 frappe.enqueue(
                     send_outstanding_email_to_customers,
