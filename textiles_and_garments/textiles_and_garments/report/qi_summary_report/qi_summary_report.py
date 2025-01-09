@@ -90,6 +90,18 @@ def get_columns(filters):
                 "width": 50
             },
             {
+                "label": _("Total Mtr"),
+                "fieldname": "total_mtr",
+                "fieldtype": "Data",
+                "width": 50
+            },
+            {
+                "label": _("Length Mtr"),
+                "fieldname": "length_mtr",
+                "fieldtype": "Data",
+                "width": 50
+            },
+            {
                 "label": _("Vertical Line"),
                 "fieldname": "vertical_line",
                 "fieldtype": "Data",
@@ -161,6 +173,8 @@ def get_sales_data_from_stock_entry(filters):
             roll_details.crow_feet AS crow_feet1,
             si.patta_problem AS patta_problem,
             roll_details.patta_problem AS patta_problem1,
+            roll_details.total_mtr AS total_mtr,
+            roll_details.length_mtr AS length_mtr,
             si.parent AS qi_report_details,
             qi_report_details_item.batch_no AS batch_no,
             roll_details.roll_weight AS qty,

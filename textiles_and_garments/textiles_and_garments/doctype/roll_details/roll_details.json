@@ -36,6 +36,8 @@
   "patta_problem",
   "vertical_line",
   "rope_mark",
+  "knurling",
+  "mild_snagging",
   "inspected_datetime"
  ],
  "fields": [
@@ -204,12 +206,24 @@
    "fieldname": "inspected_datetime",
    "fieldtype": "Data",
    "label": "Inspected Datetime"
+  },
+  {
+   "fieldname": "knurling",
+   "fieldtype": "Data",
+   "label": "Knurling",
+   "options": "-\nMild\nHeavy"
+  },
+  {
+   "fieldname": "mild_snagging",
+   "fieldtype": "Data",
+   "label": "Mild Snagging",
+   "options": "-\nMild\nHeavy"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-12-13 17:20:17.260886",
+ "modified": "2025-01-03 15:31:03.674914",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Details",
