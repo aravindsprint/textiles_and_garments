@@ -226,7 +226,8 @@ def get_data_from_stock_entry(filters):
 
     # Define filter values to pass as parameters
     filter_values = {
-        "item_code_pattern": 'MAT%',  # Adjust pattern as needed
+        "item_code_pattern": 'JDI%/%',  # Passing the pattern as a parameter
+        # "item_code_pattern": 'MAT%',  # Adjust pattern as needed
         "from_date": filters.get("from_date"),
         "to_date": filters.get("to_date"),
         "status": filters.get("status")
