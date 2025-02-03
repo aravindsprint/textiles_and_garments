@@ -27,6 +27,18 @@ frappe.query_reports["Jobwork Ageing in Dyeing Unit"] = {
 			reqd: 1,
 			default: frappe.datetime.get_today(),
 		},
+		{
+			fieldname: "wo_status",
+			label: __("WO Status"),
+			fieldtype: "Data",
+			width: "280",
+		},
+		{
+			fieldname: "si_status",
+			label: __("SI Status"),
+			fieldtype: "Data",
+			width: "280",
+		},
 
 	]
 };

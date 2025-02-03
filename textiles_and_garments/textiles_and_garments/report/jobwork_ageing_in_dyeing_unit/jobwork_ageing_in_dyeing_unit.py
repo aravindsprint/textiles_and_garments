@@ -162,11 +162,24 @@ def get_columns(filters):
                 "width": 150
             },
             {
-                "label": _("Status"),
-                "fieldname": "status",
+                "label": _("WO Status"),
+                "fieldname": "wo_status",
                 "fieldtype": "Data",
                 "width": 150,
-            }
+            },
+            {
+                "label": _("Sales Invoice"),
+                "fieldname": "sales_invoice",
+                "fieldtype": "Link",
+                "options": "Sales Invoice",
+                "width": 200,
+            },
+            {
+                "label": _("SI Status"),
+                "fieldname": "si_status",
+                "fieldtype": "Data",
+                "width": 150,
+            },
         ]
     )
 
@@ -187,13 +200,19 @@ def get_data_from_stock_entry(filters):
             stock_entry.name AS stock_entry,
             stock_entry.custom_reference_dyeing_work_order AS work_order,
             stock_entry.posting_date AS posting_date,
-            wo.status AS status
+            wo.status AS wo_status,
+            si.name AS sales_invoice,
+            si.status AS si_status
         FROM 
             `tabStock Entry` AS stock_entry
         LEFT JOIN 
             `tabWork Order` AS wo
         ON 
             stock_entry.custom_reference_dyeing_work_order = wo.name
+        LEFT JOIN 
+            `tabSales Invoice` AS si
+        ON 
+            stock_entry.custom_reference_dyeing_work_order = si.custom_work_order    
         WHERE 
             stock_entry.docstatus = 1
             AND stock_entry.name LIKE %(item_code_pattern)s
@@ -217,8 +236,11 @@ def get_data_from_stock_entry(filters):
     if filters.get("to_date"):
         conditions.append("stock_entry.posting_date <= %(to_date)s")
     
-    if filters.get("status"):
-        conditions.append("wo.status = %(status)s")
+    if filters.get("wo_status"):
+        conditions.append("wo.status = %(wo_status)s")
+
+    if filters.get("si_status"):
+        conditions.append("si.status = %(si_status)s")     
     
     # If conditions were added, append them to the query
     if conditions:
@@ -230,7 +252,8 @@ def get_data_from_stock_entry(filters):
         # "item_code_pattern": 'MAT%',  # Adjust pattern as needed
         "from_date": filters.get("from_date"),
         "to_date": filters.get("to_date"),
-        "status": filters.get("status")
+        "wo_status": filters.get("wo_status"),
+        "si_status": filters.get("si_status")
     }
     
     # Execute the query with filters
