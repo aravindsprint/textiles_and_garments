@@ -1,0 +1,75 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-02-05 15:49:36.915011",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_qlz7",
+  "bath_no",
+  "bath_name",
+  "mlr",
+  "gradient",
+  "ph",
+  "holding_time"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_qlz7",
+   "fieldtype": "Section Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "bath_no",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Bath no",
+   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"
+  },
+  {
+   "columns": 2,
+   "fieldname": "mlr",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "MLR"
+  },
+  {
+   "columns": 1,
+   "fieldname": "gradient",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Gradient"
+  },
+  {
+   "columns": 1,
+   "fieldname": "ph",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "pH"
+  },
+  {
+   "fieldname": "bath_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Bath Name"
+  },
+  {
+   "fieldname": "holding_time",
+   "fieldtype": "Data",
+   "label": "Holding Time"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-02-05 16:50:42.343153",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Dye Bath Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
