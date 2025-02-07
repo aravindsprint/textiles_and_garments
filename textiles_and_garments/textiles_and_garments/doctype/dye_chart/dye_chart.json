@@ -12,6 +12,7 @@
   "jobcard",
   "lot_weight",
   "dye_receipe",
+  "dye_bath_item",
   "dye_chart_item",
   "amended_from"
  ],
@@ -66,12 +67,18 @@
    "fieldtype": "Link",
    "label": "Dye Receipe",
    "options": "Dye Receipe"
+  },
+  {
+   "fieldname": "dye_bath_item",
+   "fieldtype": "Table",
+   "label": "Dye Bath Item",
+   "options": "Dye Bath Item"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-10-08 12:11:38.519537",
+ "modified": "2025-02-05 15:51:42.039515",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Dye Chart",
