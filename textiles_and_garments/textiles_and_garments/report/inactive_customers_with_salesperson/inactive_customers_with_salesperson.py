@@ -1,11 +1,9 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-
 import frappe
 from frappe import _
 from frappe.utils import cint
-
 
 def execute(filters=None):
 	if not filters:
@@ -22,42 +20,38 @@ def execute(filters=None):
 
 	data = []
 	for cust in customers:
-		if cint(cust[8]) >= cint(days_since_last_order):
-			cust.insert(7, get_last_sales_amt(cust[0], doctype))
+		if cint(cust[9]) >= cint(days_since_last_order):
+			cust.insert(8, get_last_sales_amt(cust[0], doctype))
 			data.append(cust)
 	return columns, data
 
-
 def get_sales_details(doctype):
-    cond = """sum(so.base_net_total) as 'total_order_considered',
-            max(so.posting_date) as 'last_order_date',
-            DATEDIFF(CURRENT_DATE, max(so.posting_date)) as 'days_since_last_order' """
-    
-    if doctype == "Sales Order":
-        cond = """sum(if(so.status = "Stopped",
-                so.base_net_total * so.per_delivered/100,
-                so.base_net_total)) as 'total_order_considered',
-            max(so.transaction_date) as 'last_order_date',
-            DATEDIFF(CURRENT_DATE, max(so.transaction_date)) as 'days_since_last_order'"""
-    
-    return frappe.db.sql(
-        f"""SELECT
-            cust.name,
-            cust.customer_name,
-            cust.territory,
-            cust.customer_group,
-            st.sales_person,
-            COUNT(DISTINCT(so.name)) AS 'num_of_order',
-            SUM(so.base_net_total) AS 'total_order_value', {cond}
-        FROM `tabCustomer` cust
-        LEFT JOIN `tabSales Team` st ON cust.name = st.parent
-        LEFT JOIN `tab{doctype}` so ON cust.name = so.customer AND so.docstatus = 1
-        GROUP BY cust.name, st.sales_person
-        ORDER BY days_since_last_order DESC""",
-        as_list=1,
-    )
+	cond = """sum(so.base_net_total) as 'total_order_considered',
+			max(so.posting_date) as 'last_order_date',
+			DATEDIFF(CURRENT_DATE, max(so.posting_date)) as 'days_since_last_order' """
+	if doctype == "Sales Order":
+		cond = """sum(if(so.status = 'Stopped',
+				so.base_net_total * so.per_delivered/100,
+				so.base_net_total)) as 'total_order_considered',
+			max(so.transaction_date) as 'last_order_date',
+			DATEDIFF(CURRENT_DATE, max(so.transaction_date)) as 'days_since_last_order'"""
 
-
+	return frappe.db.sql(
+		f"""select
+			cust.name,
+			cust.customer_name,
+			cust.territory,
+			cust.customer_group,
+			st.sales_person,
+			count(distinct(so.name)) as 'num_of_order',
+			sum(base_net_total) as 'total_order_value', {cond}
+		from `tabCustomer` cust
+		left join `tab{doctype}` so on cust.name = so.customer and so.docstatus = 1
+		left join `tabSales Team` st on st.parent = cust.name
+		group by cust.name, st.sales_person
+		order by 'days_since_last_order' desc """,
+		as_list=1,
+	)
 
 def get_last_sales_amt(customer, doctype):
 	cond = "posting_date"
@@ -69,9 +63,7 @@ def get_last_sales_amt(customer, doctype):
 		limit 1""",
 		customer,
 	)
-
 	return res and res[0][0] or 0
-
 
 def get_columns():
 	return [
@@ -79,6 +71,7 @@ def get_columns():
 		_("Customer Name") + ":Data:120",
 		_("Territory") + "::120",
 		_("Customer Group") + "::120",
+		_("Sales Person") + "::150",
 		_("Number of Order") + "::120",
 		_("Total Order Value") + ":Currency:120",
 		_("Total Order Considered") + ":Currency:160",
