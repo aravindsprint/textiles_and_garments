@@ -22,6 +22,12 @@ def get_columns(filters):
             "width": 150,
         },
         {
+            "label": _("Delivery Date"),
+            "fieldname": "delivery_date",
+            "fieldtype": "Date",
+            "width": 150,
+        },
+        {
             "label": _("Sales Order"),
             "fieldname": "name",
             "fieldtype": "Link",
@@ -72,6 +78,12 @@ def get_columns(filters):
             "width": 90,
         },
         {
+            "label": _("Amount"),
+            "fieldname": "amount",
+            "fieldtype": "Float",
+            "width": 90,
+        },
+        {
             "label": _("Item Status"),
             "fieldname": "custom_item_status",
             "fieldtype": "Data",
@@ -114,12 +126,16 @@ def get_sales_order_data(filters):
             soi.width AS width,
             soi.custom_item_status AS custom_item_status,
             soi.qty AS qty,
+            soi.rate AS rate,
+            soi.amount AS original_amount,
             COALESCE(soi.delivered_qty, 0) AS delivered_qty,
             (soi.qty - COALESCE(soi.delivered_qty, 0)) AS pending_qty,
+            ((soi.qty - COALESCE(soi.delivered_qty, 0)) * soi.rate) AS amount,
             soi.stock_uom AS stock_uom,
             so.transaction_date AS posting_date,
             so.customer AS customer,
             so.name AS name,
+            so.delivery_date AS delivery_date,
             so.docstatus AS status
         FROM 
             `tabSales Order Item` AS soi
