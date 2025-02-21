@@ -13,6 +13,11 @@ from datetime import datetime
 
 
 class DyeChart(Document):
+    # @frappe.whitelist()
+    # def create_jv_for_wo(self):
+    #     print("\n\ncreate_jv_for_wo\n\n")
+
+
     @frappe.whitelist()
     def set_values(self):
         # Fetch values from the "Job Card"
@@ -440,6 +445,112 @@ def set_additional_cost(docname):
     
     return total_water_reading_value
 
+@frappe.whitelist()
+def set_operation_cost_in_work_order(docname):
+    # Fetch the Work Order document
+    work_order = frappe.get_doc('Work Order', docname)
+
+    # Ensure the operation is only added if the flag is enabled
+    if work_order.custom_include_loading_greige == 1:
+
+        local_rate = frappe.get_value("Operation Rate", {"name": "Loading Greige"}, "rate")
+
+        if local_rate is not None:
+            # Remove existing "Loading Greige" rows from the table
+            work_order.custom_work_order_operations = [
+                row for row in work_order.custom_work_order_operations
+                if row.operation_name != "Loading Greige"
+            ]
+
+            # Append the new operation
+            work_order.append("custom_work_order_operations", {
+                "operation_name": "Loading Greige",
+                "qty": work_order.qty,
+                "rate": local_rate,
+                "amount": work_order.qty * local_rate,
+            })
+
+    # Calculate the total contract operation cost
+    total_cost = sum(row.amount for row in work_order.custom_work_order_operations if row.amount)
+
+    # Store the total in the custom field
+    work_order.custom_total_contract_operation_cost = total_cost
+
+    # Save and commit changes
+    work_order.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    frappe.msgprint(f"Operating Cost Table updated. Total Contract Operation Cost: {total_cost}")
+
+    # frappe.msgprint(f"Total Operating Cost Include Water updated to {total_water_reading_value}.")
+    # return total_water_reading_value    
+    return 
+
+
+@frappe.whitelist()
+def get_total_of_work_order_payments(custom_work_order_payments):
+    
+    # Fetch the Work Order Payment document
+    work_order_payment = frappe.get_doc("Work Order Payments", custom_work_order_payments)
+    # payment_entry_doc = frappe.get_doc("Payment Entry", docname)
+    # payment_entry_doc.paid_amount = work_order_payment.grand_total
+    # payment_entry_doc.save(ignore_permissions=True)
+    # frappe.db.commit()
+    return work_order_payment.grand_total
+
+
+    
+
+
+
+@frappe.whitelist()
+def get_unpaid_work_order(docname, from_date, to_date):
+    # Fetch Work Orders that are not "Paid" and fall within the date range
+    unpaid_work_orders = frappe.get_all(
+        "Work Order",
+        filters={
+            "custom_payment_status": ["!=", "Paid"],
+            "creation": ["between", [from_date, to_date]]
+        },
+        fields=["name", "custom_total_contract_operation_cost"]
+    )
+
+    if not unpaid_work_orders:
+        frappe.msgprint("No unpaid Work Orders found in the given date range.")
+        return
+
+    # Fetch the Work Order Payment document
+    work_order_payment = frappe.get_doc("Work Order Payments", docname)
+
+    # Clear existing rows from work_order_payment_item table
+    work_order_payment.set("work_order_payment_item", [])  
+
+    total_amount = 0  # Initialize total amount
+
+    for wo in unpaid_work_orders:
+        amount = wo.custom_total_contract_operation_cost or 0
+        total_amount += amount
+
+        # Append new rows to the work_order_payment_item table
+        work_order_payment.append("work_order_payment_item", {
+            "work_order": wo.name,
+            "amount": amount
+        })
+
+    # Store the total in the grand_total field
+    work_order_payment.grand_total = total_amount
+
+    work_order_payment.net_total = total_amount - total_amount*(work_order_payment.deduct_percentage/100)
+
+    print("\n\n\nwork_order_payment.net_total\n\n\n",work_order_payment.net_total)
+
+    # Save and commit changes
+    work_order_payment.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    frappe.msgprint(f"Replaced existing Work Orders and added {len(unpaid_work_orders)} new Work Orders to Work Order Payment {docname}. Grand Total: {total_amount}")
+
+
 
 
 @frappe.whitelist()
@@ -470,8 +581,188 @@ def update_batch_sbb(custom_duplicate_serial_and_batch_bundle):
     #             return duplicate_item.batch_no
 
 
+@frappe.whitelist()
+def set_paid_status_to_work_orders(docname,custom_work_order_payments):
+    print("\n\n\nset_paid_status_to_work_orders\n\n\n")
+
+    # Fetch all work order names from "Work Order Payment Item" child table
+    paid_work_orders = frappe.get_all(
+        "Work Order Payment Item",
+        filters={"parent": custom_work_order_payments},  # Filter by the given Work Order Payment document
+        fields=["work_order"]
+    )
+
+    # Extract work order names into a list
+    work_order_names = [wo["work_order"] for wo in paid_work_orders]
+
+    print("\n\n\nwork_order_names\n\n\n",work_order_names)
+
+    if work_order_names:
+        # Update custom_payment_status to "Paid" for all fetched Work Orders
+        frappe.db.set_value(
+            "Work Order",
+            {"name": ["in", work_order_names]},
+            "custom_payment_status",
+            "Paid"
+        )
+
+        # Commit the changes to the database
+        frappe.db.commit()
+        print(f"Updated {len(work_order_names)} Work Orders to 'Paid' status.")
+    else:
+        print("No Work Orders found in Work Order Payment Item.")
+
+    return work_order_names  # Return updated work order names for reference
+
+
+
+
 def every_five_minutes():
     print("\n\n\nevery_1_minutes\n\n\n")
+
+
+
+@frappe.whitelist()
+def create_jv_for_wo(docname):
+    print("\n\ncreate_jv_for_wo\n\n")
+    work_order_payment = frappe.get_doc("Work Order Payments", docname)
+    print("\n\nwork_order_payment\n\n",work_order_payment.net_total)
+    print("\n\nwork_order_payment\n\n",work_order_payment.grand_total)
+    work_order_payment_bonus = work_order_payment.grand_total - work_order_payment.net_total
+    print("\n\nwork_order_payment_bonus\n\n",work_order_payment_bonus)
+    doc=frappe.new_doc("Journal Entry")
+    doc.workflow_state="Draft"
+    doc.docstatus=0
+    doc.voucher_type="Journal Entry"
+    doc.ineligibility_reason="As per rules 42 & 43 of CGST Rules"
+    doc.naming_series = "JV/24/.#"
+    doc.company="Pranera Services and Solutions Pvt. Ltd.,"
+    doc.posting_date="2025-02-10"
+    doc.apply_tds=0
+    doc.write_off_based_on="Accounts Receivable"
+    doc.write_off_amount=0.0
+    doc.letter_head="CUSTOM__PSS JV_LOGO"
+    doc.is_opening="No"
+    doc.doctype="Journal Entry"
+    doc.append("accounts", {
+        "docstatus": 0,
+        "idx": 1,
+        "account": "Payroll Payable - PSS",
+        "account_type": "",
+        "party_type": "",
+        "party": "",
+        "cost_center": "Main - PSS",
+        "account_currency": "INR",
+        "exchange_rate": 1.0,
+        "debit_in_account_currency": 0.0,
+        "debit": 0.0,
+        "credit_in_account_currency": 100.0,
+        "credit": 100.0,
+        "is_advance": "No",
+        "against_account": "Utility Expenses - PSS",
+        "parentfield": "accounts",
+        "parenttype": "Journal Entry",
+        "doctype": "Journal Entry Account"
+    })
+
+    doc.append("accounts", {
+        "docstatus": 0,
+        "idx": 2,
+        "account": "Utility Expenses - PSS",
+        "account_type": "",
+        "party_type": "",
+        "party": "",
+        "cost_center": "Main - PSS",
+        "account_currency": "INR",
+        "exchange_rate": 1.0,
+        "debit_in_account_currency": 100.0,
+        "debit": 100.0,
+        "credit_in_account_currency": 0.0,
+        "credit": 0.0,
+        "is_advance": "No",
+        "against_account": "Payroll Payable - PSS",
+        "parentfield": "accounts",
+        "parenttype": "Journal Entry",
+        "doctype": "Journal Entry Account"
+    })
+    doc.save(ignore_permissions=True)
+    frappe.msgprint("JV Created")
+
+
+
+
+
+# {
+#     "data": {
+#         "docstatus": 0,
+#         "idx": 0,
+#         "workflow_state": "Draft",
+#         "is_system_generated": 0,
+#         "title": "Payroll Payable Account - PSS",
+#         "voucher_type": "Journal Entry",
+#         "ineligibility_reason": "As per rules 42 & 43 of CGST Rules",
+#         "naming_series": "JV/24/.#",
+#         "company": "Pranera Services and Solutions Pvt. Ltd.,",
+#         "company_gstin": "",
+#         "posting_date": "2025-02-10",
+#         "apply_tds": 0,
+#         "total_debit": 100.0,
+#         "total_credit": 100.0,
+#         "difference": 0.0,
+#         "multi_currency": 0,
+#         "total_amount": 0.0,
+#         "total_amount_in_words": "INR Zero only.",
+#         "acc_payye": "Yes",
+#         "write_off_based_on": "Accounts Receivable",
+#         "write_off_amount": 0.0,
+#         "letter_head": "CUSTOM__PSS JV_LOGO",
+#         "is_opening": "No",
+#         "doctype": "Journal Entry",
+#         "accounts": [
+#             {
+#                 "docstatus": 0,
+#                 "idx": 1,
+#                 "account": "Payroll Payable Account - PSS",
+#                 "account_type": "",
+#                 "party_type": "",
+#                 "party": "",
+#                 "cost_center": "HO - PSS",
+#                 "account_currency": "INR",
+#                 "exchange_rate": 1.0,
+#                 "debit_in_account_currency": 0.0,
+#                 "debit": 0.0,
+#                 "credit_in_account_currency": 100.0,
+#                 "credit": 100.0,
+#                 "is_advance": "No",
+#                 "against_account": "Loading Unloading Charges - PSS",
+#                 "parentfield": "accounts",
+#                 "parenttype": "Journal Entry",
+#                 "doctype": "Journal Entry Account"
+#             },
+#             {
+#                 "docstatus": 0,
+#                 "idx": 2,
+#                 "account": "Loading Unloading Charges - PSS",
+#                 "account_type": "",
+#                 "party_type": "",
+#                 "party": "",
+#                 "cost_center": "HO - PSS",
+#                 "account_currency": "INR",
+#                 "exchange_rate": 1.0,
+#                 "debit_in_account_currency": 100.0,
+#                 "debit": 100.0,
+#                 "credit_in_account_currency": 0.0,
+#                 "credit": 0.0,
+#                 "is_advance": "No",
+#                 "against_account": "Payroll Payable Account - PSS",
+#                 "parentfield": "accounts",
+#                 "parenttype": "Journal Entry",
+#                 "doctype": "Journal Entry Account"
+#             }
+#         ]
+#     }
+# }
+
 
 
 

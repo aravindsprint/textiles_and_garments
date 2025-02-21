@@ -32,6 +32,8 @@ doctype_js = {
     "Stock Entry": "public/js/stock_entry.js",
     "Job Card": "public/js/job_card.js",
     "Work Order": "public/js/work_order.js",
+    "Payment Entry": "public/js/payment_entry.js",
+    "Work Order Payments": "public/js/work_order_payments.js",
     "Serial and Batch Bundle": "public/js/serial_and_batch_bundle.js"
 }
 
