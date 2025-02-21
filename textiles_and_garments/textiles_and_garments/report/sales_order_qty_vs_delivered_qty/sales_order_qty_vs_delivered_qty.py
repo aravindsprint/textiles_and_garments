@@ -102,6 +102,12 @@ def get_columns(filters):
             "width": 100,
         },
         {
+            "label": _("Sales Person"),
+            "fieldname": "sales_person",
+            "fieldtype": "Data",
+            "width": 100,
+        },
+        {
             "label": _("Docstatus"),
             "fieldname": "status",
             "fieldtype": "Data",
@@ -134,6 +140,7 @@ def get_sales_order_data(filters):
             soi.stock_uom AS stock_uom,
             so.transaction_date AS posting_date,
             so.customer AS customer,
+            st.sales_person,
             so.name AS name,
             so.delivery_date AS delivery_date,
             so.docstatus AS status
@@ -143,6 +150,7 @@ def get_sales_order_data(filters):
             `tabSales Order` AS so
         ON 
             so.name = soi.parent
+        LEFT JOIN `tabSales Team` st on st.parent = so.customer    
         WHERE 
             so.docstatus = 1 AND
             (so.name LIKE 'PTMTO%%' OR
@@ -159,6 +167,7 @@ def get_sales_order_data(filters):
     #         soi.stock_uom AS stock_uom,
     #         so.transaction_date AS posting_date,
     #         so.customer AS customer,
+    #         st.sales_person,
     #         so.name AS name,
     #         so.status AS status
     #     FROM 
@@ -167,11 +176,9 @@ def get_sales_order_data(filters):
     #         `tabSales Order` AS so
     #     ON 
     #         so.name = soi.parent
+    #     LEFT JOIN `tabSales Team` st on st.parent = so.customer     
     #     WHERE 
-    #         so.docstatus = 1 AND
-    #         (so.name LIKE 'PTMTO%%' OR
-    #          so.name LIKE 'SOJV%%' OR
-    #          so.name LIKE 'SOHO%%')
+    #         so.docstatus = 1 
     # """
 
     conditions = []

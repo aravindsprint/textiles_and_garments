@@ -12,6 +12,7 @@ from frappe_whatsapp.utils import run_server_script_for_doc_event
 from datetime import datetime
 
 
+
 class DyeChart(Document):
     # @frappe.whitelist()
     # def create_jv_for_wo(self):
@@ -470,11 +471,304 @@ def set_operation_cost_in_work_order(docname):
                 "amount": work_order.qty * local_rate,
             })
 
+    if work_order.custom_loading_and_unloading_greige_lot == 1:
+
+        local_rate = frappe.get_value("Operation Rate", {"name": "Loading and Unloading Greige Lot"}, "rate")
+
+        if local_rate is not None:
+            # Remove existing "Loading Greige" rows from the table
+            work_order.custom_work_order_operations = [
+                row for row in work_order.custom_work_order_operations
+                if row.operation_name != "Loading and Unloading Greige Lot"
+            ]
+
+            # Append the new operation
+            work_order.append("custom_work_order_operations", {
+                "operation_name": "Loading and Unloading Greige Lot",
+                "qty": work_order.qty,
+                "rate": local_rate,
+                "amount": work_order.qty * local_rate,
+            })
+
+    # if work_order.custom_loading_and_unloading_finished_lot == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Loading and Unloading Finished Lot"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Loading and Unloading Finished Lot"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Loading and Unloading Finished Lot",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+
+    # if work_order.custom_loading_and_unloading_wet_lot == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Loading and Unloading Finished Lot"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Loading and Unloading Wet Lot"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Loading and Unloading Wet Lot",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+
+    # if work_order.custom_sample_dyeing == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Sample - Dyeing"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Sample - Dyeing"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Sample - Dyeing",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+
+    # if work_order.custom_cotton_dyeing_colour == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Cotton - Dyeing Colour"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Cotton - Dyeing Colour"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Cotton - Dyeing Colour",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+    
+    # if work_order.custom_cotton_washing == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Cotton - Washing"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Cotton - Washing"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Cotton - Washing",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+
+    # if work_order.custom_cotton_white == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Cotton - White"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Cotton - White"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Cotton - White",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+            
+    # if work_order.custom_poly_cotton_double_dyeing == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Poly Cotton - Double Dyeing"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Poly Cotton - Double Dyeing"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Poly Cotton - Double Dyeing",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+            
+    # if work_order.custom_polyester_double_dyeing == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Double Dyeing"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Polyester - Double Dyeing"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Polyester - Double Dyeing",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+
+    # if work_order.custom_polyester_dyeing_colour == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Dyeing  Colour"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Polyester - Dyeing  Colour"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Polyester - Dyeing  Colour",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+            
+    # if work_order.custom_polyester_dyeing_white == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Dyeing White"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Polyester - Dyeing White"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Polyester - Dyeing White",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+
+    # if work_order.custom_polyester_re_dyeing_colour == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Re Dyeing  Colour"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Polyester - Re Dyeing  Colour"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Polyester - Re Dyeing  Colour",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+            
+    # if work_order.custom_polyester_re_dyeing_white == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Re Dyeing  Colour"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Polyester - Re Dyeing White"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Polyester - Re Dyeing White",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+            
+    # if work_order.custom_polyester_re_washing == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Re Washing"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Polyester - Re Washing"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Polyester - Re Washing",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })
+
+    # if work_order.custom_polyester_washing == 1:
+
+    #     local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Washing"}, "rate")
+
+    #     if local_rate is not None:
+    #         # Remove existing "Loading Greige" rows from the table
+    #         work_order.custom_work_order_operations = [
+    #             row for row in work_order.custom_work_order_operations
+    #             if row.operation_name != "Polyester - Washing"
+    #         ]
+
+    #         # Append the new operation
+    #         work_order.append("custom_work_order_operations", {
+    #             "operation_name": "Polyester - Washing",
+    #             "qty": work_order.qty,
+    #             "rate": local_rate,
+    #             "amount": work_order.qty * local_rate,
+    #         })                                                                                                                        
+
     # Calculate the total contract operation cost
     total_cost = sum(row.amount for row in work_order.custom_work_order_operations if row.amount)
 
+    # total_cost_exclude_stitch_and_padding = sum(
+    #     row.amount for row in work_order.custom_work_order_operations 
+    #     if row.amount and row.operation not in ["Stitching (Overlock)", "Tubular Stitching (Overlock)", "Collar Padding"]
+    # )
+
+
     # Store the total in the custom field
     work_order.custom_total_contract_operation_cost = total_cost
+
+    # work_order.custom_total_contract_operation_cost_exclude_stitch_and_pad = total_cost_exclude_stitch_and_padding
 
     # Save and commit changes
     work_order.save(ignore_permissions=True)
@@ -503,53 +797,220 @@ def get_total_of_work_order_payments(custom_work_order_payments):
 
 
 
+# @frappe.whitelist()
+# def get_unpaid_work_order(docname, from_date, to_date, contractor, stitching_contractor, padding_contractor, contractor_category):
+#     print("\n\ncontractor\n\n",contractor)
+#     print("\n\nstitching_contractor\n\n",stitching_contractor)
+#     print("\n\npadding_contractor\n\n",padding_contractor)
+
+#     if contractor:
+#         unpaid_work_orders = frappe.get_all(
+#             "Work Order",
+#             filters={
+#                 "custom_payment_status": ["!=", "Paid"],
+#                 "creation": ["between", [from_date, to_date]],
+#                 "custom_contractor": ["=", contractor]
+#             },
+#             fields=["name", "custom_total_contract_operation_cost", "custom_total_contract_operation_cost_exclude_stitch_and_pad", "custom_stitch_operation_cost", "custom_padding_operation_cost"]
+#         )
+
+#         if not unpaid_work_orders:
+#             frappe.msgprint("No unpaid Work Orders found in the given date range.")
+#             return
+
+#         # Fetch the Work Order Payment document
+#         work_order_payment = frappe.get_doc("Work Order Payments", docname)
+
+#         # Clear existing rows from work_order_payment_item table
+#         work_order_payment.set("work_order_payment_item", [])  
+
+#         total_amount = 0  # Initialize total amount
+
+
+#         for wo in unpaid_work_orders:
+#             amount = wo.custom_total_contract_operation_cost_exclude_stitch_and_pad or 0
+#             total_amount += amount
+
+#             # Append new rows to the work_order_payment_item table
+#             work_order_payment.append("work_order_payment_item", {
+#                 "work_order": wo.name,
+#                 "amount": amount
+#             })
+
+#         work_order_payment.contractor = contractor       
+
+#         # Store the total in the grand_total field
+#         work_order_payment.grand_total = total_amount
+
+#         work_order_payment.net_total = total_amount - total_amount*(work_order_payment.deduct_percentage/100)
+
+#         print("\n\n\nwork_order_payment.net_total\n\n\n",work_order_payment.net_total)
+
+#         # Save and commit changes
+#         work_order_payment.save(ignore_permissions=True)
+#         frappe.db.commit()
+
+#         frappe.msgprint(f"Replaced existing Work Orders and added {len(unpaid_work_orders)} new Work Orders to Work Order Payment {docname}. Grand Total: {total_amount}")
+
+# if stitching_contractor:
+#         unpaid_work_orders = frappe.get_all(
+#             "Work Order",
+#             filters={
+#                 "custom_payment_status": ["!=", "Paid"],
+#                 "creation": ["between", [from_date, to_date]],
+#                 "custom_stitching_contractor": ["=", stitching_contractor]
+#             },
+#             fields=["name", "custom_total_contract_operation_cost", "custom_total_contract_operation_cost_exclude_stitch_and_pad", "custom_stitch_operation_cost", "custom_padding_operation_cost"]
+#         )
+
+#         if not unpaid_work_orders:
+#             frappe.msgprint("No unpaid Work Orders found in the given date range.")
+#             return
+
+#         # Fetch the Work Order Payment document
+#         work_order_payment = frappe.get_doc("Work Order Payments", docname)
+
+#         # Clear existing rows from work_order_payment_item table
+#         work_order_payment.set("work_order_payment_item", [])  
+
+#         total_amount = 0  # Initialize total amount
+
+
+#         for wo in unpaid_work_orders:
+#             amount = wo.custom_stitch_operation_cost or 0
+#             total_amount += amount
+
+#             # Append new rows to the work_order_payment_item table
+#             work_order_payment.append("work_order_payment_item", {
+#                 "work_order": wo.name,
+#                 "amount": amount
+#             })
+
+#         work_order_payment.stitching_contractor = stitching_contractor       
+
+#         # Store the total in the grand_total field
+#         work_order_payment.grand_total = total_amount
+
+#         work_order_payment.net_total = total_amount - total_amount*(work_order_payment.deduct_percentage/100)
+
+#         print("\n\n\nwork_order_payment.net_total\n\n\n",work_order_payment.net_total)
+
+#         # Save and commit changes
+#         work_order_payment.save(ignore_permissions=True)
+#         frappe.db.commit()
+
+#         frappe.msgprint(f"Replaced existing Work Orders and added {len(unpaid_work_orders)} new Work Orders to Work Order Payment {docname}. Grand Total: {total_amount}")
+
+# if npadding_contractor:
+#         unpaid_work_orders = frappe.get_all(
+#             "Work Order",
+#             filters={
+#                 "custom_payment_status": ["!=", "Paid"],
+#                 "creation": ["between", [from_date, to_date]],
+#                 "custom_padding_contractor": ["=", padding_contractor]
+#             },
+#             fields=["name", "custom_total_contract_operation_cost", "custom_total_contract_operation_cost_exclude_stitch_and_pad", "custom_stitch_operation_cost", "custom_padding_operation_cost"]
+#         )
+
+#         if not unpaid_work_orders:
+#             frappe.msgprint("No unpaid Work Orders found in the given date range.")
+#             return
+
+#         # Fetch the Work Order Payment document
+#         work_order_payment = frappe.get_doc("Work Order Payments", docname)
+
+#         # Clear existing rows from work_order_payment_item table
+#         work_order_payment.set("work_order_payment_item", [])  
+
+#         total_amount = 0  # Initialize total amount
+
+
+#         for wo in unpaid_work_orders:
+#             amount = wo.custom_padding_operation_cost or 0
+#             total_amount += amount
+
+#             # Append new rows to the work_order_payment_item table
+#             work_order_payment.append("work_order_payment_item", {
+#                 "work_order": wo.name,
+#                 "amount": amount
+#             })
+
+#         work_order_payment.padding_contractor = padding_contractor       
+
+#         # Store the total in the grand_total field
+#         work_order_payment.grand_total = total_amount
+
+#         work_order_payment.net_total = total_amount - total_amount*(work_order_payment.deduct_percentage/100)
+
+#         print("\n\n\nwork_order_payment.net_total\n\n\n",work_order_payment.net_total)
+
+#         # Save and commit changes
+#         work_order_payment.save(ignore_permissions=True)
+#         frappe.db.commit()
+
+#         frappe.msgprint(f"Replaced existing Work Orders and added {len(unpaid_work_orders)} new Work Orders to Work Order Payment {docname}. Grand Total: {total_amount}")
+
+
 @frappe.whitelist()
-def get_unpaid_work_order(docname, from_date, to_date):
-    # Fetch Work Orders that are not "Paid" and fall within the date range
-    unpaid_work_orders = frappe.get_all(
-        "Work Order",
-        filters={
-            "custom_payment_status": ["!=", "Paid"],
-            "creation": ["between", [from_date, to_date]]
-        },
-        fields=["name", "custom_total_contract_operation_cost"]
-    )
+def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitching_contractor=None, padding_contractor=None, contractor_category=None):
+    print("\n\ncontractor\n\n", contractor)
+    print("\n\nstitching_contractor\n\n", stitching_contractor)
+    print("\n\npadding_contractor\n\n", padding_contractor)
 
-    if not unpaid_work_orders:
-        frappe.msgprint("No unpaid Work Orders found in the given date range.")
-        return
+    def process_work_orders(contractor_field, amount_field, contractor_value, contractor_type):
+        if contractor_value:
+            unpaid_work_orders = frappe.get_all(
+                "Work Order",
+                filters={
+                    "custom_payment_status": ["!=", "Paid"],
+                    "creation": ["between", [from_date, to_date]],
+                    contractor_field: ["=", contractor_value]
+                },
+                fields=["name", "custom_total_contract_operation_cost", "custom_total_contract_operation_cost_exclude_stitch_and_pad", "custom_stitch_operation_cost", "custom_padding_operation_cost"]
+            )
 
-    # Fetch the Work Order Payment document
-    work_order_payment = frappe.get_doc("Work Order Payments", docname)
+            if not unpaid_work_orders:
+                frappe.msgprint(f"No unpaid Work Orders found for {contractor_type} in the given date range.")
+                return
 
-    # Clear existing rows from work_order_payment_item table
-    work_order_payment.set("work_order_payment_item", [])  
+            # Fetch the Work Order Payment document
+            work_order_payment = frappe.get_doc("Work Order Payments", docname)
 
-    total_amount = 0  # Initialize total amount
+            # Clear existing rows from work_order_payment_item table
+            work_order_payment.set("work_order_payment_item", [])
 
-    for wo in unpaid_work_orders:
-        amount = wo.custom_total_contract_operation_cost or 0
-        total_amount += amount
+            total_amount = sum(getattr(wo, amount_field, 0) or 0 for wo in unpaid_work_orders)
 
-        # Append new rows to the work_order_payment_item table
-        work_order_payment.append("work_order_payment_item", {
-            "work_order": wo.name,
-            "amount": amount
-        })
+            # Append new rows to the work_order_payment_item table
+            for wo in unpaid_work_orders:
+                amount = getattr(wo, amount_field, 0) or 0
+                work_order_payment.append("work_order_payment_item", {
+                    "work_order": wo.name,
+                    "amount": amount
+                })
 
-    # Store the total in the grand_total field
-    work_order_payment.grand_total = total_amount
+            setattr(work_order_payment, contractor_type, contractor_value)
 
-    work_order_payment.net_total = total_amount - total_amount*(work_order_payment.deduct_percentage/100)
+            # Store the total in the grand_total field
+            work_order_payment.grand_total = total_amount
+            work_order_payment.net_total = total_amount - total_amount * (work_order_payment.deduct_percentage / 100)
 
-    print("\n\n\nwork_order_payment.net_total\n\n\n",work_order_payment.net_total)
+            print("\n\n\nwork_order_payment.net_total\n\n\n", work_order_payment.net_total)
 
-    # Save and commit changes
-    work_order_payment.save(ignore_permissions=True)
-    frappe.db.commit()
+            # Save and commit changes
+            work_order_payment.save(ignore_permissions=True)
+            frappe.db.commit()
 
-    frappe.msgprint(f"Replaced existing Work Orders and added {len(unpaid_work_orders)} new Work Orders to Work Order Payment {docname}. Grand Total: {total_amount}")
+            frappe.msgprint(f"Replaced existing Work Orders and added {len(unpaid_work_orders)} new Work Orders to Work Order Payment {docname}. Grand Total: {total_amount}")
 
+    # Process for general contractor
+    process_work_orders("custom_contractor", "custom_total_contract_operation_cost_exclude_stitch_and_pad", contractor, "contractor")
+
+    # Process for stitching contractor
+    process_work_orders("custom_stitching_contractor", "custom_stitch_operation_cost", stitching_contractor, "stitching_contractor")
+
+    # Process for padding contractor
+    process_work_orders("custom_padding_contractor", "custom_padding_operation_cost", padding_contractor, "padding_contractor")
 
 
 
@@ -630,6 +1091,8 @@ def create_jv_for_wo(docname):
     print("\n\nwork_order_payment\n\n",work_order_payment.grand_total)
     work_order_payment_bonus = work_order_payment.grand_total - work_order_payment.net_total
     print("\n\nwork_order_payment_bonus\n\n",work_order_payment_bonus)
+    contractors = work_order_payment.contractor + ','+ work_order_payment.contractor + ' (Reserved)'
+    print("\n\n\ncontractors\n\n\n",contractors)
     doc=frappe.new_doc("Journal Entry")
     doc.workflow_state="Draft"
     doc.docstatus=0
@@ -637,7 +1100,8 @@ def create_jv_for_wo(docname):
     doc.ineligibility_reason="As per rules 42 & 43 of CGST Rules"
     doc.naming_series = "JV/24/.#"
     doc.company="Pranera Services and Solutions Pvt. Ltd.,"
-    doc.posting_date="2025-02-10"
+    # doc.posting_date="2025-02-10"
+    doc.posting_date = datetime.today().strftime("%Y-%m-%d")  # Assigns current date in "YYYY-MM-DD" format
     doc.apply_tds=0
     doc.write_off_based_on="Accounts Receivable"
     doc.write_off_amount=0.0
@@ -647,19 +1111,19 @@ def create_jv_for_wo(docname):
     doc.append("accounts", {
         "docstatus": 0,
         "idx": 1,
-        "account": "Payroll Payable - PSS",
+        "account": "Loading Unloading Charges - PSS",
         "account_type": "",
         "party_type": "",
         "party": "",
-        "cost_center": "Main - PSS",
+        "cost_center": "Pranera Dyeing - PSS",
         "account_currency": "INR",
         "exchange_rate": 1.0,
         "debit_in_account_currency": 0.0,
         "debit": 0.0,
-        "credit_in_account_currency": 100.0,
-        "credit": 100.0,
+        "credit_in_account_currency": work_order_payment.grand_total,
+        "credit": work_order_payment.grand_total,
         "is_advance": "No",
-        "against_account": "Utility Expenses - PSS",
+        "against_account": contractors,
         "parentfield": "accounts",
         "parenttype": "Journal Entry",
         "doctype": "Journal Entry Account"
@@ -668,19 +1132,40 @@ def create_jv_for_wo(docname):
     doc.append("accounts", {
         "docstatus": 0,
         "idx": 2,
-        "account": "Utility Expenses - PSS",
-        "account_type": "",
-        "party_type": "",
-        "party": "",
-        "cost_center": "Main - PSS",
+        "account": "Creditors - PSS",
+        "account_type": "Payable",
+        "party_type": "Supplier",
+        "party": work_order_payment.contractor + ' (Reserved)',
+        "cost_center": "Pranera Dyeing - PSS",
         "account_currency": "INR",
         "exchange_rate": 1.0,
-        "debit_in_account_currency": 100.0,
-        "debit": 100.0,
+        "debit_in_account_currency": work_order_payment_bonus,
+        "debit": work_order_payment_bonus,
         "credit_in_account_currency": 0.0,
         "credit": 0.0,
         "is_advance": "No",
-        "against_account": "Payroll Payable - PSS",
+        "against_account": "Loading Unloading Charges - PSS",
+        "parentfield": "accounts",
+        "parenttype": "Journal Entry",
+        "doctype": "Journal Entry Account"
+    })
+
+    doc.append("accounts", {
+        "docstatus": 0,
+        "idx": 3,
+        "account": "Creditors - PSS",
+        "account_type": "Payable",
+        "party_type": "Supplier",
+        "party": work_order_payment.contractor,
+        "cost_center": "Pranera Dyeing - PSS",
+        "account_currency": "INR",
+        "exchange_rate": 1.0,
+        "debit_in_account_currency": work_order_payment.net_total,
+        "debit": work_order_payment.net_total,
+        "credit_in_account_currency": 0.0,
+        "credit": 0.0,
+        "is_advance": "No",
+        "against_account": "Loading Unloading Charges - PSS",
         "parentfield": "accounts",
         "parenttype": "Journal Entry",
         "doctype": "Journal Entry Account"

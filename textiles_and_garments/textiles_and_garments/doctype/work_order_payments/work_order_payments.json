@@ -11,7 +11,10 @@
   "naming_series",
   "from_date",
   "to_date",
+  "contractor_category",
   "contractor",
+  "stitching_contractor",
+  "padding_contractor",
   "get_work_order",
   "section_break_aml3",
   "work_order_payment_item",
@@ -90,12 +93,30 @@
    "fieldname": "net_total",
    "fieldtype": "Currency",
    "label": "Net Total"
+  },
+  {
+   "fieldname": "contractor_category",
+   "fieldtype": "Select",
+   "label": "Contractor Category",
+   "options": "Loading And Unloading\nStitching\nPadding"
+  },
+  {
+   "fieldname": "stitching_contractor",
+   "fieldtype": "Link",
+   "label": "Stitching Contractor",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "padding_contractor",
+   "fieldtype": "Link",
+   "label": "Padding Contractor",
+   "options": "Supplier"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-02-21 10:52:08.197052",
+ "modified": "2025-02-21 16:04:37.279801",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Work Order Payments",

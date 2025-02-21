@@ -1,6 +1,4 @@
 frappe.ui.form.on("Work Order Payments", {
-
-
     get_work_order:function(frm){
         console.log("get_work_order button clicked");
         frappe.call({
@@ -8,7 +6,11 @@ frappe.ui.form.on("Work Order Payments", {
                 args: {
                     docname: frm.doc.name,
                     from_date: frm.doc.from_date,
-                    to_date: frm.doc.to_date
+                    to_date: frm.doc.to_date,
+                    contractor: frm.doc.contractor,
+                    stitching_contractor: frm.doc.stitching_contractor,
+                    padding_contractor: frm.doc.padding_contractor,
+                    contractor_category: frm.doc.contractor_category
                 },
                 callback: function(response) {
                     console.log("response",response);
