@@ -446,412 +446,484 @@ def set_additional_cost(docname):
     
     return total_water_reading_value
 
+# @frappe.whitelist()
+# def set_operation_cost_in_work_order(docname):
+#     # Fetch the Work Order document
+#     work_order = frappe.get_doc('Work Order', docname)
+
+#     # Ensure the operation is only added if the flag is enabled
+#     if work_order.custom_include_loading_greige == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Loading Greige"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Loading Greige"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Loading Greige",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_loading_and_unloading_greige_lot == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Loading and Unloading Greige Lot"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Loading and Unloading Greige Lot"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Loading and Unloading Greige Lot",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_loading_and_unloading_finished_lot == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Loading and Unloading Finished Lot"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Loading and Unloading Finished Lot"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Loading and Unloading Finished Lot",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_loading_and_unloading_wet_lot == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Loading and Unloading Finished Lot"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Loading and Unloading Wet Lot"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Loading and Unloading Wet Lot",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_sample_dyeing == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Sample - Dyeing"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Sample - Dyeing"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Sample - Dyeing",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_cotton_dyeing_colour == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Cotton - Dyeing Colour"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Cotton - Dyeing Colour"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Cotton - Dyeing Colour",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+    
+#     if work_order.custom_cotton_washing == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Cotton - Washing"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Cotton - Washing"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Cotton - Washing",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_cotton_white == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Cotton - White"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Cotton - White"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Cotton - White",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+            
+#     if work_order.custom_poly_cotton_double_dyeing == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Poly Cotton - Double Dyeing"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Poly Cotton - Double Dyeing"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Poly Cotton - Double Dyeing",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+            
+#     if work_order.custom_polyester_double_dyeing == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Double Dyeing"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Polyester - Double Dyeing"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Polyester - Double Dyeing",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_polyester_dyeing_colour == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Dyeing  Colour"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Polyester - Dyeing  Colour"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Polyester - Dyeing  Colour",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+            
+#     if work_order.custom_polyester_dyeing_white == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Dyeing White"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Polyester - Dyeing White"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Polyester - Dyeing White",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_polyester_re_dyeing_colour == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Re Dyeing  Colour"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Polyester - Re Dyeing  Colour"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Polyester - Re Dyeing  Colour",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+            
+#     if work_order.custom_polyester_re_dyeing_white == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Re Dyeing  Colour"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Polyester - Re Dyeing White"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Polyester - Re Dyeing White",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+            
+#     if work_order.custom_polyester_re_washing == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Re Washing"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Polyester - Re Washing"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Polyester - Re Washing",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_polyester_washing == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Washing"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Polyester - Washing"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Polyester - Washing",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+
+#     if work_order.custom_stitching_overlock == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Stitching (Overlock)"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Stitching (Overlock)"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Stitching (Overlock)",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+            
+
+#     if work_order.custom_tubular_stitching_overlock == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Tubular Stitching (Overlock)"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Tubular Stitching (Overlock)"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Tubular Stitching (Overlock)",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })
+            
+#     if work_order.custom_collar_padding == 1:
+
+#         local_rate = frappe.get_value("Operation Rate", {"name": "Collar Padding"}, "rate")
+
+#         if local_rate is not None:
+#             # Remove existing "Loading Greige" rows from the table
+#             work_order.custom_work_order_operations = [
+#                 row for row in work_order.custom_work_order_operations
+#                 if row.operation_name != "Collar Padding"
+#             ]
+
+#             # Append the new operation
+#             work_order.append("custom_work_order_operations", {
+#                 "operation_name": "Collar Padding",
+#                 "qty": work_order.qty,
+#                 "rate": local_rate,
+#                 "amount": work_order.qty * local_rate,
+#             })                                                                                                                                                
+
+#     # Calculate the total contract operation cost
+#     total_cost = sum(row.amount for row in work_order.custom_work_order_operations if row.amount)
+
+#     total_cost_exclude_stitch_and_padding = sum(
+#         row.amount for row in work_order.custom_work_order_operations 
+#         if row.amount and row.operation not in ["Stitching (Overlock)", "Tubular Stitching (Overlock)", "Collar Padding"]
+#     )
+
+
+#     stitch_cost = sum(
+#         row.amount for row in work_order.custom_work_order_operations 
+#         if row.amount and row.operation in ["Stitching (Overlock)", "Tubular Stitching (Overlock)"]
+#     )
+
+#     padding_cost = sum(
+#         row.amount for row in work_order.custom_work_order_operations 
+#         if row.amount and row.operation in ["Collar Padding"]
+#     )
+
+
+#     # Store the total in the custom field
+#     work_order.custom_total_contract_operation_cost = total_cost
+
+#     work_order.custom_stitch_operation_cost = stitch_cost
+
+#     work_order.custom_padding_operation_cost = padding_cost
+
+#     work_order.custom_total_contract_operation_cost_exclude_stitch_and_pad = total_cost_exclude_stitch_and_padding
+
+#     # Save and commit changes
+#     work_order.save(ignore_permissions=True)
+#     frappe.db.commit()
+
+#     frappe.msgprint(f"Operating Cost Table updated. Total Contract Operation Cost: {total_cost}")
+   
+#     return
+
 @frappe.whitelist()
 def set_operation_cost_in_work_order(docname):
     # Fetch the Work Order document
     work_order = frappe.get_doc('Work Order', docname)
 
-    # Ensure the operation is only added if the flag is enabled
-    if work_order.custom_include_loading_greige == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Loading Greige"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Loading Greige"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Loading Greige",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_loading_and_unloading_greige_lot == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Loading and Unloading Greige Lot"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Loading and Unloading Greige Lot"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Loading and Unloading Greige Lot",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_loading_and_unloading_finished_lot == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Loading and Unloading Finished Lot"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Loading and Unloading Finished Lot"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Loading and Unloading Finished Lot",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_loading_and_unloading_wet_lot == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Loading and Unloading Finished Lot"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Loading and Unloading Wet Lot"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Loading and Unloading Wet Lot",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_sample_dyeing == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Sample - Dyeing"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Sample - Dyeing"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Sample - Dyeing",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_cotton_dyeing_colour == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Cotton - Dyeing Colour"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Cotton - Dyeing Colour"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Cotton - Dyeing Colour",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-    
-    if work_order.custom_cotton_washing == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Cotton - Washing"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Cotton - Washing"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Cotton - Washing",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_cotton_white == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Cotton - White"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Cotton - White"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Cotton - White",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-            
-    if work_order.custom_poly_cotton_double_dyeing == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Poly Cotton - Double Dyeing"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Poly Cotton - Double Dyeing"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Poly Cotton - Double Dyeing",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-            
-    if work_order.custom_polyester_double_dyeing == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Double Dyeing"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Polyester - Double Dyeing"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Polyester - Double Dyeing",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_polyester_dyeing_colour == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Dyeing  Colour"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Polyester - Dyeing  Colour"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Polyester - Dyeing  Colour",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-            
-    if work_order.custom_polyester_dyeing_white == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Dyeing White"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Polyester - Dyeing White"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Polyester - Dyeing White",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_polyester_re_dyeing_colour == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Re Dyeing  Colour"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Polyester - Re Dyeing  Colour"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Polyester - Re Dyeing  Colour",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-            
-    if work_order.custom_polyester_re_dyeing_white == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Re Dyeing  Colour"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Polyester - Re Dyeing White"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Polyester - Re Dyeing White",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-            
-    if work_order.custom_polyester_re_washing == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Re Washing"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Polyester - Re Washing"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Polyester - Re Washing",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_polyester_washing == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Polyester - Washing"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Polyester - Washing"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Polyester - Washing",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-
-    if work_order.custom_stitching_overlock == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Stitching (Overlock)"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Stitching (Overlock)"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Stitching (Overlock)",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-            
-
-    if work_order.custom_tubular_stitching_overlock == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Tubular Stitching (Overlock)"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Tubular Stitching (Overlock)"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Tubular Stitching (Overlock)",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })
-            
-    if work_order.custom_collar_padding == 1:
-
-        local_rate = frappe.get_value("Operation Rate", {"name": "Collar Padding"}, "rate")
-
-        if local_rate is not None:
-            # Remove existing "Loading Greige" rows from the table
-            work_order.custom_work_order_operations = [
-                row for row in work_order.custom_work_order_operations
-                if row.operation_name != "Collar Padding"
-            ]
-
-            # Append the new operation
-            work_order.append("custom_work_order_operations", {
-                "operation_name": "Collar Padding",
-                "qty": work_order.qty,
-                "rate": local_rate,
-                "amount": work_order.qty * local_rate,
-            })                                                                                                                                                
-
-    # Calculate the total contract operation cost
+    operations = {
+        "custom_include_loading_greige": "Loading Greige",
+        "custom_loading_and_unloading_greige_lot": "Loading and Unloading Greige Lot",
+        "custom_loading_and_unloading_finished_lot": "Loading and Unloading Finished Lot",
+        "custom_loading_and_unloading_wet_lot": "Loading and Unloading Wet Lot",
+        "custom_sample_dyeing": "Sample - Dyeing",
+        "custom_cotton_dyeing_colour": "Cotton - Dyeing Colour",
+        "custom_cotton_washing": "Cotton - Washing",
+        "custom_cotton_white": "Cotton - White",
+        "custom_poly_cotton_double_dyeing": "Poly Cotton - Double Dyeing",
+        "custom_polyester_double_dyeing": "Polyester - Double Dyeing",
+        "custom_polyester_dyeing_colour": "Polyester - Dyeing Colour",
+        "custom_polyester_dyeing_white": "Polyester - Dyeing White",
+        "custom_polyester_re_dyeing_colour": "Polyester - Re Dyeing Colour",
+        "custom_polyester_re_dyeing_white": "Polyester - Re Dyeing White",
+        "custom_polyester_re_washing": "Polyester - Re Washing",
+        "custom_polyester_washing": "Polyester - Washing",
+        "custom_stitching_overlock": "Stitching (Overlock)",
+        "custom_tubular_stitching_overlock": "Tubular Stitching (Overlock)",
+        "custom_collar_padding": "Collar Padding"
+    }
+
+    # Process each operation
+    for field, operation_name in operations.items():
+        if getattr(work_order, field, 0) == 1:
+            local_rate = frappe.get_value("Operation Rate", {"name": operation_name}, "rate")
+            if local_rate is not None:
+                # Remove existing entries of the same operation
+                work_order.custom_work_order_operations = [
+                    row for row in work_order.custom_work_order_operations if row.operation_name != operation_name
+                ]
+                # Append the new operation
+                work_order.append("custom_work_order_operations", {
+                    "operation_name": operation_name,
+                    "qty": work_order.qty,
+                    "rate": local_rate,
+                    "amount": work_order.qty * local_rate,
+                })
+
+    # Calculate total costs
     total_cost = sum(row.amount for row in work_order.custom_work_order_operations if row.amount)
 
     total_cost_exclude_stitch_and_padding = sum(
-        row.amount for row in work_order.custom_work_order_operations 
-        if row.amount and row.operation not in ["Stitching (Overlock)", "Tubular Stitching (Overlock)", "Collar Padding"]
+        row.amount for row in work_order.custom_work_order_operations
+        if row.amount and row.operation_name not in ["Stitching (Overlock)", "Tubular Stitching (Overlock)", "Collar Padding"]
     )
 
-
     stitch_cost = sum(
-        row.amount for row in work_order.custom_work_order_operations 
-        if row.amount and row.operation in ["Stitching (Overlock)", "Tubular Stitching (Overlock)"]
+        row.amount for row in work_order.custom_work_order_operations
+        if row.amount and row.operation_name in ["Stitching (Overlock)", "Tubular Stitching (Overlock)"]
     )
 
     padding_cost = sum(
-        row.amount for row in work_order.custom_work_order_operations 
-        if row.amount and row.operation in ["Collar Padding"]
+        row.amount for row in work_order.custom_work_order_operations
+        if row.amount and row.operation_name == "Collar Padding"
     )
 
+    # Update total cost fields
+    work_order.total_contract_operation_cost = total_cost
+    work_order.total_cost_excluding_stitch_and_padding = total_cost_exclude_stitch_and_padding
+    work_order.stitch_cost = stitch_cost
+    work_order.padding_cost = padding_cost
 
-    # Store the total in the custom field
-    work_order.custom_total_contract_operation_cost = total_cost
+    # Save the document
+    work_order.save()
 
-    work_order.custom_stitch_operation_cost = stitch_cost
-
-    work_order.custom_padding_operation_cost = padding_cost
-
-    work_order.custom_total_contract_operation_cost_exclude_stitch_and_pad = total_cost_exclude_stitch_and_padding
-
-    # Save and commit changes
-    work_order.save(ignore_permissions=True)
-    frappe.db.commit()
-
-    frappe.msgprint(f"Operating Cost Table updated. Total Contract Operation Cost: {total_cost}")
-
-    # frappe.msgprint(f"Total Operating Cost Include Water updated to {total_water_reading_value}.")
-    # return total_water_reading_value    
-    return 
+    return {"message": "Operation costs updated successfully", "total_cost": total_cost}
+ 
 
 
 @frappe.whitelist()
