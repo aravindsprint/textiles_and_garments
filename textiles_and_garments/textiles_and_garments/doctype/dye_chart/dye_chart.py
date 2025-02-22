@@ -878,16 +878,14 @@ def set_operation_cost_in_work_order(docname):
         "custom_collar_padding": "Collar Padding"
     }
 
-    # Process each operation
+    # Clear all rows from the child table before inserting new ones
+    work_order.set("custom_work_order_operations", [])
+
+    # Process each operation and insert rows
     for field, operation_name in operations.items():
         if getattr(work_order, field, 0) == 1:
             local_rate = frappe.get_value("Operation Rate", {"name": operation_name}, "rate")
             if local_rate is not None:
-                # Remove existing entries of the same operation
-                work_order.custom_work_order_operations = [
-                    row for row in work_order.custom_work_order_operations if row.operation_name != operation_name
-                ]
-                # Append the new operation
                 work_order.append("custom_work_order_operations", {
                     "operation_name": operation_name,
                     "qty": work_order.qty,
@@ -913,17 +911,24 @@ def set_operation_cost_in_work_order(docname):
         if row.amount and row.operation_name == "Collar Padding"
     )
 
-    # Update total cost fields
-    work_order.total_contract_operation_cost = total_cost
-    work_order.total_cost_excluding_stitch_and_padding = total_cost_exclude_stitch_and_padding
-    work_order.stitch_cost = stitch_cost
-    work_order.padding_cost = padding_cost
+    # Update total cost fields in the Work Order
+    work_order.custom_total_contract_operation_cost = total_cost
+    work_order.custom_total_contract_operation_cost_exclude_stitch_and_pad = total_cost_exclude_stitch_and_padding
+    work_order.custom_stitch_operation_cost = stitch_cost
+    work_order.custom_padding_operation_cost = padding_cost
 
-    # Save the document
+    # Save the updated Work Order
     work_order.save()
 
-    return {"message": "Operation costs updated successfully", "total_cost": total_cost}
- 
+    return {
+        "message": "Operation costs updated successfully",
+        "total_cost": total_cost,
+        "stitch_cost": stitch_cost,
+        "padding_cost": padding_cost,
+        "total_cost_excluding_stitch_and_padding": total_cost_exclude_stitch_and_padding
+    }
+
+
 
 
 @frappe.whitelist()
