@@ -754,7 +754,46 @@ def set_operation_cost_in_work_order(docname):
                 "qty": work_order.qty,
                 "rate": local_rate,
                 "amount": work_order.qty * local_rate,
-            })                                                                                                                        
+            })
+
+    if work_order.custom_stitching_overlock == 1:
+
+        local_rate = frappe.get_value("Operation Rate", {"name": "Stitching (Overlock)"}, "rate")
+
+        if local_rate is not None:
+            # Remove existing "Loading Greige" rows from the table
+            work_order.custom_work_order_operations = [
+                row for row in work_order.custom_work_order_operations
+                if row.operation_name != "Stitching (Overlock)"
+            ]
+
+            # Append the new operation
+            work_order.append("custom_work_order_operations", {
+                "operation_name": "Stitching (Overlock)",
+                "qty": work_order.qty,
+                "rate": local_rate,
+                "amount": work_order.qty * local_rate,
+            })
+            
+
+    if work_order.custom_tubular_stitching_overlock == 1:
+
+        local_rate = frappe.get_value("Operation Rate", {"name": "Tubular Stitching (Overlock)"}, "rate")
+
+        if local_rate is not None:
+            # Remove existing "Loading Greige" rows from the table
+            work_order.custom_work_order_operations = [
+                row for row in work_order.custom_work_order_operations
+                if row.operation_name != "Tubular Stitching (Overlock)"
+            ]
+
+            # Append the new operation
+            work_order.append("custom_work_order_operations", {
+                "operation_name": "Tubular Stitching (Overlock)",
+                "qty": work_order.qty,
+                "rate": local_rate,
+                "amount": work_order.qty * local_rate,
+            })                                                                                                                                        
 
     # Calculate the total contract operation cost
     total_cost = sum(row.amount for row in work_order.custom_work_order_operations if row.amount)
