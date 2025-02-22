@@ -24,7 +24,7 @@ frappe.ui.form.on("Payment Entry", {
     // after_save: (frm) => {
     //     set_paid_status_to_work_orders(frm);
     // },
-    validate: (frm) => {
+    on_submit: (frm) => {
         set_paid_status_to_work_orders(frm);
     }
 })

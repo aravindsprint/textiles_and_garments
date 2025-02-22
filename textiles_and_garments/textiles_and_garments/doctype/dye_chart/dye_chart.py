@@ -1267,6 +1267,7 @@ def create_jv_for_wo(docname):
     doc.letter_head="CUSTOM__PSS JV_LOGO"
     doc.is_opening="No"
     doc.doctype="Journal Entry"
+    doc.custom_work_order_payments = docname
     doc.append("accounts", {
         "docstatus": 0,
         "idx": 1,
@@ -1278,9 +1279,9 @@ def create_jv_for_wo(docname):
         "account_currency": "INR",
         "exchange_rate": 1.0,
         "debit_in_account_currency": 0.0,
-        "debit": 0.0,
+        "credit": 0.0,
         "credit_in_account_currency": work_order_payment.grand_total,
-        "credit": work_order_payment.grand_total,
+        "debit": work_order_payment.grand_total,
         "is_advance": "No",
         "against_account": contractors,
         "parentfield": "accounts",
@@ -1299,9 +1300,9 @@ def create_jv_for_wo(docname):
         "account_currency": "INR",
         "exchange_rate": 1.0,
         "debit_in_account_currency": work_order_payment_bonus,
-        "debit": work_order_payment_bonus,
+        "credit": work_order_payment_bonus,
         "credit_in_account_currency": 0.0,
-        "credit": 0.0,
+        "debit": 0.0,
         "is_advance": "No",
         "against_account": "Loading Unloading Charges - PSS",
         "parentfield": "accounts",
@@ -1320,9 +1321,9 @@ def create_jv_for_wo(docname):
         "account_currency": "INR",
         "exchange_rate": 1.0,
         "debit_in_account_currency": work_order_payment.net_total,
-        "debit": work_order_payment.net_total,
+        "credit": work_order_payment.net_total,
         "credit_in_account_currency": 0.0,
-        "credit": 0.0,
+        "debit": 0.0,
         "is_advance": "No",
         "against_account": "Loading Unloading Charges - PSS",
         "parentfield": "accounts",
