@@ -1241,8 +1241,18 @@ def create_jv_for_wo(docname):
     print("\n\nwork_order_payment\n\n",work_order_payment.grand_total)
     work_order_payment_bonus = work_order_payment.grand_total - work_order_payment.net_total
     print("\n\nwork_order_payment_bonus\n\n",work_order_payment_bonus)
-    contractors = work_order_payment.contractor + ','+ work_order_payment.contractor + ' (Reserved)'
-    print("\n\n\ncontractors\n\n\n",contractors)
+    if work_order_payment.contractor:
+        contractor = work_order_payment.contractor
+        contractors = work_order_payment.contractor + ','+ work_order_payment.contractor + ' (Reserved)'
+    if work_order_payment.stitching_contractor:
+        contractor = work_order_payment.stitching_contractor
+        contractors = work_order_payment.stitching_contractor + ','+ work_order_payment.stitching_contractor + ' (Reserved)'
+    if work_order_payment.padding_contractor:
+        contractor = work_order_payment.padding_contractor
+        contractors = work_order_payment.padding_contractor + ','+ work_order_payment.padding_contractor + ' (Reserved)'
+        
+    # contractors = work_order_payment.contractor + ','+ work_order_payment.contractor + ' (Reserved)'
+    # print("\n\n\ncontractors\n\n\n",contractors)
     doc=frappe.new_doc("Journal Entry")
     doc.workflow_state="Draft"
     doc.docstatus=0
@@ -1250,7 +1260,6 @@ def create_jv_for_wo(docname):
     doc.ineligibility_reason="As per rules 42 & 43 of CGST Rules"
     doc.naming_series = "JV/24/.#"
     doc.company="Pranera Services and Solutions Pvt. Ltd.,"
-    # doc.posting_date="2025-02-10"
     doc.posting_date = datetime.today().strftime("%Y-%m-%d")  # Assigns current date in "YYYY-MM-DD" format
     doc.apply_tds=0
     doc.write_off_based_on="Accounts Receivable"
@@ -1285,7 +1294,7 @@ def create_jv_for_wo(docname):
         "account": "Creditors - PSS",
         "account_type": "Payable",
         "party_type": "Supplier",
-        "party": work_order_payment.contractor + ' (Reserved)',
+        "party": contractor + ' (Reserved)',
         "cost_center": "Pranera Dyeing - PSS",
         "account_currency": "INR",
         "exchange_rate": 1.0,
@@ -1306,7 +1315,7 @@ def create_jv_for_wo(docname):
         "account": "Creditors - PSS",
         "account_type": "Payable",
         "party_type": "Supplier",
-        "party": work_order_payment.contractor,
+        "party": contractor,
         "cost_center": "Pranera Dyeing - PSS",
         "account_currency": "INR",
         "exchange_rate": 1.0,
