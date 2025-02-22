@@ -817,16 +817,31 @@ def set_operation_cost_in_work_order(docname):
     # Calculate the total contract operation cost
     total_cost = sum(row.amount for row in work_order.custom_work_order_operations if row.amount)
 
-    # total_cost_exclude_stitch_and_padding = sum(
-    #     row.amount for row in work_order.custom_work_order_operations 
-    #     if row.amount and row.operation not in ["Stitching (Overlock)", "Tubular Stitching (Overlock)", "Collar Padding"]
-    # )
+    total_cost_exclude_stitch_and_padding = sum(
+        row.amount for row in work_order.custom_work_order_operations 
+        if row.amount and row.operation not in ["Stitching (Overlock)", "Tubular Stitching (Overlock)", "Collar Padding"]
+    )
+
+
+    stitch_cost = sum(
+        row.amount for row in work_order.custom_work_order_operations 
+        if row.amount and row.operation in ["Stitching (Overlock)", "Tubular Stitching (Overlock)"]
+    )
+
+    padding_cost = sum(
+        row.amount for row in work_order.custom_work_order_operations 
+        if row.amount and row.operation in ["Collar Padding"]
+    )
 
 
     # Store the total in the custom field
     work_order.custom_total_contract_operation_cost = total_cost
 
-    # work_order.custom_total_contract_operation_cost_exclude_stitch_and_pad = total_cost_exclude_stitch_and_padding
+    work_order.custom_stitch_operation_cost = stitch_cost
+
+    work_order.custom_padding_operation_cost = padding_cost
+
+    work_order.custom_total_contract_operation_cost_exclude_stitch_and_pad = total_cost_exclude_stitch_and_padding
 
     # Save and commit changes
     work_order.save(ignore_permissions=True)
