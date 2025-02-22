@@ -793,7 +793,26 @@ def set_operation_cost_in_work_order(docname):
                 "qty": work_order.qty,
                 "rate": local_rate,
                 "amount": work_order.qty * local_rate,
-            })                                                                                                                                        
+            })
+            
+    if work_order.custom_collar_padding == 1:
+
+        local_rate = frappe.get_value("Operation Rate", {"name": "Collar Padding"}, "rate")
+
+        if local_rate is not None:
+            # Remove existing "Loading Greige" rows from the table
+            work_order.custom_work_order_operations = [
+                row for row in work_order.custom_work_order_operations
+                if row.operation_name != "Collar Padding"
+            ]
+
+            # Append the new operation
+            work_order.append("custom_work_order_operations", {
+                "operation_name": "Collar Padding",
+                "qty": work_order.qty,
+                "rate": local_rate,
+                "amount": work_order.qty * local_rate,
+            })                                                                                                                                                
 
     # Calculate the total contract operation cost
     total_cost = sum(row.amount for row in work_order.custom_work_order_operations if row.amount)
