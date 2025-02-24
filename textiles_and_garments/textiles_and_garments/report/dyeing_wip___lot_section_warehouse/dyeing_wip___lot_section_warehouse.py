@@ -28,13 +28,13 @@ def get_columns(filters):
 
     if filters.show_item_name:
         columns.append(
-            {
-                "label": _("Item Name"),
-                "fieldname": "item_name",
-                "fieldtype": "Link",
-                "options": "Item",
-                "width": 200,
-            }
+            # {
+            #     "label": _("Item Name"),
+            #     "fieldname": "item_name",
+            #     "fieldtype": "Link",
+            #     "options": "Item",
+            #     "width": 200,
+            # }
         )
 
     columns.extend(
@@ -75,18 +75,18 @@ def get_columns(filters):
             },
             {
             "label": _("Item Code"),
-            "fieldname": "item_code",
+            "fieldname": "required_item_code",
             "fieldtype": "Link",
             "options": "Item",
             "width": 200,
             },
-            {
-                "label": _("Batch No"),
-                "fieldname": "batch_no",
-                "fieldtype": "Link",
-                "width": 150,
-                "options": "Batch",
-            },
+            # {
+            #     "label": _("Batch No"),
+            #     "fieldname": "batch_no",
+            #     "fieldtype": "Link",
+            #     "width": 150,
+            #     "options": "Batch",
+            # },
             {
                 "label": _("Work Order Qty"),
                 "fieldname": "wo_qty",
@@ -95,7 +95,7 @@ def get_columns(filters):
             },
             {
                 "label": _("Stock Entry Qty"),
-                "fieldname": "ste_qty",
+                "fieldname": "transferred_qty",
                 "fieldtype": "Float",
                 "width": 150
             },
@@ -254,16 +254,13 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
     # print("\n\nstock_entry_detail_data\n\n", stock_entry_detail_data)
     stock_entry_detail_data = frappe.db.sql("""
         SELECT 
-            ste_entry_item.item_code AS item_code,
             ste_entry_item.parent AS stock_entry,
-            ste_entry_item.qty AS ste_qty,
-            ste_entry_item.stock_uom AS stock_uom,
-            ste_entry_item.batch_no AS batch_no,
             ste.posting_date AS posting_date,
             ste.work_order AS work_order,
             wo.production_item AS production_item,
-            wo.qty AS wo_qty,  -- Fetching production item from work order
+            wori.stock_uom AS stock_uom,  -- Fetching production item from work order
             wori.item_code AS required_item_code,    -- Fetching item code from Work Order Required Items
+            wori.transferred_qty AS transferred_qty, 
             wori.consumed_qty AS consumed_qty,        -- Fetching consumed quantity from Work Order Required Items
             (ste_entry_item.qty - IFNULL(wori.consumed_qty, 0)) AS pending_qty -- Calculating pending quantity
         FROM 
@@ -283,7 +280,8 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             AND wori.item_code = ste_entry_item.item_code  -- Match based on item_code
         WHERE 
             ste_entry_item.docstatus = 1
-            AND ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
+            AND (ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
+            OR  ste_entry_item.t_warehouse like 'HTHP%')	
     """, as_dict=1)
 
     print("\n\nstock_entry_detail_data\n\n", stock_entry_detail_data)
