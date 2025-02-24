@@ -260,7 +260,7 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             ste_entry_item.stock_uom AS stock_uom,
             ste_entry_item.batch_no AS batch_no,
             ste.posting_date AS posting_date,
-            ste.custom_work_order AS work_order,
+            ste.work_order AS work_order,
             wo.production_item AS production_item,
             wo.qty AS wo_qty,  -- Fetching production item from work order
             wori.item_code AS required_item_code,    -- Fetching item code from Work Order Required Items
@@ -275,7 +275,7 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
         LEFT JOIN 
             `tabWork Order` AS wo
         ON 
-            ste.custom_work_order = wo.name
+            ste.work_order = wo.name
         LEFT JOIN 
             `tabWork Order Item` AS wori
         ON 
