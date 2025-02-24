@@ -281,7 +281,7 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
         WHERE 
             ste_entry_item.docstatus = 1
             AND (ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
-            OR  ste_entry_item.t_warehouse like 'HTHP%')	
+            OR  ste_entry_item.t_warehouse like 'HTHP%%')	
     """, as_dict=1)
 
     print("\n\nstock_entry_detail_data\n\n", stock_entry_detail_data)
