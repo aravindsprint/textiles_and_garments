@@ -262,7 +262,7 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             wori.item_code AS required_item_code,    -- Fetching item code from Work Order Required Items
             wori.transferred_qty AS transferred_qty, 
             wori.consumed_qty AS consumed_qty,        -- Fetching consumed quantity from Work Order Required Items
-            (ste_entry_item.qty - IFNULL(wori.consumed_qty, 0)) AS pending_qty -- Calculating pending quantity
+            (wori.transferred_qty - IFNULL(wori.consumed_qty, 0)) AS pending_qty -- Calculating pending quantity
         FROM 
             `tabStock Entry Detail` AS ste_entry_item
         INNER JOIN 
