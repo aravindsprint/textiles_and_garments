@@ -7,6 +7,8 @@ import frappe
 from frappe import _
 from frappe.query_builder.functions import Sum
 from frappe.utils import flt, today
+import json
+from datetime import date 
 
 def execute(filters=None):
     columns, data = [], []
@@ -182,7 +184,9 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             AND wori.item_code = ste_entry_item.item_code  -- Match based on item_code
         WHERE 
             ste_entry_item.docstatus = 1
-            AND (ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS')
+            AND (ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
+            OR ste_entry_item.t_warehouse like 'HTHP%%')
+            AND ste_entry_item.batch_no = '24PTSI0172/24-1569-2'
             AND ste.stock_entry_type like 'Material Transfer%%'
     """, as_dict=1)
 
@@ -292,6 +296,16 @@ def combine_stock_and_batchwise_data(stock_entry_data, stock_data):
             **entry,  # Keep all existing fields
             "stock_qty": stock_qty  # Add new column for stock_qty
         })
+
+    # Custom JSON encoder to handle dates
+    def custom_json_encoder(obj):
+        if isinstance(obj, date):
+            return obj.strftime('%Y-%m-%d')  # Convert date to string format
+        raise TypeError(f"Type {type(obj)} not serializable")
+
+    # Print stock_data and final_data using frappe.msgprint
+    frappe.msgprint(f"Stock Data:\n{json.dumps(stock_data, indent=2, default=custom_json_encoder)}")
+    frappe.msgprint(f"Final Data:\n{json.dumps(final_data, indent=2, default=custom_json_encoder)}")
 
     return final_data
 
