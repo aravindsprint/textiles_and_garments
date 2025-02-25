@@ -182,8 +182,7 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             AND wori.item_code = ste_entry_item.item_code  -- Match based on item_code
         WHERE 
             ste_entry_item.docstatus = 1
-            AND (ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
-            OR  ste_entry_item.t_warehouse like 'HTHP%%')
+            AND (ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS')
             AND ste.stock_entry_type like 'Material Transfer%%'
     """, as_dict=1)
 
@@ -276,24 +275,26 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
 
 
 def combine_stock_and_batchwise_data(stock_entry_data, stock_data):
-    # Convert stock_data into a dictionary for quick lookup using batch_no as key
-    stock_data_dict = {(d.batch_no): d.balance_qty for d in stock_data}
+    # Convert stock_data into a dictionary for quick lookup using (batch_no, warehouse) as key
+    stock_data_dict = {(d.batch_no, d.warehouse): d.balance_qty for d in stock_data}
 
     final_data = []
     
     for entry in stock_entry_data:
         batch_no = entry.get("stock_batch_no")  # Get batch_no from stock_entry_data
+        warehouse = entry.get("t_warehouse")  # Get target warehouse from stock_entry_data
         
-        # Get stock_qty from stock_data if batch_no matches, otherwise default to 0
-        stock_qty = stock_data_dict.get(batch_no, 0)
+        # Get stock_qty from stock_data only if batch_no and warehouse match, otherwise default to 0
+        stock_qty = stock_data_dict.get((batch_no, warehouse), 0)
         
-        # Append data with stock_qty added
+        # Append data with stock_qty added only when there's a match
         final_data.append({
             **entry,  # Keep all existing fields
             "stock_qty": stock_qty  # Add new column for stock_qty
         })
 
     return final_data
+
 
 
 
