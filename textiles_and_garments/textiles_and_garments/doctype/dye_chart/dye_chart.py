@@ -851,6 +851,83 @@ def set_additional_cost(docname):
    
 #     return
 
+# @frappe.whitelist()
+# def set_operation_cost_in_work_order(docname):
+#     # Fetch the Work Order document
+#     work_order = frappe.get_doc('Work Order', docname)
+
+#     operations = {
+#         "custom_include_loading_greige": "Loading Greige",
+#         "custom_loading_and_unloading_greige_lot": "Loading and Unloading Greige Lot",
+#         "custom_loading_and_unloading_finished_lot": "Loading and Unloading Finished Lot",
+#         "custom_loading_and_unloading_wet_lot": "Loading and Unloading Wet Lot",
+#         "custom_sample_dyeing": "Sample - Dyeing",
+#         "custom_cotton_dyeing_colour": "Cotton - Dyeing Colour",
+#         "custom_cotton_washing": "Cotton - Washing",
+#         "custom_cotton_white": "Cotton - White",
+#         "custom_poly_cotton_double_dyeing": "Poly Cotton - Double Dyeing",
+#         "custom_polyester_double_dyeing": "Polyester - Double Dyeing",
+#         "custom_polyester_dyeing_colour": "Polyester - Dyeing Colour",
+#         "custom_polyester_dyeing_white": "Polyester - Dyeing White",
+#         "custom_polyester_re_dyeing_colour": "Polyester - Re Dyeing Colour",
+#         "custom_polyester_re_dyeing_white": "Polyester - Re Dyeing White",
+#         "custom_polyester_re_washing": "Polyester - Re Washing",
+#         "custom_polyester_washing": "Polyester - Washing",
+#         "custom_stitching_overlock": "Stitching (Overlock)",
+#         "custom_tubular_stitching_overlock": "Tubular Stitching (Overlock)",
+#         "custom_collar_padding": "Collar Padding"
+#     }
+
+#     # Clear all rows from the child table before inserting new ones
+#     work_order.set("custom_work_order_operations", [])
+
+#     # Process each operation and insert rows
+#     for field, operation_name in operations.items():
+#         if getattr(work_order, field, 0) == 1:
+#             local_rate = frappe.get_value("Operation Rate", {"name": operation_name}, "rate")
+#             if local_rate is not None:
+#                 work_order.append("custom_work_order_operations", {
+#                     "operation_name": operation_name,
+#                     "qty": work_order.qty,
+#                     "rate": local_rate,
+#                     "amount": work_order.qty * local_rate,
+#                 })
+
+#     # Calculate total costs
+#     total_cost = sum(row.amount for row in work_order.custom_work_order_operations if row.amount)
+
+#     total_cost_exclude_stitch_and_padding = sum(
+#         row.amount for row in work_order.custom_work_order_operations
+#         if row.amount and row.operation_name not in ["Stitching (Overlock)", "Tubular Stitching (Overlock)", "Collar Padding"]
+#     )
+
+#     stitch_cost = sum(
+#         row.amount for row in work_order.custom_work_order_operations
+#         if row.amount and row.operation_name in ["Stitching (Overlock)", "Tubular Stitching (Overlock)"]
+#     )
+
+#     padding_cost = sum(
+#         row.amount for row in work_order.custom_work_order_operations
+#         if row.amount and row.operation_name == "Collar Padding"
+#     )
+
+#     # Update total cost fields in the Work Order
+#     work_order.custom_total_contract_operation_cost = total_cost
+#     work_order.custom_total_contract_operation_cost_exclude_stitch_and_pad = total_cost_exclude_stitch_and_padding
+#     work_order.custom_stitch_operation_cost = stitch_cost
+#     work_order.custom_padding_operation_cost = padding_cost
+
+#     # Save the updated Work Order
+#     work_order.save()
+
+#     return {
+#         "message": "Operation costs updated successfully",
+#         "total_cost": total_cost,
+#         "stitch_cost": stitch_cost,
+#         "padding_cost": padding_cost,
+#         "total_cost_excluding_stitch_and_padding": total_cost_exclude_stitch_and_padding
+#     }
+
 @frappe.whitelist()
 def set_operation_cost_in_work_order(docname):
     # Fetch the Work Order document
@@ -886,11 +963,16 @@ def set_operation_cost_in_work_order(docname):
         if getattr(work_order, field, 0) == 1:
             local_rate = frappe.get_value("Operation Rate", {"name": operation_name}, "rate")
             if local_rate is not None:
+                qty = (
+                    work_order.custom_trims_weight
+                    if operation_name == "Collar Padding"
+                    else work_order.custom_fabric_and_trims_weight
+                )
                 work_order.append("custom_work_order_operations", {
                     "operation_name": operation_name,
-                    "qty": work_order.qty,
+                    "qty": qty,
                     "rate": local_rate,
-                    "amount": work_order.qty * local_rate,
+                    "amount": qty * local_rate,
                 })
 
     # Calculate total costs
@@ -927,6 +1009,7 @@ def set_operation_cost_in_work_order(docname):
         "padding_cost": padding_cost,
         "total_cost_excluding_stitch_and_padding": total_cost_exclude_stitch_and_padding
     }
+
 
 
 
