@@ -77,8 +77,15 @@ def get_columns(filters):
             "width": 200,
             },
             {
+                "label": _("Warehouse"),
+                "fieldname": "t_warehouse",
+                "fieldtype": "Link",
+                "width": 150,
+                "options": "Warehouse",
+            },
+            {
                 "label": _("Batch No"),
-                "fieldname": "stock_batch_no",
+                "fieldname": "batch_no",
                 "fieldtype": "Link",
                 "width": 150,
                 "options": "Batch",
@@ -134,14 +141,18 @@ def get_columns(filters):
 
     return columns
 
+
+@frappe.whitelist()
 def get_data(filters):
     data = []
     
     # Get stock entry data with ste_qty
     stock_entry_data = get_stock_entry_detail_data_from_stock_entry(filters)
     print("\n\n\nstock_entry_data\n\n\n", stock_entry_data)
+    # frappe.msgprint(f"stock_entry_data :\n{json.dumps(stock_entry_data, indent=2)}")
 
     stock_data = get_stock_data(filters)
+    frappe.msgprint(f"s Stock Data:\n{json.dumps(stock_data, indent=2)}")
     
     
     # Combine stock entry data with balance_qty
@@ -160,7 +171,8 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             ste.stock_entry_type as stock_entry_type,
             ste.work_order AS work_order,
             ste_entry_item.item_code as stock_item_code,
-            ste_entry_item.batch_no as stock_batch_no,
+            ste_entry_item.t_warehouse as t_warehouse,
+            ste_entry_item.batch_no as batch_no,
             ste_entry_item.stock_uom as stock_uom,
             wo.production_item AS production_item,
             wori.item_code AS required_item_code,    -- Fetching item code from Work Order Required Items
@@ -184,38 +196,59 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             AND wori.item_code = ste_entry_item.item_code  -- Match based on item_code
         WHERE 
             ste_entry_item.docstatus = 1
+            AND ste_entry_item.batch_no = '24PTSI0172/24-1569-2'
             AND (ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
             OR ste_entry_item.t_warehouse like 'HTHP%%')
-            AND ste_entry_item.batch_no = '24PTSI0172/24-1569-2'
             AND ste.stock_entry_type like 'Material Transfer%%'
     """, as_dict=1)
 
     print("\n\nstock_entry_detail_data\n\n", stock_entry_detail_data)
     return stock_entry_detail_data
 
-
+@frappe.whitelist()
 def get_stock_data(filters):
     stock_data = []
     batchwise_data = get_batchwise_data_from_stock_ledger(filters)
     batchwise_data = get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters)
+
+    print("\n\n\nbatchwise_data\n\n\n",batchwise_data);
+
+    # Custom JSON encoder to handle dates
+    # def custom_json_encoder(obj):
+    #     if isinstance(obj, date):
+    #         return obj.strftime('%Y-%m-%d')  # Convert date to string format
+    #     raise TypeError(f"Type {type(obj)} not serializable")
+    
+    # frappe.msgprint(f"s batchwise_data Data:\n{json.dumps(batchwise_data, indent=2, default=custom_json_encoder)}")
 
     stock_data = parse_batchwise_data(batchwise_data)
     print("\n\nstock_data\n\n\n", stock_data)
     return stock_data
 
 
-def parse_batchwise_data(batchwise_data):
-    data = []
-    for key, d in batchwise_data.items():
-        # Skip if balance_qty is 0
-        if d.balance_qty == 0:
-            continue
+# def parse_batchwise_data(batchwise_data):
+#     data = []
+#     for key, d in batchwise_data.items():
+#         # Skip if balance_qty is 0
+#         if d.balance_qty == 0:
+#             continue
         
-        # Filter by warehouse name
-        if "HTHP" in d.warehouse or "Dye/Lot" in d.warehouse:
-            data.append(d)
+#         # Filter by warehouse name
+#         if "HTHP" in d.warehouse or "Dye/Lot" in d.warehouse:
+#             data.append(d)
 
-    return data
+#     return data
+
+def parse_batchwise_data(batchwise_data):
+	data = []
+	for key in batchwise_data:
+		d = batchwise_data[key]
+		if d.balance_qty == 0:
+			continue
+
+		data.append(d)
+
+	return data    
 
 
 
@@ -277,15 +310,16 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
     return batchwise_data    
 
 
-
+@frappe.whitelist()
 def combine_stock_and_batchwise_data(stock_entry_data, stock_data):
     # Convert stock_data into a dictionary for quick lookup using (batch_no, warehouse) as key
     stock_data_dict = {(d.batch_no, d.warehouse): d.balance_qty for d in stock_data}
+    print("\n\n\nstock_data_dict\n\n\n",stock_data_dict)
 
     final_data = []
     
     for entry in stock_entry_data:
-        batch_no = entry.get("stock_batch_no")  # Get batch_no from stock_entry_data
+        batch_no = entry.get("batch_no")  # Get batch_no from stock_entry_data
         warehouse = entry.get("t_warehouse")  # Get target warehouse from stock_entry_data
         
         # Get stock_qty from stock_data only if batch_no and warehouse match, otherwise default to 0
