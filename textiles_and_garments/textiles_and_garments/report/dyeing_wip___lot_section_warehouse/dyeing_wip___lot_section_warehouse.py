@@ -196,7 +196,6 @@ def get_stock_entry_detail_data_from_stock_entry(filters):
             AND wori.item_code = ste_entry_item.item_code  -- Match based on item_code
         WHERE 
             ste_entry_item.docstatus = 1
-            AND ste_entry_item.batch_no = '24PTSI0172/24-1569-2'
             AND (ste_entry_item.t_warehouse = 'DYE/LOT SECTION - PSS'
             OR ste_entry_item.t_warehouse like 'HTHP%%')
             AND ste.stock_entry_type like 'Material Transfer%%'
