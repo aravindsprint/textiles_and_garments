@@ -1196,7 +1196,7 @@ def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitchin
                 "Work Order",
                 filters={
                     "custom_payment_status": ["!=", "Paid"],
-                    "creation": ["between", [from_date, to_date]],
+                    "modified": ["between", [from_date, to_date]],
                     contractor_field: ["=", contractor_value]
                 },
                 fields=["name", "custom_total_contract_operation_cost", "custom_total_contract_operation_cost_exclude_stitch_and_pad", "custom_stitch_operation_cost", "custom_padding_operation_cost"]
