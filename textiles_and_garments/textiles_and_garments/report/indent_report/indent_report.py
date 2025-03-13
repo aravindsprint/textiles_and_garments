@@ -115,7 +115,7 @@ def get_sales_order_data(filters):
             mri.parent,  
             item.commercial_name, 
             item.color, 
-            mri.requested_by, 
+            mr.requested_by, 
             CASE 
                 WHEN mr.requested_by = 'For Stock' THEN 'STOCK'
                 ELSE 'MTO' 
