@@ -117,7 +117,7 @@ def get_sales_order_data(filters):
             item.color, 
             mri.requested_by, 
             CASE 
-                WHEN mri.requested_by = 'For Stock' THEN 'STOCK'
+                WHEN mr.requested_by = 'For Stock' THEN 'STOCK'
                 ELSE 'MTO' 
             END AS customer_group,
             mri.qty, 
