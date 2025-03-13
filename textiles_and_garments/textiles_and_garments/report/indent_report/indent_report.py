@@ -102,7 +102,7 @@ def get_data(filters):
 def get_sales_order_data(filters):
     query = """
         SELECT 
-            mr.posting_date as posting_date,    
+            mr.date as posting_date,    
             CASE 
                 WHEN mri.finished_item_code LIKE 'G%%' THEN 'Knitting'
                 WHEN mri.finished_item_code LIKE 'D%%' THEN 'Dyeing'
