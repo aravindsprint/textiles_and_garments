@@ -106,9 +106,11 @@ def get_sales_order_data(filters):
             CASE 
                 WHEN mri.finished_item_code LIKE 'G%%' THEN 'Knitting'
                 WHEN mri.finished_item_code LIKE 'D%%' THEN 'Dyeing'
-                WHEN mri.finished_item_code LIKE 'S%%' THEN 'Stentering'
-                WHEN mri.finished_item_code LIKE 'P%%' THEN 'Peach finish'
+                WHEN mri.finished_item_code LIKE 'S%%' THEN 'Stenter'
+                WHEN mri.finished_item_code LIKE 'PF%%' THEN 'Peach finish'
                 WHEN mri.finished_item_code LIKE 'H%%' THEN 'Heat setting'
+                WHEN mri.finished_item_code LIKE 'WH%%' THEN 'OW Heat setting'
+                WHEN mri.finished_item_code LIKE 'PK%%' THEN 'Printing'
                 ELSE 'Unknown' 
             END AS process,
             mri.for_project, 
@@ -127,6 +129,7 @@ def get_sales_order_data(filters):
         FROM `tabMaterial Request Item` AS mri
         INNER JOIN `tabMaterial Request` AS mr ON mri.parent = mr.name
         INNER JOIN `tabItem` AS item ON mri.finished_item_code = item.item_code
+        WHERE mr.docstatus = 1
     """
 
     conditions = []

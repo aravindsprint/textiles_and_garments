@@ -36,7 +36,7 @@ frappe.query_reports["Sales Order Qty Vs Delivered Qty"] = {
 			fieldname: "custom_item_status",
 			label: __("Item Status"),
 			fieldtype: "Select",
-			options: ["Completed", "Cancelled", "Partially Delivered and Need to Deliver"],
+			options: ["", "Completed", "Cancelled", "Partially Delivered and Need to Deliver"],
 			width: "80",
 			
 		},
