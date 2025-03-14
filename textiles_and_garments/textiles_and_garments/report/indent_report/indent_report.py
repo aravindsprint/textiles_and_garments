@@ -101,36 +101,70 @@ def get_data(filters):
 
 def get_sales_order_data(filters):
     query = """
-        SELECT 
-            mr.date as posting_date,    
-            CASE 
-                WHEN mri.finished_item_code LIKE 'G%%' THEN 'Knitting'
-                WHEN mri.finished_item_code LIKE 'D%%' THEN 'Dyeing'
-                WHEN mri.finished_item_code LIKE 'S%%' THEN 'Stenter'
-                WHEN mri.finished_item_code LIKE 'PF%%' THEN 'Peach finish'
-                WHEN mri.finished_item_code LIKE 'H%%' THEN 'Heat setting'
-                WHEN mri.finished_item_code LIKE 'WH%%' THEN 'OW Heat setting'
-                WHEN mri.finished_item_code LIKE 'PK%%' THEN 'Printing'
-                ELSE 'Unknown' 
-            END AS process,
-            mri.for_project, 
-            mri.parent,  
-            item.commercial_name, 
-            item.color, 
-            mr.requested_by, 
-            CASE 
-                WHEN mr.requested_by = 'For Stock' THEN 'STOCK'
-                ELSE 'MTO' 
-            END AS customer_group,
-            mri.qty, 
-            mri.uom, 
-            mri.finished_item_code,   
-            item.item_name
-        FROM `tabMaterial Request Item` AS mri
-        INNER JOIN `tabMaterial Request` AS mr ON mri.parent = mr.name
-        INNER JOIN `tabItem` AS item ON mri.finished_item_code = item.item_code
-        WHERE mr.docstatus = 1
-    """
+	    SELECT 
+	        mr.date as posting_date,    
+	        CASE 
+	            WHEN mri.finished_item_code LIKE 'G%%' THEN 'Knitting'
+	            WHEN mri.finished_item_code LIKE 'D%%' THEN 'Dyeing'
+	            WHEN mri.finished_item_code LIKE 'S%%' THEN 'Stenter'
+	            WHEN mri.finished_item_code LIKE 'PF%%' THEN 'Peach finish'
+	            WHEN mri.finished_item_code LIKE 'H%%' THEN 'Heat setting'
+	            WHEN mri.finished_item_code LIKE 'WH%%' THEN 'OW Heat setting'
+	            WHEN mri.finished_item_code LIKE 'PK%%' THEN 'Printing'
+	            ELSE 'Unknown' 
+	        END AS process,
+	        mri.for_project, 
+	        mri.parent,  
+	        item.commercial_name, 
+	        item.color, 
+	        mr.requested_by, 
+	        CASE 
+	            WHEN mr.requested_by = 'For Stock' THEN 'STOCK'
+	            ELSE 'MTO' 
+	        END AS customer_group,
+	        mri.qty, 
+	        mri.stock_uom, 
+	        mri.finished_item_code,
+	        item.item_name
+	    FROM `tabMaterial Request` AS mr
+	    JOIN `tabMaterial Request Item` AS mri ON mri.parent = mr.name
+	    JOIN `tabItem` AS item ON item.name = mri.finished_item_code
+	    WHERE mr.date >= %(from_date)s 
+	    AND mr.date <= %(to_date)s
+	"""  
+
+
+    # query = """
+    #     SELECT 
+    #         mr.transaction_date as posting_date,    
+    #         CASE 
+    #             WHEN mri.finished_item_code LIKE 'G%%' THEN 'Knitting'
+    #             WHEN mri.finished_item_code LIKE 'D%%' THEN 'Dyeing'
+    #             WHEN mri.finished_item_code LIKE 'S%%' THEN 'Stenter'
+    #             WHEN mri.finished_item_code LIKE 'PF%%' THEN 'Peach finish'
+    #             WHEN mri.finished_item_code LIKE 'H%%' THEN 'Heat setting'
+    #             WHEN mri.finished_item_code LIKE 'WH%%' THEN 'OW Heat setting'
+    #             WHEN mri.finished_item_code LIKE 'PK%%' THEN 'Printing'
+    #             ELSE 'Unknown' 
+    #         END AS process,
+    #         mri.for_project, 
+    #         mri.parent,  
+    #         item.commercial_name, 
+    #         item.color, 
+    #         mr.requested_by, 
+    #         CASE 
+    #             WHEN mr.requested_by = 'For Stock' THEN 'STOCK'
+    #             ELSE 'MTO' 
+    #         END AS customer_group,
+    #         mri.qty, 
+    #         mri.uom, 
+    #         mri.finished_item_code,   
+    #         item.item_name
+    #     FROM `tabMaterial Request Item` AS mri
+    #     INNER JOIN `tabMaterial Request` AS mr ON mri.parent = mr.name
+    #     INNER JOIN `tabItem` AS item ON mri.finished_item_code = item.item_code
+    #     WHERE mr.docstatus = 1
+    # """
 
     conditions = []
 
@@ -156,13 +190,13 @@ def get_sales_order_data(filters):
         query += " WHERE " + " AND ".join(conditions)
 
     filter_values = {
-        "finished_item_code": filters.get("finished_item_code"),
-        "commercial_name": filters.get("commercial_name"),
-        "color": filters.get("color"),
-        "from_date": filters.get("from_date"),
-        "to_date": filters.get("to_date"),
-        "status": filters.get("status"),
-    }
+	    "finished_item_code": filters.get("finished_item_code") or "",
+	    "commercial_name": filters.get("commercial_name") or "",
+	    "color": filters.get("color") or "",
+	    "from_date": filters.get("from_date"),
+	    "to_date": filters.get("to_date"),
+	    "status": filters.get("status") or "",
+	}
     
     return frappe.db.sql(query, filter_values, as_dict=1)
 
