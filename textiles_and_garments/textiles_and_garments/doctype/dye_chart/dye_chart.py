@@ -939,6 +939,8 @@ def set_operation_cost_in_work_order(docname):
         "custom_loading_and_unloading_finished_lot": "Loading and Unloading Finished Lot",
         "custom_loading_and_unloading_wet_lot": "Loading and Unloading Wet Lot",
         "custom_sample_dyeing": "Sample - Dyeing",
+        "custom_sample_double_dyeing": "Sample Double Dyeing",
+        "custom_sample_washing": "Sample Washing",
         "custom_cotton_dyeing_colour": "Cotton - Dyeing Colour",
         "custom_cotton_washing": "Cotton - Washing",
         "custom_cotton_white": "Cotton - White",
