@@ -108,8 +108,8 @@ def get_columns(filters):
             "width": 100,
         },
         {
-            "label": _("Docstatus"),
-            "fieldname": "status",
+            "label": _("Delivery status"),
+            "fieldname": "delivery_status",
             "fieldtype": "Data",
             "width": 70,
         }
@@ -143,7 +143,7 @@ def get_sales_order_data(filters):
             st.sales_person,
             so.name AS name,
             so.delivery_date AS delivery_date,
-            so.docstatus AS status
+            so.delivery_status AS delivery_status
         FROM 
             `tabSales Order Item` AS soi
         LEFT JOIN 
@@ -202,8 +202,8 @@ def get_sales_order_data(filters):
     if filters.get("to_date"):
         conditions.append("so.transaction_date <= %(to_date)s")
     
-    if filters.get("status"):
-        conditions.append("so.status = %(status)s")
+    if filters.get("delivery_status"):
+        conditions.append("so.delivery_status = %(delivery_status)s")
     
     if conditions:
         query += " AND " + " AND ".join(conditions)
@@ -214,7 +214,7 @@ def get_sales_order_data(filters):
         "custom_item_status": filters.get("custom_item_status"),
         "from_date": filters.get("from_date"),
         "to_date": filters.get("to_date"),
-        "status": filters.get("status"),
+        "delivery_status": filters.get("delivery_status"),
     }
     
     return frappe.db.sql(query, filter_values, as_dict=1)
