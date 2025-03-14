@@ -55,7 +55,7 @@ def get_columns(filters):
         {
             "label": _("Customer"),
             "fieldname": "requested_by",
-            "fieldtype": "Date",
+            "fieldtype": "Data",
             "width": 150,
         },
         {
@@ -121,7 +121,7 @@ def get_sales_order_data(filters):
                 ELSE 'MTO' 
             END AS customer_group,
             mri.qty, 
-            mri.uom, 
+            mri.stock_uom, 
             mri.finished_item_code,   
             item.item_name
         FROM `tabMaterial Request Item` AS mri
