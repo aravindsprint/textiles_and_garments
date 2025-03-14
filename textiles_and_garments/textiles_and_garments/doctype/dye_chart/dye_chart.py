@@ -956,9 +956,9 @@ def set_operation_cost_in_stock_entry(docname):
                 # )
                 stock_entry.append("custom_loading_and_unloading_operations", {
                     "operation_name": operation_name,
-                    "qty": qty,
+                    "qty": stock_entry.custom_total_weight,
                     "rate": local_rate,
-                    "amount": qty * local_rate,
+                    "amount": stock_entry.custom_total_weight * local_rate,
                 })
 
     # Calculate total costs
@@ -977,6 +977,53 @@ def set_operation_cost_in_stock_entry(docname):
         "message": "Operation costs updated successfully",
         "total_cost": total_cost
     }
+
+@frappe.whitelist()
+def set_operation_cost_in_purchase_receipt(docname):
+    print("set_operation_cost_in_purchase_receipt")
+    purchase_receipt = frappe.get_doc('Purchase Receipt', docname)
+    operations = {
+        "custom_loading_and_unloading_greige_lot": "Loading and Unloading Greige Lot",
+        "custom_loading_and_unloading_finished_lot": "Loading and Unloading Finished Lot",
+        "custom_loading_and_unloading_wet_lot": "Loading and Unloading Wet Lot"
+    }
+
+    # Clear all rows from the child table before inserting new ones
+    purchase_receipt.set("custom_loading_and_unloading_operations", [])
+
+    # Process each operation and insert rows
+    for field, operation_name in operations.items():
+        if getattr(purchase_receipt, field, 0) == 1:
+            local_rate = frappe.get_value("Operation Rate", {"name": operation_name}, "rate")
+            if local_rate is not None:
+                # qty = (
+                #     stock_entry.custom_trims_weight
+                #     if operation_name == "Collar Padding"
+                #     else stock_entry.custom_fabric_and_trims_weight
+                # )
+                purchase_receipt.append("custom_loading_and_unloading_operations", {
+                    "operation_name": operation_name,
+                    "qty": purchase_receipt.custom_total_weight,
+                    "rate": local_rate,
+                    "amount": purchase_receipt.custom_total_weight * local_rate,
+                })
+
+    # Calculate total costs
+    total_cost = sum(row.amount for row in purchase_receipt.custom_loading_and_unloading_operations if row.amount)
+
+    
+
+    # Update total cost fields in the Stock Entry
+    purchase_receipt.custom_total_contract_operation_cost = total_cost
+    
+
+    # Save the updated Work Order
+    purchase_receipt.save()
+
+    return {
+        "message": "Operation costs updated successfully",
+        "total_cost": total_cost
+    }    
 
 
 
@@ -1300,6 +1347,120 @@ def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitchin
     # Process for padding contractor
     process_work_orders("custom_padding_contractor", "custom_padding_operation_cost", padding_contractor, "padding_contractor")
 
+
+
+@frappe.whitelist()
+def get_unpaid_stock_entry(docname, from_date, to_date, contractor=None):
+    print("\n\ncontractor\n\n", contractor)
+    
+
+    def process_stock_entry(contractor_field, amount_field, contractor_value, contractor_type):
+        if contractor_value:
+            unpaid_stock_entry = frappe.get_all(
+                "Stock Entry",
+                filters={
+                    "custom_payment_status": ["!=", "Paid"],
+                    "modified": ["between", [from_date, to_date]],
+                    contractor_field: ["=", contractor_value]
+                },
+                fields=["name", "custom_total_contract_operation_cost"]
+            )
+
+            if not unpaid_stock_entry:
+                frappe.msgprint(f"No unpaid Stock Entry found for {contractor_type} in the given date range.")
+                return
+
+            # Fetch the Work Order Payment document
+            loading_and_unloading_payment = frappe.get_doc("Loading and Unloading Payments", docname)
+
+            # Clear existing rows from work_order_payment_item table
+            loading_and_unloading_payment.set("stock_entry_payment_item", [])
+
+            total_amount = sum(getattr(se, amount_field, 0) or 0 for se in unpaid_stock_entry)
+
+            # Append new rows to the work_order_payment_item table
+            for se in unpaid_stock_entry:
+                amount = getattr(se, amount_field, 0) or 0
+                loading_and_unloading_payment.append("stock_entry_payment_item", {
+                    "stock_entry": se.name,
+                    "amount": amount
+                })
+
+            setattr(loading_and_unloading_payment, contractor_type, contractor_value)
+
+            # Store the total in the grand_total field
+            loading_and_unloading_payment.grand_total_for_stock_entry = total_amount
+            loading_and_unloading_payment.net_total_for_stock_entry = total_amount - total_amount * (loading_and_unloading_payment.deduct_percentage / 100)
+
+            print("\n\n\nstock_entry_payment.net_total\n\n\n", loading_and_unloading_payment.net_total_for_stock_entry)
+
+            # Save and commit changes
+            loading_and_unloading_payment.save(ignore_permissions=True)
+            frappe.db.commit()
+
+            frappe.msgprint(f"Replaced existing Stock Entry and added {len(unpaid_stock_entry)} new Loading and Unloading to Loading and Unloading Payment {docname}. Grand Total: {total_amount}")
+
+    # Process for general contractor
+    process_stock_entry("custom_contractor", "custom_total_contract_operation_cost", contractor, "contractor")
+
+
+
+@frappe.whitelist()
+def get_unpaid_purchase_receipt(docname, from_date, to_date, contractor=None):
+    print("\n\ncontractor\n\n", contractor)
+    
+
+    def process_purchase_receipt(contractor_field, amount_field, contractor_value, contractor_type):
+        if contractor_value:
+            unpaid_purchase_receipt = frappe.get_all(
+                "Purchase Receipt",
+                filters={
+                    "custom_payment_status": ["!=", "Paid"],
+                    "modified": ["between", [from_date, to_date]],
+                    contractor_field: ["=", contractor_value]
+                },
+                fields=["name", "custom_total_contract_operation_cost"]
+            )
+
+            if not unpaid_purchase_receipt:
+                frappe.msgprint(f"No unpaid Purchase Receipt found for {contractor_type} in the given date range.")
+                return
+
+            # Fetch the Work Order Payment document
+            loading_and_unloading_payment = frappe.get_doc("Loading and Unloading Payments", docname)
+
+            # Clear existing rows from work_order_payment_item table
+            loading_and_unloading_payment.set("purchase_receipt_payment_item", [])
+
+            total_amount = sum(flt(getattr(pr, amount_field, 0)) for pr in unpaid_purchase_receipt)
+
+
+            # Append new rows to the work_order_payment_item table
+            for se in unpaid_purchase_receipt:
+                amount = getattr(se, amount_field, 0) or 0
+                loading_and_unloading_payment.append("purchase_receipt_payment_item", {
+                    "purchase_receipt": se.name,
+                    "amount": amount
+                })
+
+            setattr(loading_and_unloading_payment, contractor_type, contractor_value)
+
+            # Store the total in the grand_total field
+            loading_and_unloading_payment.grand_total_for_purchase_receipt = total_amount
+            loading_and_unloading_payment.net_total_for_purchase_receipt = total_amount - total_amount * (loading_and_unloading_payment.deduct_percentage / 100)
+
+            print("\n\n\nstock_entry_payment.net_total\n\n\n", loading_and_unloading_payment.net_total_for_purchase_receipt)
+
+            # Save and commit changes
+            loading_and_unloading_payment.save(ignore_permissions=True)
+            frappe.db.commit()
+
+            frappe.msgprint(f"Replaced existing Stock Entry and added {len(unpaid_purchase_receipt)} new Loading and Unloading to Loading and Unloading Payment {docname}. Grand Total: {total_amount}")
+
+    # Process for general contractor
+    process_purchase_receipt("custom_contractor", "custom_total_contract_operation_cost", contractor, "contractor")
+
+    
 
 
 @frappe.whitelist()

@@ -1,0 +1,169 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-03-14 17:36:37.495986",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_vq8c",
+  "naming_series",
+  "from_date",
+  "to_date",
+  "contractor",
+  "get_stock_entry",
+  "get_purchase_receipt",
+  "section_break_aml3",
+  "stock_entry_payment_item",
+  "purchase_receipt_payment_item",
+  "section_break_6l6o",
+  "amended_from",
+  "grand_total_for_stock_entry",
+  "net_total_for_stock_entry",
+  "grand_total_for_purchase_receipt",
+  "net_total_for_purchase_receipt",
+  "deduct_percentage",
+  "grand_total",
+  "net_total"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_vq8c",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Loading and Unloading Payments",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "LUP/.####"
+  },
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "label": "From Date"
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date"
+  },
+  {
+   "fieldname": "contractor",
+   "fieldtype": "Link",
+   "label": "Contractor",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "section_break_aml3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_6l6o",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total"
+  },
+  {
+   "fieldname": "deduct_percentage",
+   "fieldtype": "Float",
+   "label": "Deduct Percentage"
+  },
+  {
+   "fieldname": "net_total",
+   "fieldtype": "Currency",
+   "label": "Net Total"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Loading and Unloading Payments",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "stock_entry_payment_item",
+   "fieldtype": "Table",
+   "label": "Stock Entry Payment Item",
+   "options": "Stock Entry Payment Item"
+  },
+  {
+   "fieldname": "purchase_receipt_payment_item",
+   "fieldtype": "Table",
+   "label": "Purchase Receipt Payment Item",
+   "options": "Purchase Receipt Payment Item"
+  },
+  {
+   "fieldname": "get_stock_entry",
+   "fieldtype": "Button",
+   "label": "Get Stock Entry"
+  },
+  {
+   "fieldname": "get_purchase_receipt",
+   "fieldtype": "Button",
+   "label": "Get Purchase Receipt"
+  },
+  {
+   "fieldname": "grand_total_for_stock_entry",
+   "fieldtype": "Currency",
+   "label": "Grand Total For Stock Entry"
+  },
+  {
+   "fieldname": "grand_total_for_purchase_receipt",
+   "fieldtype": "Currency",
+   "label": "Grand Total For Purchase Receipt"
+  },
+  {
+   "fieldname": "net_total_for_stock_entry",
+   "fieldtype": "Currency",
+   "label": "Net Total For Stock Entry"
+  },
+  {
+   "fieldname": "net_total_for_purchase_receipt",
+   "fieldtype": "Currency",
+   "label": "Net Total For Purchase Receipt"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-03-14 18:15:37.218616",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Loading and Unloading Payments",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
