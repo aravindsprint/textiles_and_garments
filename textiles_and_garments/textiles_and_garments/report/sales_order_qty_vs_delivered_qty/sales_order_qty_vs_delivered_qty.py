@@ -166,6 +166,7 @@ def get_sales_order_data(filters):
     #         (soi.qty - COALESCE(soi.delivered_qty, 0)) AS pending_qty,
     #         soi.stock_uom AS stock_uom,
     #         so.transaction_date AS posting_date,
+    #         soi.custom_item_status AS custom_item_status,
     #         so.customer AS customer,
     #         st.sales_person,
     #         so.name AS name,
@@ -191,6 +192,9 @@ def get_sales_order_data(filters):
     
     if filters.get("color"):
         conditions.append("soi.color = %(color)s")
+
+    if filters.get("custom_item_status"):
+        conditions.append("soi.custom_item_status = %(custom_item_status)s")
     
     if filters.get("from_date"):
         conditions.append("so.transaction_date >= %(from_date)s")
@@ -207,6 +211,7 @@ def get_sales_order_data(filters):
     filter_values = {
         "item_code": filters.get("item_code"),
         "commercial_name": filters.get("commercial_name"),
+        "custom_item_status": filters.get("custom_item_status"),
         "from_date": filters.get("from_date"),
         "to_date": filters.get("to_date"),
         "status": filters.get("status"),
