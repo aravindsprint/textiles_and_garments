@@ -72,7 +72,7 @@ def get_columns(filters):
         },
         {
             "label": _("UOM"),
-            "fieldname": "stock_uom",
+            "fieldname": "uom",
             "fieldtype": "Data",
             "width": 70,
         },
@@ -123,7 +123,7 @@ def get_sales_order_data(filters):
                 ELSE 'MTO' 
             END AS customer_group,
             mri.qty, 
-            mri.stock_uom, 
+            mri.uom, 
             mri.finished_item_code,   
             item.item_name
         FROM `tabMaterial Request Item` AS mri
