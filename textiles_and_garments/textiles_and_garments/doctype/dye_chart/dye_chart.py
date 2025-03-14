@@ -928,6 +928,59 @@ def set_additional_cost(docname):
 #         "total_cost_excluding_stitch_and_padding": total_cost_exclude_stitch_and_padding
 #     }
 
+
+
+
+@frappe.whitelist()
+def set_operation_cost_in_stock_entry(docname):
+    print("set_operation_cost_in_stock_entry")
+    stock_entry = frappe.get_doc('Stock Entry', docname)
+    operations = {
+        "custom_loading_and_unloading_greige_lot": "Loading and Unloading Greige Lot",
+        "custom_loading_and_unloading_finished_lot": "Loading and Unloading Finished Lot",
+        "custom_loading_and_unloading_wet_lot": "Loading and Unloading Wet Lot"
+    }
+
+    # Clear all rows from the child table before inserting new ones
+    stock_entry.set("custom_loading_and_unloading_operations", [])
+
+    # Process each operation and insert rows
+    for field, operation_name in operations.items():
+        if getattr(stock_entry, field, 0) == 1:
+            local_rate = frappe.get_value("Operation Rate", {"name": operation_name}, "rate")
+            if local_rate is not None:
+                # qty = (
+                #     stock_entry.custom_trims_weight
+                #     if operation_name == "Collar Padding"
+                #     else stock_entry.custom_fabric_and_trims_weight
+                # )
+                stock_entry.append("custom_loading_and_unloading_operations", {
+                    "operation_name": operation_name,
+                    "qty": qty,
+                    "rate": local_rate,
+                    "amount": qty * local_rate,
+                })
+
+    # Calculate total costs
+    total_cost = sum(row.amount for row in stock_entry.custom_loading_and_unloading_operations if row.amount)
+
+    
+
+    # Update total cost fields in the Stock Entry
+    stock_entry.custom_total_contract_operation_cost = total_cost
+    
+
+    # Save the updated Work Order
+    stock_entry.save()
+
+    return {
+        "message": "Operation costs updated successfully",
+        "total_cost": total_cost
+    }
+
+
+
+
 @frappe.whitelist()
 def set_operation_cost_in_work_order(docname):
     # Fetch the Work Order document
