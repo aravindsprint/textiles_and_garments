@@ -141,10 +141,10 @@ def get_sales_order_data(filters):
         conditions.append("item.color = %(color)s")
     
     if filters.get("from_date"):
-        conditions.append("mri.date >= %(from_date)s")
+        conditions.append("mr.date >= %(from_date)s")
 
     if filters.get("to_date"):
-        conditions.append("mri.date <= %(to_date)s")
+        conditions.append("mr.date <= %(to_date)s")
     
     if filters.get("status"):
         conditions.append("mri.status = %(status)s")  # Ensure 'status' exists in `mri` 
