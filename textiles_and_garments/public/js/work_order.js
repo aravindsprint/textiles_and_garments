@@ -53,8 +53,8 @@ frappe.ui.form.on("Work Order", {
             frm.doc.custom_polyester_re_dyeing_white == 1||
             frm.doc.custom_polyester_re_washing == 1||
             frm.doc.custom_polyester_washing == 1||
-            frm.doc.custom_tubular_stitching_overlock ==1
-            frm.doc.custom_sample_washing ==1
+            frm.doc.custom_tubular_stitching_overlock ==1||
+            frm.doc.custom_sample_washing ==1||
             frm.doc.custom_sample_double_dyeing ==1){
             console.log("custom_include_loading_greige");
             frappe.call({
