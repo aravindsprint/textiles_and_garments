@@ -8,6 +8,8 @@
  "field_order": [
   "section_break_qgxh",
   "work_order",
+  "fabric_and_trims_weight",
+  "trims_weight",
   "amount",
   "loading_and_unloading_amount",
   "stitching_amount",
@@ -36,28 +38,39 @@
    "fetch_from": "work_order.custom_total_contract_operation_cost_exclude_stitch_and_pad",
    "fieldname": "loading_and_unloading_amount",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Loading and Unloading Amount"
   },
   {
    "fetch_from": "work_order.custom_stitch_operation_cost",
    "fieldname": "stitching_amount",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Stitching Amount"
   },
   {
    "fetch_from": "work_order.custom_padding_operation_cost",
    "fieldname": "padding_amount",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Padding Amount"
+  },
+  {
+   "fetch_from": "work_order.custom_fabric_and_trims_weight",
+   "fieldname": "fabric_and_trims_weight",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Fabric And Trims Weight"
+  },
+  {
+   "fetch_from": "work_order.custom_trims_weight",
+   "fieldname": "trims_weight",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Trims Weight"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-02-21 16:19:40.345181",
+ "modified": "2025-03-15 15:35:25.741564",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Work Order Payment Item",
