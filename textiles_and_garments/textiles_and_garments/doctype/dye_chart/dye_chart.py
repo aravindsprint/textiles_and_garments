@@ -1075,7 +1075,7 @@ def set_operation_cost_in_work_order(docname):
                 elif operation_name == "Stitching (Overlock)" or operation_name == "Tubular Stitching (Overlock)":
                     qty = work_order.custom_stitching_weight
                 else:
-                    qty = work_order.custom_trims_weight      
+                    qty = work_order.custom_fabric_and_trims_weight      
                 work_order.append("custom_work_order_operations", {
                     "operation_name": operation_name,
                     "qty": qty,
