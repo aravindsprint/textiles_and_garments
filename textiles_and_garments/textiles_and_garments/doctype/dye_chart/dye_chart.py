@@ -1330,7 +1330,8 @@ def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitchin
                     "amount": amount
                 })
 
-                work_order_payment.work_order_payment_item.sort(key=lambda item: item["work_order"])
+                work_order_payment.work_order_payment_item.sort(key=lambda item: item.work_order)
+
 
             setattr(work_order_payment, contractor_type, contractor_value)
 
