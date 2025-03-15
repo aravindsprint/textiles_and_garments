@@ -1065,11 +1065,17 @@ def set_operation_cost_in_work_order(docname):
         if getattr(work_order, field, 0) == 1:
             local_rate = frappe.get_value("Operation Rate", {"name": operation_name}, "rate")
             if local_rate is not None:
-                qty = (
-                    work_order.custom_trims_weight
-                    if operation_name == "Collar Padding"
-                    else work_order.custom_fabric_and_trims_weight
-                )
+                # qty = (
+                #     work_order.custom_trims_weight
+                #     if operation_name == "Collar Padding"
+                #     else work_order.custom_fabric_and_trims_weight
+                # )
+                if operation_name == "Collar Padding":
+                    qty = work_order.custom_trims_weight
+                else if operation_name == "Stitching (Overlock)" or operation_name == "Tubular Stitching (Overlock)":
+                    qty = work_order.custom_stitching_weight
+                else:
+                    qty = work_order.custom_trims_weight      
                 work_order.append("custom_work_order_operations", {
                     "operation_name": operation_name,
                     "qty": qty,

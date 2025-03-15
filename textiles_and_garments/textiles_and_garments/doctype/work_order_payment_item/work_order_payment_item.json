@@ -10,10 +10,11 @@
   "work_order",
   "fabric_and_trims_weight",
   "trims_weight",
-  "amount",
+  "stitching_weight",
   "loading_and_unloading_amount",
   "stitching_amount",
-  "padding_amount"
+  "padding_amount",
+  "amount"
  ],
  "fields": [
   {
@@ -21,6 +22,7 @@
    "fieldtype": "Section Break"
   },
   {
+   "columns": 2,
    "fieldname": "work_order",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -28,6 +30,7 @@
    "options": "Work Order"
   },
   {
+   "columns": 1,
    "fetch_from": "work_order.custom_total_contract_operation_cost",
    "fieldname": "amount",
    "fieldtype": "Data",
@@ -35,24 +38,31 @@
    "label": "Amount"
   },
   {
+   "columns": 1,
    "fetch_from": "work_order.custom_total_contract_operation_cost_exclude_stitch_and_pad",
    "fieldname": "loading_and_unloading_amount",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Loading and Unloading Amount"
   },
   {
+   "columns": 1,
    "fetch_from": "work_order.custom_stitch_operation_cost",
    "fieldname": "stitching_amount",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Stitching Amount"
   },
   {
+   "columns": 1,
    "fetch_from": "work_order.custom_padding_operation_cost",
    "fieldname": "padding_amount",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Padding Amount"
   },
   {
+   "columns": 1,
    "fetch_from": "work_order.custom_fabric_and_trims_weight",
    "fieldname": "fabric_and_trims_weight",
    "fieldtype": "Data",
@@ -60,17 +70,25 @@
    "label": "Fabric And Trims Weight"
   },
   {
+   "columns": 1,
    "fetch_from": "work_order.custom_trims_weight",
    "fieldname": "trims_weight",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Trims Weight"
+  },
+  {
+   "columns": 1,
+   "fieldname": "stitching_weight",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Stitching Weight"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-03-15 15:35:25.741564",
+ "modified": "2025-03-15 16:28:06.209709",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Work Order Payment Item",
