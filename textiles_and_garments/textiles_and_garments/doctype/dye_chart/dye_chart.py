@@ -1072,7 +1072,7 @@ def set_operation_cost_in_work_order(docname):
                 # )
                 if operation_name == "Collar Padding":
                     qty = work_order.custom_trims_weight
-                else if operation_name == "Stitching (Overlock)" or operation_name == "Tubular Stitching (Overlock)":
+                elif operation_name == "Stitching (Overlock)" or operation_name == "Tubular Stitching (Overlock)":
                     qty = work_order.custom_stitching_weight
                 else:
                     qty = work_order.custom_trims_weight      
