@@ -13,15 +13,19 @@
   "contractor",
   "get_stock_entry",
   "get_purchase_receipt",
+  "get_sales_invoice",
   "section_break_aml3",
   "stock_entry_payment_item",
   "purchase_receipt_payment_item",
+  "sales_invoice_payment_item",
   "section_break_6l6o",
   "amended_from",
   "grand_total_for_stock_entry",
   "net_total_for_stock_entry",
   "grand_total_for_purchase_receipt",
   "net_total_for_purchase_receipt",
+  "grand_total_for_sales_invoice",
+  "net_total_for_sales_invoice",
   "deduct_percentage",
   "grand_total",
   "net_total"
@@ -137,12 +141,33 @@
    "fieldname": "net_total_for_purchase_receipt",
    "fieldtype": "Currency",
    "label": "Net Total For Purchase Receipt"
+  },
+  {
+   "fieldname": "grand_total_for_sales_invoice",
+   "fieldtype": "Currency",
+   "label": "Grand Total for Sales Invoice"
+  },
+  {
+   "fieldname": "net_total_for_sales_invoice",
+   "fieldtype": "Currency",
+   "label": "Net Total for Sales Invoice"
+  },
+  {
+   "fieldname": "sales_invoice_payment_item",
+   "fieldtype": "Table",
+   "label": "Sales Invoice Payment Item",
+   "options": "Sales Invoice Payment Item"
+  },
+  {
+   "fieldname": "get_sales_invoice",
+   "fieldtype": "Button",
+   "label": "Get Sales Invoice"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-03-14 18:15:37.218616",
+ "modified": "2025-03-17 10:31:54.174324",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Loading and Unloading Payments",

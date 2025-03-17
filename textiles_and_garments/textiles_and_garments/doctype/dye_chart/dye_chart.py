@@ -932,6 +932,54 @@ def set_additional_cost(docname):
 
 
 @frappe.whitelist()
+def set_operation_cost_in_sales_invoice(docname):
+    print("set_operation_cost_in_sales_invoice")
+    sales_invoice = frappe.get_doc('Sales Invoice', docname)
+    operations = {
+        "custom_loading_and_unloading_greige_lot": "Loading and Unloading Greige Lot",
+        "custom_loading_and_unloading_finished_lot": "Loading and Unloading Finished Lot",
+        "custom_loading_and_unloading_wet_lot": "Loading and Unloading Wet Lot"
+    }
+
+    # Clear all rows from the child table before inserting new ones
+    sales_invoice.set("custom_loading_and_unloading_operations", [])
+
+    # Process each operation and insert rows
+    for field, operation_name in operations.items():
+        if getattr(sales_invoice, field, 0) == 1:
+            local_rate = frappe.get_value("Operation Rate", {"name": operation_name}, "rate")
+            if local_rate is not None:
+                # qty = (
+                #     stock_entry.custom_trims_weight
+                #     if operation_name == "Collar Padding"
+                #     else stock_entry.custom_fabric_and_trims_weight
+                # )
+                sales_invoice.append("custom_loading_and_unloading_operations", {
+                    "operation_name": operation_name,
+                    "qty": sales_invoice.custom_total_weight,
+                    "rate": local_rate,
+                    "amount": sales_invoice.custom_total_weight * local_rate,
+                })
+
+    # Calculate total costs
+    total_cost = sum(row.amount for row in sales_invoice.custom_loading_and_unloading_operations if row.amount)
+
+    
+
+    # Update total cost fields in the Stock Entry
+    sales_invoice.custom_total_contract_operation_cost = total_cost
+    
+
+    # Save the updated Work Order
+    sales_invoice.save()
+
+    return {
+        "message": "Operation costs updated successfully",
+        "total_cost": total_cost
+    }
+
+
+@frappe.whitelist()
 def set_operation_cost_in_stock_entry(docname):
     print("set_operation_cost_in_stock_entry")
     stock_entry = frappe.get_doc('Stock Entry', docname)
@@ -1468,6 +1516,63 @@ def get_unpaid_purchase_receipt(docname, from_date, to_date, contractor=None):
 
     # Process for general contractor
     process_purchase_receipt("custom_contractor", "custom_total_contract_operation_cost", contractor, "contractor")
+
+
+
+@frappe.whitelist()
+def get_unpaid_sales_invoice(docname, from_date, to_date, contractor=None):
+    print("\n\ncontractor\n\n", contractor)
+    
+
+    def process_sales_invoice(contractor_field, amount_field, contractor_value, contractor_type):
+        if contractor_value:
+            unpaid_sales_invoice = frappe.get_all(
+                "Sales Invoice",
+                filters={
+                    "custom_payment_status": ["!=", "Paid"],
+                    "modified": ["between", [from_date, to_date]],
+                    contractor_field: ["=", contractor_value]
+                },
+                fields=["name", "custom_total_contract_operation_cost"]
+            )
+
+            if not unpaid_sales_invoice:
+                frappe.msgprint(f"No unpaid Sales Invoice found for {contractor_type} in the given date range.")
+                return
+
+            # Fetch the Work Order Payment document
+            loading_and_unloading_payment = frappe.get_doc("Loading and Unloading Payments", docname)
+
+            # Clear existing rows from work_order_payment_item table
+            loading_and_unloading_payment.set("sales_invoice_payment_item", [])
+
+            total_amount = sum(flt(getattr(pr, amount_field, 0)) for pr in unpaid_sales_invoice)
+
+
+            # Append new rows to the work_order_payment_item table
+            for se in unpaid_sales_invoice:
+                amount = getattr(se, amount_field, 0) or 0
+                loading_and_unloading_payment.append("sales_invoice_payment_item", {
+                    "sales_invoice": se.name,
+                    "amount": amount
+                })
+
+            setattr(loading_and_unloading_payment, contractor_type, contractor_value)
+
+            # Store the total in the grand_total field
+            loading_and_unloading_payment.grand_total_for_sales_invoice = total_amount
+            loading_and_unloading_payment.net_total_for_sales_invoice = total_amount - total_amount * (loading_and_unloading_payment.deduct_percentage / 100)
+
+            print("\n\n\nsales_invoice_payment.net_total\n\n\n", loading_and_unloading_payment.net_total_for_sales_invoice)
+
+            # Save and commit changes
+            loading_and_unloading_payment.save(ignore_permissions=True)
+            frappe.db.commit()
+
+            frappe.msgprint(f"Replaced existing Sales Invoice and added {len(unpaid_sales_invoice)} new Loading and Unloading to Loading and Unloading Payment {docname}. Grand Total: {total_amount}")
+
+    # Process for general contractor
+    process_sales_invoice("custom_contractor", "custom_total_contract_operation_cost", contractor, "contractor")
 
     
 
