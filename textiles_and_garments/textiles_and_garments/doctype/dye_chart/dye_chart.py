@@ -1646,6 +1646,109 @@ def every_five_minutes():
 
 
 
+
+
+@frappe.whitelist()
+def create_jv_for_lup(docname):
+    print("\n\ncreate_jv_for_lup\n\n")
+    loading_and_unloading_payment = frappe.get_doc("Loading and Unloading Payments", docname)
+    print("\n\nloading_and_unloading_payment\n\n",loading_and_unloading_payment.net_total)
+    print("\n\nloading_and_unloading_payment\n\n",loading_and_unloading_payment.grand_total)
+    loading_and_unloading_payment_bonus = loading_and_unloading_payment.grand_total - loading_and_unloading_payment.net_total
+    print("\n\nwork_order_payment_bonus\n\n",loading_and_unloading_payment_bonus)
+    if loading_and_unloading_payment.contractor:
+        contractor = loading_and_unloading_payment.contractor
+        contractors = loading_and_unloading_payment.contractor + ','+ loading_and_unloading_payment.contractor + ' (Reserved)'
+    if loading_and_unloading_payment.stitching_contractor:
+        contractor = loading_and_unloading_payment.stitching_contractor
+        contractors = loading_and_unloading_payment.stitching_contractor + ','+ loading_and_unloading_payment.stitching_contractor + ' (Reserved)'
+    if loading_and_unloading_payment.padding_contractor:
+        contractor = loading_and_unloading_payment.padding_contractor
+        contractors = loading_and_unloading_payment.padding_contractor + ','+ loading_and_unloading_payment.padding_contractor + ' (Reserved)'
+        
+    # contractors = work_order_payment.contractor + ','+ work_order_payment.contractor + ' (Reserved)'
+    # print("\n\n\ncontractors\n\n\n",contractors)
+    doc=frappe.new_doc("Journal Entry")
+    doc.workflow_state="Draft"
+    doc.docstatus=0
+    doc.voucher_type="Journal Entry"
+    doc.ineligibility_reason="As per rules 42 & 43 of CGST Rules"
+    doc.naming_series = "JV/24/.#"
+    doc.company="Pranera Services and Solutions Pvt. Ltd.,"
+    doc.posting_date = datetime.today().strftime("%Y-%m-%d")  # Assigns current date in "YYYY-MM-DD" format
+    doc.apply_tds=0
+    doc.write_off_based_on="Accounts Receivable"
+    doc.write_off_amount=0.0
+    doc.letter_head="CUSTOM__PSS JV_LOGO"
+    doc.is_opening="No"
+    doc.doctype="Journal Entry"
+    doc.custom_work_order_payments = docname
+    doc.append("accounts", {
+        "docstatus": 0,
+        "idx": 1,
+        "account": "Loading Unloading Charges - PSS",
+        "account_type": "",
+        "party_type": "",
+        "party": "",
+        "cost_center": "Pranera Dyeing - PSS",
+        "account_currency": "INR",
+        "exchange_rate": 1.0,
+        "debit_in_account_currency": 0.0,
+        "credit": 0.0,
+        "credit_in_account_currency": loading_and_unloading_payment.grand_total,
+        "debit": loading_and_unloading_payment.grand_total,
+        "is_advance": "No",
+        "against_account": contractors,
+        "parentfield": "accounts",
+        "parenttype": "Journal Entry",
+        "doctype": "Journal Entry Account"
+    })
+
+    doc.append("accounts", {
+        "docstatus": 0,
+        "idx": 2,
+        "account": "Creditors - PSS",
+        "account_type": "Payable",
+        "party_type": "Supplier",
+        "party": contractor + ' (Reserved)',
+        "cost_center": "Pranera Dyeing - PSS",
+        "account_currency": "INR",
+        "exchange_rate": 1.0,
+        "debit_in_account_currency": loading_and_unloading_payment_bonus,
+        "credit": loading_and_unloading_payment_bonus,
+        "credit_in_account_currency": 0.0,
+        "debit": 0.0,
+        "is_advance": "No",
+        "against_account": "Loading Unloading Charges - PSS",
+        "parentfield": "accounts",
+        "parenttype": "Journal Entry",
+        "doctype": "Journal Entry Account"
+    })
+
+    doc.append("accounts", {
+        "docstatus": 0,
+        "idx": 3,
+        "account": "Creditors - PSS",
+        "account_type": "Payable",
+        "party_type": "Supplier",
+        "party": contractor,
+        "cost_center": "Pranera Dyeing - PSS",
+        "account_currency": "INR",
+        "exchange_rate": 1.0,
+        "debit_in_account_currency": loading_and_unloading_payment.net_total,
+        "credit": loading_and_unloading_payment.net_total,
+        "credit_in_account_currency": 0.0,
+        "debit": 0.0,
+        "is_advance": "No",
+        "against_account": "Loading Unloading Charges - PSS",
+        "parentfield": "accounts",
+        "parenttype": "Journal Entry",
+        "doctype": "Journal Entry Account"
+    })
+    doc.save(ignore_permissions=True)
+    frappe.msgprint("JV Created")
+
+
 @frappe.whitelist()
 def create_jv_for_wo(docname):
     print("\n\ncreate_jv_for_wo\n\n")
