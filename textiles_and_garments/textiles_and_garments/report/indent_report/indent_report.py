@@ -129,11 +129,11 @@ def get_sales_order_data(filters):
         FROM `tabMaterial Request` AS mr
         JOIN `tabMaterial Request Item` AS mri ON mri.parent = mr.name
         JOIN `tabItem` AS item ON item.name = mri.finished_item_code
+        WHERE mr.docstatus = 1
     """
 
     # query = """
     #     SELECT 
-    #         mr.date as posting_date,
     #         mri.parent,
     #         mri.qty, 
     #         mri.stock_uom,
