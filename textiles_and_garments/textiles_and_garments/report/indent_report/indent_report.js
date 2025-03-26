@@ -7,24 +7,20 @@ frappe.query_reports["Indent Report"] = {
 			fieldname: "finished_item_code",
 			label: __("Item"),
 			fieldtype: "Link",
-			width: "280",
 			options: "Item",
+			width: "280",
 		},
 		{
 			fieldname: "docstatus",
 			label: __("Docstatus"),
 			fieldtype: "Select",
 			width: "280",
-			options: ["0","1","2"],
+			options: [
+				{ "label": "Draft", "value": "0" },
+				{ "label": "Submitted", "value": "1" },
+				{ "label": "Cancelled", "value": "2" }
+			],
 		},
-		// {
-		// 	fieldname: "custom_item_status",
-		// 	label: __("Item Status"),
-		// 	fieldtype: "Select",
-		// 	options: ["Not Started", "Completed", "Cancelled", "Partially Delivered and Need to Deliver"],
-		// 	width: "80",
-			
-		// },
 		{
 			fieldname: "from_date",
 			label: __("From This Date"),
@@ -41,9 +37,21 @@ frappe.query_reports["Indent Report"] = {
 			reqd: 1,
 			default: frappe.datetime.get_today(),
 		},
-
+		{
+			fieldname: "commercial_name",
+			label: __("Commercial Name"),
+			fieldtype: "Data",
+			width: "200",
+		},
+		{
+			fieldname: "color",
+			label: __("Color"),
+			fieldtype: "Data",
+			width: "200",
+		}
 	]
 };
+
 
 
 

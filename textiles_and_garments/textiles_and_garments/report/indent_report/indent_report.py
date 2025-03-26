@@ -161,8 +161,9 @@ def get_sales_order_data(filters):
         conditions.append("item.commercial_name = %(commercial_name)s")
     if filters.get("color"):
         conditions.append("item.color = %(color)s")
-    if filters.get("docstatus"):
-        conditions.append("mri.docstatus = %(docstatus)s")  # Ensure 'status' exists in `mri`
+    if filters.get("docstatus") is not None:
+        conditions.append("mr.docstatus = %(docstatus)s")
+
 
     # Only add WHERE clause if there are conditions
     if conditions:
@@ -171,13 +172,14 @@ def get_sales_order_data(filters):
 
 
     filter_values = {
-        "finished_item_code": filters.get("finished_item_code") or "",
-        "commercial_name": filters.get("commercial_name") or "",
-        "color": filters.get("color") or "",
+        "finished_item_code": filters.get("finished_item_code") or None,
+        "commercial_name": filters.get("commercial_name") or None,
+        "color": filters.get("color") or None,
         "from_date": filters.get("from_date"),
         "to_date": filters.get("to_date"),
-        "docstatus": filters.get("docstatus") or "",
+        "docstatus": int(filters.get("docstatus")) if filters.get("docstatus") else None,
     }
+
     
     return frappe.db.sql(query, filter_values, as_dict=1)
 
