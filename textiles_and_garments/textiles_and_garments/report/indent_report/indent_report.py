@@ -88,6 +88,12 @@ def get_columns(filters):
             "fieldname": "item_name",
             "fieldtype": "Data",
             "width": 250,
+        },
+        {
+            "label": _("Docstatus"),
+            "fieldname": "docstatus",
+            "fieldtype": "Data",
+            "width": 250,
         }
     ]
 
@@ -125,7 +131,8 @@ def get_sales_order_data(filters):
             mri.qty, 
             mri.uom, 
             mri.finished_item_code,
-            item.item_name
+            item.item_name,
+            mr.docstatus
         FROM `tabMaterial Request` AS mr
         JOIN `tabMaterial Request Item` AS mri ON mri.parent = mr.name
         JOIN `tabItem` AS item ON item.name = mri.finished_item_code
@@ -142,7 +149,7 @@ def get_sales_order_data(filters):
     #     JOIN `tabItem` AS item ON item.name = mri.item_code
     # """
 
-    conditions = ["mr.docstatus = 1"]
+    conditions = []
 
     if filters.get("from_date"):
         conditions.append("mr.date >= %(from_date)s")
@@ -154,8 +161,8 @@ def get_sales_order_data(filters):
         conditions.append("item.commercial_name = %(commercial_name)s")
     if filters.get("color"):
         conditions.append("item.color = %(color)s")
-    if filters.get("status"):
-        conditions.append("mri.status = %(status)s")  # Ensure 'status' exists in `mri`
+    if filters.get("docstatus"):
+        conditions.append("mri.docstatus = %(docstatus)s")  # Ensure 'status' exists in `mri`
 
     # Only add WHERE clause if there are conditions
     if conditions:
@@ -169,7 +176,7 @@ def get_sales_order_data(filters):
         "color": filters.get("color") or "",
         "from_date": filters.get("from_date"),
         "to_date": filters.get("to_date"),
-        "status": filters.get("status") or "",
+        "docstatus": filters.get("docstatus") or "",
     }
     
     return frappe.db.sql(query, filter_values, as_dict=1)

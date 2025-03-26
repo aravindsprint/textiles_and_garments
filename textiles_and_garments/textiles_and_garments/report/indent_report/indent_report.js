@@ -11,6 +11,21 @@ frappe.query_reports["Indent Report"] = {
 			options: "Item",
 		},
 		{
+			fieldname: "docstatus",
+			label: __("Docstatus"),
+			fieldtype: "Select",
+			width: "280",
+			options: ["0","1","2"],
+		},
+		// {
+		// 	fieldname: "custom_item_status",
+		// 	label: __("Item Status"),
+		// 	fieldtype: "Select",
+		// 	options: ["Not Started", "Completed", "Cancelled", "Partially Delivered and Need to Deliver"],
+		// 	width: "80",
+			
+		// },
+		{
 			fieldname: "from_date",
 			label: __("From This Date"),
 			fieldtype: "Date",
