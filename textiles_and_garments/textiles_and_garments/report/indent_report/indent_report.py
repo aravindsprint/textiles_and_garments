@@ -129,7 +129,6 @@ def get_sales_order_data(filters):
         FROM `tabMaterial Request` AS mr
         JOIN `tabMaterial Request Item` AS mri ON mri.parent = mr.name
         JOIN `tabItem` AS item ON item.name = mri.finished_item_code
-        WHERE mr.docstatus = 1
     """
 
     # query = """
@@ -143,7 +142,7 @@ def get_sales_order_data(filters):
     #     JOIN `tabItem` AS item ON item.name = mri.item_code
     # """
 
-    conditions = []
+    conditions = ["mr.docstatus = 1"]
 
     if filters.get("from_date"):
         conditions.append("mr.date >= %(from_date)s")
