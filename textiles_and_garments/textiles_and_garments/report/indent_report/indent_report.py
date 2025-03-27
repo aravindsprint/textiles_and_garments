@@ -153,8 +153,8 @@ def get_sales_order_data(filters):
             END AS process,
             mri.for_project,
             mri.parent,
-            item.commercial_name, 
-            item.color, 
+            mri.custom_commercial_name as commercial_name, 
+            mri.custom_color as color, 
             mr.requested_by, 
             CASE 
                 WHEN mr.requested_by = 'For Stock' THEN 'STOCK'
@@ -179,9 +179,9 @@ def get_sales_order_data(filters):
     if filters.get("finished_item_code"):
         conditions.append("mri.finished_item_code = %(finished_item_code)s")
     if filters.get("commercial_name"):
-        conditions.append("item.commercial_name = %(commercial_name)s")
+        conditions.append("mri.custom_commercial_name = %(commercial_name)s")
     if filters.get("color"):
-        conditions.append("item.color = %(color)s")
+        conditions.append("mri.custom_color = %(color)s")
     if filters.get("docstatus") is not None:
         conditions.append("mr.docstatus = %(docstatus)s")
 
