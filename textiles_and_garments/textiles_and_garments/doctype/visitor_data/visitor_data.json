@@ -12,7 +12,7 @@
   "company_name",
   "mobile_no",
   "amended_from",
-  "idx"
+  "id"
  ],
  "fields": [
   {
@@ -52,16 +52,16 @@
    "label": "Date"
   },
   {
-   "fieldname": "idx",
+   "fieldname": "id",
    "fieldtype": "Data",
-   "label": "idx",
+   "label": "ID",
    "unique": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-03-28 11:46:32.727050",
+ "modified": "2025-03-28 14:52:47.580725",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Visitor Data",
