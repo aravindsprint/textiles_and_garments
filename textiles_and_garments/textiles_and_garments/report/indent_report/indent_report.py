@@ -1,5 +1,5 @@
 # Copyright (c) 2025, Aravind and contributors
-# For license information, please see license.txt
+# For license information,please see license.txt
 
 from collections import defaultdict
 import frappe
