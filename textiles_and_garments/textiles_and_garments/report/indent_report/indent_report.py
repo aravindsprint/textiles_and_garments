@@ -161,7 +161,7 @@ def get_sales_order_data(filters):
                 ELSE 'MTO' 
             END AS customer_group,
             mri.qty, 
-            mri.stock_uom,
+            mri.stock_uom as uom,
             mri.finished_item_code,
             item.item_name,
             mr.docstatus

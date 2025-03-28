@@ -7,11 +7,12 @@
  "engine": "InnoDB",
  "field_order": [
   "naming_series",
-  "amended_from",
+  "date",
   "name1",
   "company_name",
   "mobile_no",
-  "date"
+  "amended_from",
+  "idx"
  ],
  "fields": [
   {
@@ -49,12 +50,18 @@
    "fieldname": "date",
    "fieldtype": "Datetime",
    "label": "Date"
+  },
+  {
+   "fieldname": "idx",
+   "fieldtype": "Data",
+   "label": "idx",
+   "unique": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-03-27 11:35:56.301269",
+ "modified": "2025-03-28 11:46:32.727050",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Visitor Data",
