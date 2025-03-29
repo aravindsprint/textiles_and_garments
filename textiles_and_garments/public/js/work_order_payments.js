@@ -15,6 +15,11 @@ frappe.ui.form.on("Work Order Payments", {
                 callback: function(response) {
                     console.log("response",response);
                     if(response.message) {
+                        frm.doc.work_order_payment_item = frm.doc.work_order_payment_item.sort((a, b) => {
+                            let numA = parseInt(a.work_order.match(/\d+$/)[0]); // Extract numeric part
+                            let numB = parseInt(b.work_order.match(/\d+$/)[0]); 
+                            return numA - numB; // Sort numerically
+                        });
                         frm.refresh_field("work_order_payment_item");
                         frm.reload_doc();
                           

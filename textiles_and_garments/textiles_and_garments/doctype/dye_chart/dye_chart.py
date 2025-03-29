@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import urllib.parse
 from frappe_whatsapp.utils import run_server_script_for_doc_event
 from datetime import datetime
+import re
 
 
 
@@ -1340,12 +1341,98 @@ def get_total_of_work_order_payments(custom_work_order_payments):
 #         frappe.msgprint(f"Replaced existing Work Orders and added {len(unpaid_work_orders)} new Work Orders to Work Order Payment {docname}. Grand Total: {total_amount}")
 
 
+# @frappe.whitelist()
+# def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitching_contractor=None, padding_contractor=None, contractor_category=None):
+#     print("\n\ncontractor\n\n", contractor)
+#     print("\n\nstitching_contractor\n\n", stitching_contractor)
+#     print("\n\npadding_contractor\n\n", padding_contractor)
+
+#     def process_work_orders(contractor_field, amount_field, contractor_value, contractor_type):
+#         if contractor_value:
+#             unpaid_work_orders = frappe.get_all(
+#                 "Work Order",
+#                 filters={
+#                     "custom_payment_status": ["!=", "Paid"],
+#                     "modified": ["between", [from_date, to_date]],
+#                     contractor_field: ["=", contractor_value]
+#                 },
+#                 fields=["name", "custom_total_contract_operation_cost", "custom_total_contract_operation_cost_exclude_stitch_and_pad", "custom_stitch_operation_cost", "custom_padding_operation_cost"]
+#             )
+
+#             if not unpaid_work_orders:
+#                 frappe.msgprint(f"No unpaid Work Orders found for {contractor_type} in the given date range.")
+#                 return
+
+#             # Fetch the Work Order Payment document
+#             work_order_payment = frappe.get_doc("Work Order Payments", docname)
+
+#             # Clear existing rows from work_order_payment_item table
+#             work_order_payment.set("work_order_payment_item", [])
+
+#             total_amount = sum(getattr(wo, amount_field, 0) or 0 for wo in unpaid_work_orders)
+
+#             # Append new rows to the work_order_payment_item table
+#             for wo in unpaid_work_orders:
+#                 amount = getattr(wo, amount_field, 0) or 0
+#                 work_order_payment.append("work_order_payment_item", {
+#                     "work_order": wo.name,
+#                     "amount": amount
+#                 })
+
+#                 # work_order_payment.work_order_payment_item.sort(key=lambda item: item.work_order)
+
+
+#             # Sorting was not working, so explicitly reassign the sorted list
+           
+#             print("\n\n\nsorted\n\n\n")
+#             def extract_number(work_order):
+#                 match = re.search(r"\d+$", work_order)
+#                 return int(match.group()) if match else float('inf')  # Default to avoid errors
+
+#             # Print before sorting
+#             print("\n\nBefore sorting:\n\n", [item.work_order for item in work_order_payment.work_order_payment_item])
+
+#             # Apply sorting
+#             work_order_payment.set(
+#                 "work_order_payment_item",
+#                 sorted(
+#                     work_order_payment.work_order_payment_item,
+#                     key=lambda item: extract_number(item.work_order)
+#                 )
+#             )
+
+#             # Print after sorting
+#             print("\n\nAfter sorting:\n\n", [item.work_order for item in work_order_payment.work_order_payment_item])
+
+#             setattr(work_order_payment, contractor_type, contractor_value)
+
+#             # Store the total in the grand_total field
+#             work_order_payment.grand_total = total_amount
+#             work_order_payment.net_total = total_amount - total_amount * (work_order_payment.deduct_percentage / 100)
+
+#             print("\n\n\nwork_order_payment.net_total\n\n\n", work_order_payment.net_total)
+
+#             # Save and commit changes
+#             work_order_payment.save(ignore_permissions=True)
+#             frappe.db.commit()
+
+#             frappe.msgprint(f"Replaced existing Work Orders and added {len(unpaid_work_orders)} new Work Orders to Work Order Payment {docname}. Grand Total: {total_amount}")
+
+#     # Process for general contractor
+#     process_work_orders("custom_contractor", "custom_total_contract_operation_cost_exclude_stitch_and_pad", contractor, "contractor")
+
+#     # Process for stitching contractor
+#     process_work_orders("custom_stitching_contractor", "custom_stitch_operation_cost", stitching_contractor, "stitching_contractor")
+
+#     # Process for padding contractor
+#     process_work_orders("custom_padding_contractor", "custom_padding_operation_cost", padding_contractor, "padding_contractor")
+
+
+import re
+import frappe
+
 @frappe.whitelist()
 def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitching_contractor=None, padding_contractor=None, contractor_category=None):
-    print("\n\ncontractor\n\n", contractor)
-    print("\n\nstitching_contractor\n\n", stitching_contractor)
-    print("\n\npadding_contractor\n\n", padding_contractor)
-
     def process_work_orders(contractor_field, amount_field, contractor_value, contractor_type):
         if contractor_value:
             unpaid_work_orders = frappe.get_all(
@@ -1365,49 +1452,49 @@ def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitchin
             # Fetch the Work Order Payment document
             work_order_payment = frappe.get_doc("Work Order Payments", docname)
 
-            # Clear existing rows from work_order_payment_item table
-            work_order_payment.set("work_order_payment_item", [])
-
-            total_amount = sum(getattr(wo, amount_field, 0) or 0 for wo in unpaid_work_orders)
-
-            # Append new rows to the work_order_payment_item table
+            # Prepare items for sorting
+            work_order_items = []
             for wo in unpaid_work_orders:
                 amount = getattr(wo, amount_field, 0) or 0
-                work_order_payment.append("work_order_payment_item", {
+                work_order_items.append({
                     "work_order": wo.name,
                     "amount": amount
                 })
 
-                # work_order_payment.work_order_payment_item.sort(key=lambda item: item.work_order)
+            # Sorting function to extract numeric part
+            def extract_number(work_order):
+                match = re.search(r"\d+$", work_order)
+                return int(match.group()) if match else float('inf')
 
+            # Sort the work orders numerically
+            sorted_items = sorted(work_order_items, key=lambda item: extract_number(item["work_order"]))
 
-            # Sorting was not working, so explicitly reassign the sorted list
-            work_order_payment.set("work_order_payment_item", sorted(
-                work_order_payment.work_order_payment_item, key=lambda item: item.work_order
-            ))
+            # Print sorted results for debugging
+            print("\n\nSorted Work Orders:\n", [item["work_order"] for item in sorted_items])
+
+            # Clear and reinsert sorted items
+            work_order_payment.set("work_order_payment_item", [])
+            for item in sorted_items:
+                work_order_payment.append("work_order_payment_item", item)
+
+            # Set contractor value
             setattr(work_order_payment, contractor_type, contractor_value)
 
-            # Store the total in the grand_total field
+            # Calculate and set totals
+            total_amount = sum(item["amount"] for item in sorted_items)
             work_order_payment.grand_total = total_amount
             work_order_payment.net_total = total_amount - total_amount * (work_order_payment.deduct_percentage / 100)
-
-            print("\n\n\nwork_order_payment.net_total\n\n\n", work_order_payment.net_total)
 
             # Save and commit changes
             work_order_payment.save(ignore_permissions=True)
             frappe.db.commit()
 
-            frappe.msgprint(f"Replaced existing Work Orders and added {len(unpaid_work_orders)} new Work Orders to Work Order Payment {docname}. Grand Total: {total_amount}")
+            frappe.msgprint(f"Updated Work Order Payment {docname} with {len(sorted_items)} sorted Work Orders. Grand Total: {total_amount}")
 
-    # Process for general contractor
+    # Process different contractor types
     process_work_orders("custom_contractor", "custom_total_contract_operation_cost_exclude_stitch_and_pad", contractor, "contractor")
-
-    # Process for stitching contractor
     process_work_orders("custom_stitching_contractor", "custom_stitch_operation_cost", stitching_contractor, "stitching_contractor")
-
-    # Process for padding contractor
     process_work_orders("custom_padding_contractor", "custom_padding_operation_cost", padding_contractor, "padding_contractor")
-
 
 
 @frappe.whitelist()
