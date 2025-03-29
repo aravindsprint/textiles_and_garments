@@ -1378,9 +1378,13 @@ def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitchin
                     "amount": amount
                 })
 
-                work_order_payment.work_order_payment_item.sort(key=lambda item: item.work_order)
+                # work_order_payment.work_order_payment_item.sort(key=lambda item: item.work_order)
 
 
+            # Sorting was not working, so explicitly reassign the sorted list
+            work_order_payment.set("work_order_payment_item", sorted(
+                work_order_payment.work_order_payment_item, key=lambda item: item.work_order
+            ))
             setattr(work_order_payment, contractor_type, contractor_value)
 
             # Store the total in the grand_total field
