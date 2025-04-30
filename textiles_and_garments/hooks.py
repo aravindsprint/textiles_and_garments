@@ -147,10 +147,10 @@ doctype_js = {
 
 scheduler_events = {
     "cron": {
-        # "*/10 * * * *": [
+        # "*/1 * * * *": [
         #     "textiles_and_garments.textiles_and_garments.doctype.dye_chart.dye_chart.every_five_minutes",
         # ],
-        "30 17 30 * *": [
+        "30 18 30 * *": [
             "textiles_and_garments.tasks.create_sales_invoice_for_LIC_in_MANONMANI",
             "textiles_and_garments.tasks.create_sales_invoice_for_MIRAAI_in_MANONMANI",
             "textiles_and_garments.tasks.create_sales_invoice_for_VASANTH_in_P_THANGAVELU",
@@ -170,7 +170,7 @@ scheduler_events = {
         #     "textiles_and_garments.tasks.create_sales_invoice_for_LIC_OF_INDIA_in_P_THANGAVELU",
 
         # ],
-        # "10 11 * * 3": [
+        # "*/10 * * * *": [
         #     "textiles_and_garments.tasks.every_five_minutes",
         # ]
     }
@@ -189,6 +189,9 @@ scheduler_events = {
 	# "monthly": [
 	# 	"textiles_and_garments.tasks.monthly"
 	# ],
+    # "all": [
+    #     "textiles_and_garments.textiles_and_garments.doctype.dye_chart.dye_chart.every_five_minutes"
+    # ]
 }
 
 # Testing

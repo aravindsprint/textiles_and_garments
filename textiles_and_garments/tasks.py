@@ -747,7 +747,8 @@ def create_sales_invoice_for_LIC_in_MANONMANI(
             "purchaser_mobile_no": "0",
             "contact_person": "LIC OF INDIA-LIC OF INDIA",
             "vehicle_no": "TN",
-            "distance": "10"
+            "distance": "10",
+            "shipping_address_name": "LIC OF INDIA-Billing"
         })
 
 
@@ -949,7 +950,8 @@ def create_sales_invoice_for_MIRAAI_in_MANONMANI(
             "purchaser_mobile_no": "0",
             "contact_person": "Bhuvanesh-MIRAAI ADVANCED COMPOSITES PVT LTD",
             "vehicle_no": "TN",
-            "distance": "10"
+            "distance": "10",
+            "shipping_address_name": "MIRAI ADVANCE COMPOSITES PVT LTD-Billing"
         })
 
         # Insert the document into the database
@@ -1150,7 +1152,8 @@ def create_sales_invoice_for_VASANTH_in_P_THANGAVELU(
             "purchaser_mobile_no": "0",
             "contact_person": "Vasanth-VASANTH & CO",
             "vehicle_no": "TN",
-            "distance": "10"
+            "distance": "10",
+            "shipping_address_name": "VASANTH & CO-Billing"
         })
 
         # Insert the document into the database
@@ -1351,7 +1354,8 @@ def create_sales_invoice_for_RELIANCE_INDUSTRIES_LIMITED_in_P_THANGAVELU(
             "purchaser_mobile_no": "0",
             "contact_person": "Reliance-RELIANCE INDUSTRIES LIMITED - 1",
             "vehicle_no": "TN",
-            "distance": "10"
+            "distance": "10",
+            "shipping_address_name": "RELIANCE INDUSTRIES LIMITED - 1-Billing"
         })
 
         # Insert the document into the database
@@ -1553,7 +1557,8 @@ def create_sales_invoice_for_TAMILNADU_GENERATION_AND_DISTRIBUTION_in_P_THANGAVE
             "purchaser_mobile_no": "0",
             "contact_person": "tneb-TAMILNADU GENERATION AND DISTRIBUTION",
             "vehicle_no": "TN",
-            "distance": "10"
+            "distance": "10",
+            "shipping_address_name": "TAMILNADU GENERATION AND DISTRIBUTION-Billing"
         })
 
         # Insert the document into the database
@@ -1758,7 +1763,8 @@ def create_sales_invoice_for_TAMILNADU_GENERATION_AND_DISTRIBUTION_2_in_P_THANGA
             "purchaser_mobile_no": "0",
             "contact_person": "tneb-TAMILNADU GENERATION AND DISTRIBUTION",
             "vehicle_no": "TN",
-            "distance": "10"
+            "distance": "10",
+            "shipping_address_name": "TAMILNADU GENERATION AND DISTRIBUTION-Billing"
         })
 
         # Insert the document into the database
@@ -1960,7 +1966,8 @@ def create_sales_invoice_for_LIC_OF_INDIA_in_P_THANGAVELU(
             "purchaser_mobile_no": "0",
             "contact_person": "LIC OF INDIA-LIC OF INDIA",
             "vehicle_no": "TN",
-            "distance": "10"
+            "distance": "10",
+            "shipping_address_name": "LIC OF INDIA-Billing"
         })
 
         # Insert the document into the database
