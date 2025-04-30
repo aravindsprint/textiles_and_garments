@@ -743,7 +743,13 @@ def create_sales_invoice_for_LIC_in_MANONMANI(
             "taxes": taxes,
             "sales_team": sales_team,
             "payment_schedule": payment_schedule,
+            "purchase_by": "-",
+            "purchaser_mobile_no": "0",
+            "contact_person": "LIC OF INDIA-LIC OF INDIA",
+            "vehicle_no": "TN",
+            "distance": "10"
         })
+
 
         # Insert the document into the database
         sales_invoice.insert()
@@ -939,6 +945,11 @@ def create_sales_invoice_for_MIRAAI_in_MANONMANI(
             "taxes": taxes,
             "sales_team": sales_team,
             "payment_schedule": payment_schedule,
+            "purchase_by": "-",
+            "purchaser_mobile_no": "0",
+            "contact_person": "Bhuvanesh-MIRAAI ADVANCED COMPOSITES PVT LTD",
+            "vehicle_no": "TN",
+            "distance": "10"
         })
 
         # Insert the document into the database
@@ -1135,6 +1146,11 @@ def create_sales_invoice_for_VASANTH_in_P_THANGAVELU(
             "taxes": taxes,
             "sales_team": sales_team,
             "payment_schedule": payment_schedule,
+            "purchase_by": "-",
+            "purchaser_mobile_no": "0",
+            "contact_person": "Vasanth-VASANTH & CO",
+            "vehicle_no": "TN",
+            "distance": "10"
         })
 
         # Insert the document into the database
@@ -1331,6 +1347,11 @@ def create_sales_invoice_for_RELIANCE_INDUSTRIES_LIMITED_in_P_THANGAVELU(
             "taxes": taxes,
             "sales_team": sales_team,
             "payment_schedule": payment_schedule,
+            "purchase_by": "-",
+            "purchaser_mobile_no": "0",
+            "contact_person": "Reliance-RELIANCE INDUSTRIES LIMITED - 1",
+            "vehicle_no": "TN",
+            "distance": "10"
         })
 
         # Insert the document into the database
@@ -1528,6 +1549,11 @@ def create_sales_invoice_for_TAMILNADU_GENERATION_AND_DISTRIBUTION_in_P_THANGAVE
             "taxes": taxes,
             "sales_team": sales_team,
             "payment_schedule": payment_schedule,
+            "purchase_by": "-",
+            "purchaser_mobile_no": "0",
+            "contact_person": "tneb-TAMILNADU GENERATION AND DISTRIBUTION",
+            "vehicle_no": "TN",
+            "distance": "10"
         })
 
         # Insert the document into the database
@@ -1728,6 +1754,11 @@ def create_sales_invoice_for_TAMILNADU_GENERATION_AND_DISTRIBUTION_2_in_P_THANGA
             "taxes": taxes,
             "sales_team": sales_team,
             "payment_schedule": payment_schedule,
+            "purchase_by": "-",
+            "purchaser_mobile_no": "0",
+            "contact_person": "tneb-TAMILNADU GENERATION AND DISTRIBUTION",
+            "vehicle_no": "TN",
+            "distance": "10"
         })
 
         # Insert the document into the database
@@ -1925,6 +1956,11 @@ def create_sales_invoice_for_LIC_OF_INDIA_in_P_THANGAVELU(
             "taxes": taxes,
             "sales_team": sales_team,
             "payment_schedule": payment_schedule,
+            "purchase_by": "-",
+            "purchaser_mobile_no": "0",
+            "contact_person": "LIC OF INDIA-LIC OF INDIA",
+            "vehicle_no": "TN",
+            "distance": "10"
         })
 
         # Insert the document into the database
