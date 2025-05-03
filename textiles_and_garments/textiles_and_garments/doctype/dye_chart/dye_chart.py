@@ -1764,7 +1764,7 @@ def create_jv_for_lup(docname):
     doc.docstatus=0
     doc.voucher_type="Journal Entry"
     doc.ineligibility_reason="As per rules 42 & 43 of CGST Rules"
-    doc.naming_series = "JV/24/.#"
+    doc.naming_series = "JV/25/.#"
     doc.company="Pranera Services and Solutions Pvt. Ltd.,"
     doc.posting_date = datetime.today().strftime("%Y-%m-%d")  # Assigns current date in "YYYY-MM-DD" format
     doc.apply_tds=0
@@ -1865,7 +1865,7 @@ def create_jv_for_wo(docname):
     doc.docstatus=0
     doc.voucher_type="Journal Entry"
     doc.ineligibility_reason="As per rules 42 & 43 of CGST Rules"
-    doc.naming_series = "JV/24/.#"
+    doc.naming_series = "JV/25/.#"
     doc.company="Pranera Services and Solutions Pvt. Ltd.,"
     doc.posting_date = datetime.today().strftime("%Y-%m-%d")  # Assigns current date in "YYYY-MM-DD" format
     doc.apply_tds=0
