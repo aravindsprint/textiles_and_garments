@@ -38,8 +38,7 @@
   "rope_mark",
   "knurling",
   "mild_snagging",
-  "inspected_datetime",
-  "rfid"
+  "inspected_datetime"
  ],
  "fields": [
   {
@@ -219,18 +218,12 @@
    "fieldtype": "Data",
    "label": "Mild Snagging",
    "options": "-\nMild\nHeavy"
-  },
-  {
-   "fieldname": "rfid",
-   "fieldtype": "Data",
-   "label": "RFID",
-   "unique": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-05-13 11:10:20.582883",
+ "modified": "2025-05-13 16:21:52.779834",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Details",
