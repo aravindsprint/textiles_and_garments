@@ -185,12 +185,12 @@ def get_total_stock(filters):
         .where(wh.is_group == 0)
     )
 
-    Warehouse filtering condition
+    # Warehouse filtering condition
     allowed_warehouses = [
-    	("like", "JV/%"),
-    	("=", "LAYA SAMPLE ROOM - PSS"),
-    	("=", "Laya Stock in JV - PSS"),
-    	("like", "PT/%"),
+        ("like", "JV/%"),
+        ("=", "LAYA SAMPLE ROOM - PSS"),
+        ("=", "Laya Stock in JV - PSS"),
+        ("like", "PT/%"),
     ]
 
     # allowed_warehouses = [
@@ -209,7 +209,7 @@ def get_total_stock(filters):
     allowed_parent_warehouses = [
         ("like", "JV/%"),
         ("like", "PT/%"),
-        ("=", "LAYA - PSS")
+        ("=", "LAYA - PSS"),
     ]
 
     # Build OR condition for warehouse filters
