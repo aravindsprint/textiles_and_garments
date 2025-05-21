@@ -162,11 +162,41 @@ def get_columns(filters):
 	return columns
 
 
+# def get_total_stock(filters):
+# 	bin = frappe.qb.DocType("Bin")
+# 	item = frappe.qb.DocType("Item")
+# 	wh = frappe.qb.DocType("Warehouse")
+
+# 	query = (
+# 		frappe.qb.from_(bin)
+# 		.inner_join(item)
+# 		.on(bin.item_code == item.item_code)
+# 		.inner_join(wh)
+# 		.on(wh.name == bin.warehouse)
+# 		.where(bin.actual_qty != 0)
+# 	)
+
+# 	if filters.get("group_by") == "Warehouse":
+# 		if filters.get("company"):
+# 			query = query.where(wh.company == filters.get("company"))
+# 		query = query.select(bin.warehouse).groupby(bin.warehouse)
+# 	else:
+# 		query = query.select(wh.company).groupby(wh.company)
+
+# 	query = query.select(
+# 		item.item_code,
+# 		item.description,
+# 		Sum(bin.actual_qty).as_("actual_qty")
+# 	).groupby(item.item_code)
+
+# 	return query.run()
+
 def get_total_stock(filters):
 	bin = frappe.qb.DocType("Bin")
 	item = frappe.qb.DocType("Item")
 	wh = frappe.qb.DocType("Warehouse")
 
+	# Base query
 	query = (
 		frappe.qb.from_(bin)
 		.inner_join(item)
@@ -176,13 +206,38 @@ def get_total_stock(filters):
 		.where(bin.actual_qty != 0)
 	)
 
+	# Warehouse filtering condition
+	allowed_warehouses = [
+		("like", "JV/%"),
+		("=", "LAYA SAMPLE ROOM - PSS"),
+		("=", "Laya Stock in JV - PSS"),
+		("like", "PT/%"),
+	]
+
+	# allowed_warehouses = [
+	# 	("like", "DYE/%"),
+	# 	("=", "Stores - PSS")
+	# ]
+
+	# Build OR condition for warehouse filters
+	warehouse_conditions = None
+	for operator, pattern in allowed_warehouses:
+		condition = wh.name.like(pattern) if operator == "like" else wh.name == pattern
+		warehouse_conditions = condition if warehouse_conditions is None else warehouse_conditions | condition
+
+	query = query.where(warehouse_conditions)
+
+	# Grouping by Warehouse or Company
 	if filters.get("group_by") == "Warehouse":
 		if filters.get("company"):
 			query = query.where(wh.company == filters.get("company"))
 		query = query.select(bin.warehouse).groupby(bin.warehouse)
+	elif filters.get("group_by") == "Parent Warehouse":
+	    query = query.select(wh.parent_warehouse).groupby(wh.parent_warehouse)	
 	else:
 		query = query.select(wh.company).groupby(wh.company)
 
+	# Final select
 	query = query.select(
 		item.item_code,
 		item.description,
@@ -190,6 +245,7 @@ def get_total_stock(filters):
 	).groupby(item.item_code)
 
 	return query.run()
+
 
 
 def get_wip_qty_map():

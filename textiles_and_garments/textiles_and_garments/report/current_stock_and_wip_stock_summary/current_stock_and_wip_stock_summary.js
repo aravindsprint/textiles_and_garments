@@ -10,7 +10,7 @@ frappe.query_reports["Current Stock and WIP Stock Summary"] = {
 			fieldtype: "Select",
 			width: "80",
 			reqd: 1,
-			options: ["Warehouse", "Company"],
+			options: ["Warehouse", "Company", "Parent Warehouse"],
 			default: "Warehouse",
 		},
 		{
