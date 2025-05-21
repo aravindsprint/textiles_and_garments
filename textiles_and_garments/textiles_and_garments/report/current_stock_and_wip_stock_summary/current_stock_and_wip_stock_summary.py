@@ -185,7 +185,7 @@ def get_total_stock(filters):
         .where(wh.is_group == 0)
     )
 
-    # Warehouse filtering condition
+    Warehouse filtering condition
     allowed_warehouses = [
     	("like", "JV/%"),
     	("=", "LAYA SAMPLE ROOM - PSS"),
@@ -205,6 +205,20 @@ def get_total_stock(filters):
         warehouse_conditions = condition if warehouse_conditions is None else warehouse_conditions | condition
 
     query = query.where(warehouse_conditions)
+
+    allowed_parent_warehouses = [
+        ("like", "JV/%"),
+        ("like", "PT/%"),
+        ("=", "LAYA - PSS")
+    ]
+
+    # Build OR condition for warehouse filters
+    parent_warehouse_conditions = None
+    for operator, pattern in allowed_parent_warehouses:
+        condition = wh.parent_warehouse.like(pattern) if operator == "like" else wh.parent_warehouse == pattern
+        parent_warehouse_conditions = condition if parent_warehouse_conditions is None else parent_warehouse_conditions | condition
+
+    query = query.where(parent_warehouse_conditions)
 
     # Grouping by Warehouse or Company
     if filters.get("group_by") == "Warehouse":
