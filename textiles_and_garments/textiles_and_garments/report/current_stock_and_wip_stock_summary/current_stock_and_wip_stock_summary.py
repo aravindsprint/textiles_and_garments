@@ -207,7 +207,7 @@ def get_total_stock(filters):
     query = query.where(warehouse_conditions)
 
     allowed_parent_warehouses = [
-        ("like", "JV/%"),
+        ("like", "JV%"),
         ("like", "PT/%"),
         ("=", "LAYA - PSS"),
     ]
