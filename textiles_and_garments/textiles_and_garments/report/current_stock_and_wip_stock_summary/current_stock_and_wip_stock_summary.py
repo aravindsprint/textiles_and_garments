@@ -220,9 +220,9 @@ def get_total_stock(filters):
         ("=", "LAYA - PSS"),
     ]
 
-    allowed_parent_warehouses = [
-        ("like", "ALL%"),
-    ]
+    # allowed_parent_warehouses = [
+    #     ("like", "ALL%"),
+    # ]
 
     # Build OR condition for warehouse filters
     parent_warehouse_conditions = None
