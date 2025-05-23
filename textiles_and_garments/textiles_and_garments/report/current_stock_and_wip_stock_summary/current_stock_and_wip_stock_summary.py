@@ -139,7 +139,13 @@ def execute(filters=None):
     stock_with_wip = []
     for row in actual_stock:
         # Adjust index based on group_by
-        item_code = row[1] if filters.get("group_by") == "Warehouse" else row[1]
+        # item_code = row[1] if filters.get("group_by") == "Warehouse" else row[1]
+        if filters.get("group_by") == "Warehouse":
+            item_code = row[1]
+        elif filters.get("group_by") == "Company":
+            item_code = row[1]
+        else:  # For "Parent Warehouse" or no group_by
+            item_code = row[0]
         wip_qty = wip_qty_map.get(item_code, 0)
         stock_with_wip.append(row + (wip_qty,))
 
@@ -159,10 +165,12 @@ def get_columns(filters):
 
     if filters.get("group_by") == "Warehouse":
         columns.insert(0, _("Warehouse") + ":Link/Warehouse:150")
-    elif filters.get("group_by") == "Parent Warehouse":
-        columns.insert(0, _("Parent Warehouse") + ":Link/Warehouse:150")    
-    else:
-        columns.insert(0, _("Company") + ":Link/Company:250")
+    # elif filters.get("group_by") == "Parent Warehouse":
+    #     columns.insert(0, _("Parent Warehouse") + ":Link/Warehouse:150")
+    elif filters.get("group_by") == "Company":
+        columns.insert(0, _("Company") + ":Link/Company:150")    
+    # else:
+    #     columns.insert(0, _("Parent Warehouse") + ":Link/Warehouse:250")
 
     return columns
 
@@ -212,6 +220,10 @@ def get_total_stock(filters):
         ("=", "LAYA - PSS"),
     ]
 
+    allowed_parent_warehouses = [
+        ("like", "ALL%"),
+    ]
+
     # Build OR condition for warehouse filters
     parent_warehouse_conditions = None
     for operator, pattern in allowed_parent_warehouses:
@@ -228,7 +240,9 @@ def get_total_stock(filters):
     elif filters.get("group_by") == "Parent Warehouse":
         if filters.get("company"):
             query = query.where(wh.company == filters.get("company"))
-        query = query.select(wh.parent_warehouse).groupby(wh.parent_warehouse)	
+        # print("\n\nbefore query\n\n",query)    
+        # query = query.select(wh.parent_warehouse).groupby(wh.parent_warehouse)
+        # print("\n\nafter query\n\n",query)	
     else:
         query = query.select(wh.company).groupby(wh.company)
 
@@ -241,6 +255,7 @@ def get_total_stock(filters):
         item.description,
         Sum(bin.actual_qty).as_("actual_qty")
     ).groupby(item.item_code)
+
 
     return query.run()
 
