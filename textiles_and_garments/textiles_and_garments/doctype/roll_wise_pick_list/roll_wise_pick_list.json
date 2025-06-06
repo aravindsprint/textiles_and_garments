@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series: naming_series",
+ "creation": "2025-06-06 09:38:23.212737",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "warehouse",
+  "column_break_z3d0",
+  "posting_date",
+  "section_break_ra5c",
+  "roll_wise_pick_item",
+  "section_break_y6dp",
+  "batch_wise_pick_item",
+  "section_break_mddq",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "PICK/.####"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Roll Wise Pick List",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Roll Wise Pick List",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_z3d0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ra5c",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "roll_wise_pick_item",
+   "fieldtype": "Table",
+   "label": "Roll Wise Pick Item",
+   "options": "Roll Wise Pick Item"
+  },
+  {
+   "fieldname": "section_break_y6dp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "batch_wise_pick_item",
+   "fieldtype": "Table",
+   "label": "Batch Wise Pick Item",
+   "options": "Batch Wise Pick Item"
+  },
+  {
+   "fieldname": "section_break_mddq",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-06-06 12:54:09.735061",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Roll Wise Pick List",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
