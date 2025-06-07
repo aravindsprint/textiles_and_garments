@@ -8,6 +8,7 @@
  "field_order": [
   "naming_series",
   "warehouse",
+  "batch",
   "column_break_z3d0",
   "posting_date",
   "section_break_ra5c",
@@ -82,12 +83,18 @@
   {
    "fieldname": "section_break_mddq",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "label": "Batch",
+   "options": "Batch"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-06 16:43:29.413041",
+ "modified": "2025-06-07 09:14:59.323452",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Wise Pick List",

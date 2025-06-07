@@ -189,6 +189,7 @@ frappe.ui.form.on('Roll Wise Pick List', {
 
 function show_roll_multi_select_dialog(frm) {
     const warehouse = frm.doc.warehouse;
+    const batch = frm.doc.batch;
     if (!warehouse) {
         frappe.msgprint("Please select a Warehouse first.");
         return;
@@ -197,7 +198,8 @@ function show_roll_multi_select_dialog(frm) {
     frappe.call({
         method: "textiles_and_garments.textiles_and_garments.doctype.roll_wise_pick_list.roll_wise_pick_list.get_filtered_rolls",
         args: {
-            warehouse: warehouse
+            warehouse: warehouse,
+            batch: batch
         },
         callback: function (res) {
             const all_rolls = res.message || [];
@@ -292,6 +294,126 @@ function show_roll_multi_select_dialog(frm) {
         }
     });
 }
+
+
+// function show_roll_multi_select_dialog(frm) {
+//     const warehouse = frm.doc.warehouse;
+//     if (!warehouse) {
+//         frappe.msgprint("Please select a Warehouse first.");
+//         return;
+//     }
+
+//     let page_length = 20;
+//     let current_page = 0;
+//     let all_rolls = [];
+
+//     const fetch_rolls = (start = 0) => {
+//         frappe.call({
+//             method: "textiles_and_garments.textiles_and_garments.doctype.roll_wise_pick_list.roll_wise_pick_list.get_filtered_rolls",
+//             args: {
+//                 warehouse: warehouse
+//             },
+//             callback: function (res) {
+//                 all_rolls = res.message || [];
+
+//                 // Simulate paginated subset
+//                 const paginated_rolls = all_rolls.slice(start, start + page_length);
+//                 const roll_options = paginated_rolls.map(r => r.name);
+
+//                 let dialog = new frappe.ui.form.MultiSelectDialog({
+//                     doctype: "Roll",
+//                     target: frm,
+//                     setters: {
+//                         item_code: null,
+//                         batch: null,
+//                         roll_weight: null
+//                     },
+//                     add_filters_group: 1,
+
+//                     get_query() {
+//                         const filters = {};
+//                         const item_code = dialog.dialog.get_value('item_code');
+//                         const batch = dialog.dialog.get_value('batch');
+//                         const roll_weight = dialog.dialog.get_value('roll_weight');
+
+//                         if (item_code) filters.item_code = item_code;
+//                         if (batch) filters.batch = batch;
+//                         if (roll_weight) filters.roll_weight = roll_weight;
+
+//                         // Apply filter to limited set
+//                         filters.name = ["in", roll_options];
+
+//                         return { filters };
+//                     },
+
+//                     primary_action_label: 'Add to Pick List',
+
+//                     action(selected_names) {
+//                         if (!selected_names || selected_names.length === 0) return;
+
+//                         const selected_rolls = all_rolls.filter(r => selected_names.includes(r.name));
+
+//                         // Add to roll_wise_pick_item
+//                         selected_rolls.forEach(roll => {
+//                             frm.add_child('roll_wise_pick_item', {
+//                                 item_code: roll.item_code,
+//                                 batch: roll.batch,
+//                                 qty: roll.roll_weight,
+//                                 roll_no: roll.name,
+//                                 uom: roll.stock_uom,
+//                                 warehouse: frm.doc.warehouse
+//                             });
+//                         });
+
+//                         // Group and add to batch_wise_pick_item
+//                         const batch_map = {};
+//                         selected_rolls.forEach(roll => {
+//                             if (!batch_map[roll.batch]) {
+//                                 batch_map[roll.batch] = {
+//                                     item_code: roll.item_code,
+//                                     batch: roll.batch,
+//                                     qty: 0,
+//                                     uom: roll.stock_uom,
+//                                     warehouse: frm.doc.warehouse
+//                                 };
+//                             }
+//                             batch_map[roll.batch].qty += roll.roll_weight;
+//                         });
+
+//                         Object.values(batch_map).forEach(batch_entry => {
+//                             frm.add_child('batch_wise_pick_item', batch_entry);
+//                         });
+
+//                         frm.refresh_field('roll_wise_pick_item');
+//                         frm.refresh_field('batch_wise_pick_item');
+
+//                         frappe.msgprint(`${selected_rolls.length} roll(s) added to the Pick List.`);
+//                         dialog.dialog.hide();
+//                     }
+//                 });
+
+//                 // Add Pagination Footer Controls
+//                 dialog.dialog.set_primary_action("Next Page", () => {
+//                     current_page += 1;
+//                     dialog.dialog.hide();
+//                     fetch_rolls(current_page * page_length);
+//                 });
+
+//                 dialog.dialog.add_custom_button("Previous Page", () => {
+//                     if (current_page > 0) {
+//                         current_page -= 1;
+//                         dialog.dialog.hide();
+//                         fetch_rolls(current_page * page_length);
+//                     }
+//                 }, "left");
+
+//             }
+//         });
+//     };
+
+//     fetch_rolls(); // Load initial page
+// }
+
 
 
 
