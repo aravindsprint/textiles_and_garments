@@ -139,6 +139,21 @@ class RollWisePickList(Document):
 #     print("\n\nbatchwise_data\n\n",batchwise_data)
 #     return batchwise_data
 
+
+@frappe.whitelist()
+def get_sales_invoice_items(sales_invoice):
+    """Fetch all items from the given sales invoice."""
+    if not sales_invoice:
+        return []
+
+    items = frappe.get_all(
+        "Sales Invoice Item",
+        filters={"parent": sales_invoice},
+        fields=["item_code", "warehouse", "qty", "rate", "amount"]
+    )
+    return items
+
+
 @frappe.whitelist()
 def get_filtered_rolls(warehouse, batch):
     if not warehouse:
