@@ -343,8 +343,15 @@ def get_total_stock(filters):
     )
 
     allowed_warehouses = [
-        ("like", "JV/RFD02 - PSS%")
+        ("like", "JV/%"),
+        ("=", "LAYA SAMPLE ROOM - PSS"),
+        ("=", "Laya Stock in JV - PSS"),
+        ("like", "PT/%"),
     ]
+
+    # allowed_warehouses = [
+    #     ("like", "JV/RFD02 - PSS%")
+    # ]
 
     # allowed_warehouses = [
     #     ("like", "DYE/%"),
@@ -358,9 +365,16 @@ def get_total_stock(filters):
         warehouse_conditions = condition if warehouse_conditions is None else warehouse_conditions | condition
     query = query.where(warehouse_conditions)
 
+    
     allowed_parent_warehouses = [
-        ("like", "JV%")
+        ("like", "JV%"),
+        ("like", "PT/%"),
+        ("=", "LAYA - PSS"),
     ]
+
+    # allowed_parent_warehouses = [
+    #     ("like", "JV%")
+    # ]
 
     # allowed_parent_warehouses = [("like", "ALL%")]
 
