@@ -338,7 +338,7 @@ def get_total_stock(filters):
         .inner_join(item).on(bin.item_code == item.item_code)
         .inner_join(wh).on(wh.name == bin.warehouse)
         .left_join(rol).on((rol.parent == item.item_code) & (rol.warehouse == bin.warehouse))
-        .where(bin.actual_qty != 0)
+        .where(bin.actual_qty >= 0)
         .where(wh.is_group == 0)
     )
 
