@@ -13,7 +13,10 @@
   "mobile_no",
   "amended_from",
   "id",
-  "location"
+  "location",
+  "out",
+  "out_date",
+  "duration"
  ],
  "fields": [
   {
@@ -63,12 +66,32 @@
    "fieldtype": "Select",
    "label": "Location",
    "options": "HO\nJV"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "out",
+   "fieldtype": "Select",
+   "label": "Out",
+   "options": "\nYes\nNo"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "out_date",
+   "fieldtype": "Datetime",
+   "label": "Out Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "duration",
+   "fieldtype": "Data",
+   "label": "Duration"
   }
  ],
+ "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-21 15:54:38.357925",
+ "modified": "2025-07-24 14:58:22.854894",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Visitor Data",
@@ -89,6 +112,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
