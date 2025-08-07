@@ -112,7 +112,7 @@ def get_batch_source(batch_no):
             
         for source in source_docs:
             if source.doctype in ["Purchase Receipt", "Stock Entry"]:
-                if source.doctype == "Stock Entry" and source.purpose != "Material Receipt":
+                if source.doctype == "Stock Entry" and source.purpose != "Material Receipt" or source.purpose != "Material Transfer" or source.purpose != "Material Transfer for Manufacture" or source.purpose != "Send to Subcontractor" or source.purpose != "Material Issue":
                     # For manufacture/repack, trace raw material batches
                     raw_material_batches = get_raw_material_batches(source.name)
                     for rm_batch in raw_material_batches:
