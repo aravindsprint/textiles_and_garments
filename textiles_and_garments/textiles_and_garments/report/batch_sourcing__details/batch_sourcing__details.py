@@ -194,15 +194,32 @@ def get_source_documents(batch_no):
         pr_doc = frappe.get_doc("Purchase Receipt", pr.name)
         source_docs.append(pr_doc)
     
-    # Check Stock Entry
+    # Check Stock Entry - First try direct batch_no in stock_entry_detail
     se_list = frappe.get_all("Stock Entry Detail", 
         filters={"batch_no": batch_no, "t_warehouse": ["!=", ""]},
         fields=["parent as name"],
         distinct=True
     )
-    for se in se_list:
-        se_doc = frappe.get_doc("Stock Entry", se.name)
-        source_docs.append(se_doc)
+    
+    # If no direct matches, check serial_and_batch_bundle
+    if not se_list:
+        bundle_list = frappe.get_all("Stock Entry Detail",
+            filters={"t_warehouse": ["!=", ""], "serial_and_batch_bundle": ["!=", ""]},
+            fields=["parent as name", "serial_and_batch_bundle as bundle"],
+            distinct=True
+        )
+        
+        for bundle_item in bundle_list:
+            bundle_doc = frappe.get_doc("Serial and Batch Bundle", bundle_item.bundle)
+            for entry in bundle_doc.entries:
+                if entry.batch_no == batch_no:
+                    se_doc = frappe.get_doc("Stock Entry", bundle_item.name)
+                    source_docs.append(se_doc)
+                    break
+    else:
+        for se in se_list:
+            se_doc = frappe.get_doc("Stock Entry", se.name)
+            source_docs.append(se_doc)
     
     # Check Subcontracting Receipt
     scr_list = frappe.get_all("Subcontracting Receipt Item", 
@@ -224,8 +241,15 @@ def get_raw_material_batches(stock_entry_name):
     se_doc = frappe.get_doc("Stock Entry", stock_entry_name)
     
     for item in se_doc.items:
+        # First check direct batch_no
         if not item.t_warehouse and item.batch_no:
             batches.append(item.batch_no)
+        # Then check serial_and_batch_bundle
+        elif not item.t_warehouse and item.serial_and_batch_bundle:
+            bundle_doc = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
+            for entry in bundle_doc.entries:
+                if entry.batch_no:
+                    batches.append(entry.batch_no)
     
     batch_logger.debug(f"Found raw material batches: {batches}")
     return batches
@@ -237,12 +261,19 @@ def get_supplied_raw_material_batches(subcontract_receipt_name):
     scr_doc = frappe.get_doc("Subcontracting Receipt", subcontract_receipt_name)
     
     for item in scr_doc.supplied_items:
+        # First check direct batch_no
         if item.batch_no:
             batches.append(item.batch_no)
+        # Then check serial_and_batch_bundle if implemented in Subcontracting
+        elif hasattr(item, 'serial_and_batch_bundle') and item.serial_and_batch_bundle:
+            bundle_doc = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
+            for entry in bundle_doc.entries:
+                if entry.batch_no:
+                    batches.append(entry.batch_no)
     
     batch_logger.debug(f"Found supplied batches: {batches}")
     return batches
-
+    
 def get_quality_inspection(batch_no, doctype=None, docname=None):
     """Get Quality Inspection linked to batch or document"""
     batch_logger.debug(f"Getting QI for {batch_no}, {doctype}, {docname}")
