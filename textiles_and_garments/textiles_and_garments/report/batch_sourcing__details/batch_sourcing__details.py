@@ -12,7 +12,7 @@ batch_logger.setLevel(frappe.log_level or "INFO")
 
 def execute(filters=None):
     """Main report execution function"""
-    batch_logger.info("Report execution started")
+    batch_logger.info("\n\nReport execution started")
     columns, data = [], []
     
     try:
@@ -118,6 +118,7 @@ def get_batch_source(batch_no):
         try:
             batch_doc = frappe.get_doc("Batch", batch)
             source_docs = get_source_documents(batch)
+            batch_logger.info(f"Found {source_docs} source documents for {batch}")
             batch_logger.info(f"Found {len(source_docs)} source documents for {batch}")
             
             if not source_docs:
@@ -135,6 +136,7 @@ def get_batch_source(batch_no):
                 return
                 
             for source in source_docs:
+                batch_logger.info(f"Processing source: {source.doctype} {source.name}")
                 batch_logger.debug(f"Processing source: {source.doctype} {source.name}")
                 
                 if source.doctype in ["Purchase Receipt", "Stock Entry"]:
@@ -182,6 +184,7 @@ def get_batch_source(batch_no):
 def get_source_documents(batch_no):
     """Get documents where this batch was created"""
     batch_logger.debug(f"Getting source docs for batch: {batch_no}")
+    batch_logger.info(f"Getting source docs for batch: {batch_no}")
     source_docs = []
     
     # Check Purchase Receipt
@@ -194,20 +197,44 @@ def get_source_documents(batch_no):
         pr_doc = frappe.get_doc("Purchase Receipt", pr.name)
         source_docs.append(pr_doc)
     
-    # Check Stock Entry - First try direct batch_no in stock_entry_detail
-    se_list = frappe.get_all("Stock Entry Detail", 
-        filters={"batch_no": batch_no, "t_warehouse": ["!=", ""]},
-        fields=["parent as name"],
-        distinct=True
-    )
+    # Check Stock Entry with join to parent Stock Entry
+    se_list = frappe.db.sql("""
+        SELECT sed.parent as name, se.purpose
+        FROM `tabStock Entry Detail` sed
+        JOIN `tabStock Entry` se ON se.name = sed.parent
+        WHERE sed.batch_no = %(batch_no)s 
+        AND sed.t_warehouse IS NOT NULL 
+        AND sed.t_warehouse != ''
+        AND se.purpose = 'Manufacture'
+        GROUP BY sed.parent
+    """, {"batch_no": batch_no}, as_dict=True)
+    batch_logger.info(f"Getting source docs in se_list: {se_list}")
     
-    # If no direct matches, check serial_and_batch_bundle
+    # If no direct matches in manufacturing entries, check other stock entries
     if not se_list:
-        bundle_list = frappe.get_all("Stock Entry Detail",
-            filters={"t_warehouse": ["!=", ""], "serial_and_batch_bundle": ["!=", ""]},
-            fields=["parent as name", "serial_and_batch_bundle as bundle"],
-            distinct=True
-        )
+        se_list = frappe.db.sql("""
+            SELECT sed.parent as name, se.purpose
+            FROM `tabStock Entry Detail` sed
+            JOIN `tabStock Entry` se ON se.name = sed.parent
+            WHERE sed.batch_no = %(batch_no)s
+            AND se.purpose = 'Manufacture'
+            AND sed.t_warehouse IS NOT NULL 
+            AND sed.t_warehouse != ''
+            GROUP BY sed.parent
+        """, {"batch_no": batch_no}, as_dict=True)
+    
+    # If still no matches, check serial_and_batch_bundle
+    if not se_list:
+        bundle_list = frappe.db.sql("""
+            SELECT sed.parent as name, se.purpose, sed.serial_and_batch_bundle as bundle
+            FROM `tabStock Entry Detail` sed
+            JOIN `tabStock Entry` se ON se.name = sed.parent
+            WHERE sed.t_warehouse IS NOT NULL
+            AND se.purpose = 'Manufacture' 
+            AND sed.t_warehouse != ''
+            AND sed.serial_and_batch_bundle IS NOT NULL
+            AND sed.serial_and_batch_bundle != ''
+        """, as_dict=True)
         
         for bundle_item in bundle_list:
             bundle_doc = frappe.get_doc("Serial and Batch Bundle", bundle_item.bundle)
@@ -216,10 +243,10 @@ def get_source_documents(batch_no):
                     se_doc = frappe.get_doc("Stock Entry", bundle_item.name)
                     source_docs.append(se_doc)
                     break
-    else:
-        for se in se_list:
-            se_doc = frappe.get_doc("Stock Entry", se.name)
-            source_docs.append(se_doc)
+    
+    for se in se_list:
+        se_doc = frappe.get_doc("Stock Entry", se.name)
+        source_docs.append(se_doc)
     
     # Check Subcontracting Receipt
     scr_list = frappe.get_all("Subcontracting Receipt Item", 
@@ -273,7 +300,7 @@ def get_supplied_raw_material_batches(subcontract_receipt_name):
     
     batch_logger.debug(f"Found supplied batches: {batches}")
     return batches
-    
+
 def get_quality_inspection(batch_no, doctype=None, docname=None):
     """Get Quality Inspection linked to batch or document"""
     batch_logger.debug(f"Getting QI for {batch_no}, {doctype}, {docname}")

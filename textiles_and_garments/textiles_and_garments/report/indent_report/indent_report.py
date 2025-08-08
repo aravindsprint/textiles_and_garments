@@ -106,38 +106,6 @@ def get_data(filters):
     return data
 
 def get_sales_order_data(filters):
-    # query = """
-    #     SELECT 
-    #         mr.date as posting_date,    
-    #         CASE 
-    #             WHEN mri.finished_item_code LIKE 'G%%' THEN 'Knitting'
-    #             WHEN mri.finished_item_code LIKE 'D%%' THEN 'Dyeing'
-    #             WHEN mri.finished_item_code LIKE 'S%%' THEN 'Stenter'
-    #             WHEN mri.finished_item_code LIKE 'PF%%' THEN 'Peach finish'
-    #             WHEN mri.finished_item_code LIKE 'H%%' THEN 'Heat setting'
-    #             WHEN mri.finished_item_code LIKE 'WH%%' THEN 'OW Heat setting'
-    #             WHEN mri.finished_item_code LIKE 'PK%%' THEN 'Printing'
-    #             ELSE 'Unknown' 
-    #         END AS process,
-    #         mri.for_project, 
-    #         mri.parent,  
-    #         item.commercial_name, 
-    #         item.color, 
-    #         mr.requested_by, 
-    #         CASE 
-    #             WHEN mr.requested_by = 'For Stock' THEN 'STOCK'
-    #             ELSE 'MTO' 
-    #         END AS customer_group,
-    #         mri.qty, 
-    #         mri.uom, 
-    #         mri.finished_item_code,
-    #         item.item_name,
-    #         mr.docstatus
-    #     FROM `tabMaterial Request` AS mr
-    #     JOIN `tabMaterial Request Item` AS mri ON mri.parent = mr.name
-    #     JOIN `tabItem` AS item ON item.name = mri.finished_item_code
-    # """
-
     query = """
         SELECT 
             mr.date as posting_date,
