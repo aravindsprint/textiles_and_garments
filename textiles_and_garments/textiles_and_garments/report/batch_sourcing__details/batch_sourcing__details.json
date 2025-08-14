@@ -11,7 +11,7 @@
  "is_standard": "Yes",
  "letter_head": "CUSTOM__PSS JV_LOGO",
  "letterhead": null,
- "modified": "2025-08-05 17:24:34.551066",
+ "modified": "2025-08-14 16:09:31.875525",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Batch Sourcing  Details",
@@ -22,7 +22,7 @@
  "report_type": "Script Report",
  "roles": [
   {
-   "role": "Item Manager"
+   "role": "Stock User"
   }
  ],
  "timeout": 0
