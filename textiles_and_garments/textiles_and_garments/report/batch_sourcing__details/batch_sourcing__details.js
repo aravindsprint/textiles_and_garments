@@ -22,6 +22,14 @@ frappe.query_reports["Batch Sourcing  Details"] = {
             }
         },
         {
+            fieldname: "supplier",
+            label: __("Supplier"),
+            fieldtype: "Link",
+            options: "Supplier",
+            reqd: 0,
+            width: "280",
+        },
+        {
             fieldname: "from_date",
             label: __("From Date"),
             fieldtype: "Date",

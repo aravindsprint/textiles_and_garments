@@ -466,6 +466,341 @@
 #     </a>
 #     """
 
+# correct data without supplier column
+# from collections import defaultdict
+# import frappe
+# from frappe import _
+# from frappe.utils import flt, today
+
+# # Initialize logger
+# batch_logger = frappe.logger("batch_sourcing", allow_site=True, file_count=5)
+# batch_logger.setLevel(frappe.log_level or "INFO")
+
+# def execute(filters=None):
+#     """Main report execution function"""
+#     batch_logger.info("\n\nReport execution started")
+#     columns, data = [], []
+    
+#     try:
+#         data = get_data(filters)
+#         columns = get_columns(filters)
+#         batch_logger.info(f"Report generated with {len(data)} rows")
+#     except Exception as e:
+#         batch_logger.error(f"Error in execute: {str(e)}", exc_info=True)
+#         frappe.throw(_("Error generating report. Please check logs for details."))
+    
+#     return columns, data
+
+# def get_columns(filters):
+#     """Define report columns"""
+#     columns = [
+#         {
+#             "label": _("S.No"),
+#             "fieldname": "s_no",
+#             "fieldtype": "Int",
+#             "width": 60,
+#         },
+#         {
+#             "label": _("Item Code"),
+#             "fieldname": "item_code",
+#             "fieldtype": "Link",
+#             "options": "Item",
+#             "width": 120,
+#         },
+#         {
+#             "label": _("Batch"),
+#             "fieldname": "batch",
+#             "fieldtype": "Link",
+#             "options": "Batch",
+#             "width": 120,
+#         },
+#         {
+#             "label": _("Source Document Type"),
+#             "fieldname": "doctype",
+#             "fieldtype": "Data",
+#             "width": 150,
+#         },
+#         {
+#             "label": _("Source Document"),
+#             "fieldname": "doc_no",
+#             "fieldtype": "Dynamic Link",
+#             "options": "doctype",
+#             "width": 150,
+#         }
+#     ]
+#     batch_logger.debug("Columns definition prepared")
+#     return columns
+
+# def get_data(filters):
+#     """Get report data"""
+#     batch_logger.debug(f"Processing with filters: {filters}")
+    
+#     if not filters.get("batch_no"):
+#         batch_logger.error("No batch number provided in filters")
+#         frappe.throw(_("Please select a Batch Number"))
+    
+#     batch_no = filters.get("batch_no")
+#     batch_logger.info(f"Starting batch trace for: {batch_no}")
+    
+#     try:
+#         sources = get_batch_source(batch_no)
+#     except Exception as e:
+#         batch_logger.error(f"Error tracing batch {batch_no}: {str(e)}", exc_info=True)
+#         raise
+    
+#     data = []
+#     for idx, source in enumerate(sources, 1):
+#         data.append({
+#             "s_no": idx,
+#             "item_code": source["item_code"],
+#             "batch": source["batch"],
+#             "doctype": source["doctype"],
+#             "doc_no": source["docname"]
+#         })
+    
+#     batch_logger.info(f"Completed trace for {batch_no}. Found {len(data)} rows")
+#     return data
+
+# def get_batch_source(batch_no):
+#     """Trace the origin of a batch and return source documents"""
+#     batches = []
+#     processed_batches = set()
+    
+#     def _trace_batch(batch):
+#         if batch in processed_batches:
+#             batch_logger.debug(f"Skipping already processed batch: {batch}")
+#             return
+            
+#         processed_batches.add(batch)
+#         batch_logger.info(f"Processing batch: {batch}")
+        
+#         try:
+#             batch_doc = frappe.get_doc("Batch", batch)
+#             source_docs = get_source_documents(batch)
+#             batch_logger.info(f"Found {len(source_docs)} source documents for {batch}")
+            
+#             # Always add the current batch data first
+#             batch_data = {
+#                 "batch": batch,
+#                 "item_code": batch_doc.item,
+#                 "doctype": None,
+#                 "docname": None
+#             }
+            
+#             # If no source docs, treat as source batch
+#             if not source_docs:
+#                 batch_logger.info(f"No source docs found - treating as source batch: {batch}")
+#                 batch_data["doctype"] = "Purchase Receipt"
+#                 batches.append(batch_data)
+#                 batch_logger.debug(f"Added source batch: {batch_data}")
+#                 return
+                
+#             for source in source_docs:
+#                 batch_logger.debug(f"Processing source: {source.doctype} {source.name}")
+                
+#                 if source.doctype in ["Purchase Receipt", "Stock Entry"]:
+#                     if source.doctype == "Stock Entry" and source.purpose not in [
+#                         "Material Receipt", "Material Transfer", 
+#                         "Material Transfer for Manufacture", 
+#                         "Send to Subcontractor", "Material Issue"
+#                     ]:
+#                         batch_logger.info(f"Tracing raw materials from {source.name}")
+#                         raw_material_batches = get_raw_material_batches(source.name)
+#                         batch_logger.info(f"Found raw material batches: {raw_material_batches}")
+                        
+#                         for rm_batch in raw_material_batches:
+#                             batch_logger.debug(f"Tracing raw material: {rm_batch}")
+#                             _trace_batch(rm_batch)
+                            
+#                         # Add the manufacturing entry itself
+#                         item_code = get_item_code_from_source(source, batch)
+#                         batch_data = {
+#                             "batch": batch,
+#                             "item_code": item_code,
+#                             "doctype": source.doctype,
+#                             "docname": source.name
+#                         }
+#                         batches.append(batch_data)
+#                     else:
+#                         item_code = get_item_code_from_source(source, batch)
+#                         batch_data = {
+#                             "batch": batch,
+#                             "item_code": item_code,
+#                             "doctype": source.doctype,
+#                             "docname": source.name
+#                         }
+#                         batches.append(batch_data)
+                        
+#                 elif source.doctype == "Subcontracting Receipt":
+#                     batch_logger.info(f"Processing subcontract: {source.name}")
+#                     supplied_batches = get_supplied_raw_material_batches(source.name)
+#                     batch_logger.info(f"Found supplied batches: {supplied_batches}")
+                    
+#                     for s_batch in supplied_batches:
+#                         batch_logger.debug(f"Tracing supplied batch: {s_batch}")
+#                         _trace_batch(s_batch)
+                        
+#                     # Add the subcontracting receipt itself
+#                     item_code = get_item_code_from_source(source, batch)
+#                     batch_data = {
+#                         "batch": batch,
+#                         "item_code": item_code,
+#                         "doctype": source.doctype,
+#                         "docname": source.name
+#                     }
+#                     batches.append(batch_data)
+                        
+#         except Exception as e:
+#             batch_logger.error(f"Error tracing batch {batch}: {str(e)}", exc_info=True)
+#             raise
+    
+#     _trace_batch(batch_no)
+#     batch_logger.info(f"Completed tracing. Total batches: {len(batches)}")
+#     return batches
+
+# def get_item_code_from_source(source_doc, batch_no):
+#     """Get item code from source document for the given batch"""
+#     if source_doc.doctype == "Purchase Receipt":
+#         for item in source_doc.items:
+#             if item.batch_no == batch_no:
+#                 return item.item_code
+#     elif source_doc.doctype == "Stock Entry":
+#         for item in source_doc.items:
+#             if item.batch_no == batch_no:
+#                 return item.item_code
+#             # Check serial and batch bundle if exists
+#             elif hasattr(item, 'serial_and_batch_bundle') and item.serial_and_batch_bundle:
+#                 bundle = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
+#                 for entry in bundle.entries:
+#                     if entry.batch_no == batch_no:
+#                         return item.item_code
+#     elif source_doc.doctype == "Subcontracting Receipt":
+#         for item in source_doc.items:
+#             if item.batch_no == batch_no:
+#                 return item.item_code
+    
+#     # Fallback - get item code from batch
+#     batch_doc = frappe.get_doc("Batch", batch_no)
+#     return batch_doc.item
+
+# def get_source_documents(batch_no):
+#     """Get documents where this batch was created"""
+#     batch_logger.debug(f"Getting source docs for batch: {batch_no}")
+#     source_docs = []
+    
+#     # Check Purchase Receipt
+#     pr_list = frappe.get_all("Purchase Receipt Item", 
+#         filters={"batch_no": batch_no},
+#         fields=["parent as name"],
+#         distinct=True
+#     )
+#     for pr in pr_list:
+#         pr_doc = frappe.get_doc("Purchase Receipt", pr.name)
+#         source_docs.append(pr_doc)
+    
+#     # Check Stock Entry with join to parent Stock Entry
+#     se_list = frappe.db.sql("""
+#         SELECT sed.parent as name, se.purpose
+#         FROM `tabStock Entry Detail` sed
+#         JOIN `tabStock Entry` se ON se.name = sed.parent
+#         WHERE sed.batch_no = %(batch_no)s 
+#         AND sed.t_warehouse IS NOT NULL 
+#         AND sed.t_warehouse != ''
+#         AND se.purpose = 'Manufacture'
+#         GROUP BY sed.parent
+#     """, {"batch_no": batch_no}, as_dict=True)
+    
+#     # If no direct matches in manufacturing entries, check other stock entries
+#     if not se_list:
+#         se_list = frappe.db.sql("""
+#             SELECT sed.parent as name, se.purpose
+#             FROM `tabStock Entry Detail` sed
+#             JOIN `tabStock Entry` se ON se.name = sed.parent
+#             WHERE sed.batch_no = %(batch_no)s
+#             AND se.purpose = 'Manufacture'
+#             AND sed.t_warehouse IS NOT NULL 
+#             AND sed.t_warehouse != ''
+#             GROUP BY sed.parent
+#         """, {"batch_no": batch_no}, as_dict=True)
+    
+#     # If still no matches, check serial_and_batch_bundle
+#     if not se_list:
+#         bundle_list = frappe.db.sql("""
+#             SELECT sed.parent as name, se.purpose, sed.serial_and_batch_bundle as bundle
+#             FROM `tabStock Entry Detail` sed
+#             JOIN `tabStock Entry` se ON se.name = sed.parent
+#             WHERE sed.t_warehouse IS NOT NULL
+#             AND se.purpose = 'Manufacture' 
+#             AND sed.t_warehouse != ''
+#             AND sed.serial_and_batch_bundle IS NOT NULL
+#             AND sed.serial_and_batch_bundle != ''
+#         """, as_dict=True)
+        
+#         for bundle_item in bundle_list:
+#             bundle_doc = frappe.get_doc("Serial and Batch Bundle", bundle_item.bundle)
+#             for entry in bundle_doc.entries:
+#                 if entry.batch_no == batch_no:
+#                     se_doc = frappe.get_doc("Stock Entry", bundle_item.name)
+#                     source_docs.append(se_doc)
+#                     break
+    
+#     for se in se_list:
+#         se_doc = frappe.get_doc("Stock Entry", se.name)
+#         source_docs.append(se_doc)
+    
+#     # Check Subcontracting Receipt
+#     scr_list = frappe.get_all("Subcontracting Receipt Item", 
+#         filters={"batch_no": batch_no},
+#         fields=["parent as name"],
+#         distinct=True
+#     )
+#     for scr in scr_list:
+#         scr_doc = frappe.get_doc("Subcontracting Receipt", scr.name)
+#         source_docs.append(scr_doc)
+    
+#     batch_logger.debug(f"Found {len(source_docs)} source documents")
+#     return source_docs
+
+# def get_raw_material_batches(stock_entry_name):
+#     """Get raw material batches used in manufacture/repack"""
+#     batch_logger.debug(f"Getting raw materials from: {stock_entry_name}")
+#     batches = []
+#     se_doc = frappe.get_doc("Stock Entry", stock_entry_name)
+    
+#     for item in se_doc.items:
+#         # First check direct batch_no
+#         if not item.t_warehouse and item.batch_no:
+#             batches.append(item.batch_no)
+#         # Then check serial_and_batch_bundle
+#         elif not item.t_warehouse and item.serial_and_batch_bundle:
+#             bundle_doc = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
+#             for entry in bundle_doc.entries:
+#                 if entry.batch_no:
+#                     batches.append(entry.batch_no)
+    
+#     batch_logger.debug(f"Found raw material batches: {batches}")
+#     return batches
+
+# def get_supplied_raw_material_batches(subcontract_receipt_name):
+#     """Get batches of raw materials supplied for subcontracting"""
+#     batch_logger.debug(f"Getting supplied batches from: {subcontract_receipt_name}")
+#     batches = []
+#     scr_doc = frappe.get_doc("Subcontracting Receipt", subcontract_receipt_name)
+    
+#     for item in scr_doc.supplied_items:
+#         # First check direct batch_no
+#         if item.batch_no:
+#             batches.append(item.batch_no)
+#         # Then check serial_and_batch_bundle if implemented in Subcontracting
+#         elif hasattr(item, 'serial_and_batch_bundle') and item.serial_and_batch_bundle:
+#             bundle_doc = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
+#             for entry in bundle_doc.entries:
+#                 if entry.batch_no:
+#                     batches.append(entry.batch_no)
+    
+#     batch_logger.debug(f"Found supplied batches: {batches}")
+#     return batches
+
 
 from collections import defaultdict
 import frappe
@@ -526,6 +861,13 @@ def get_columns(filters):
             "fieldtype": "Dynamic Link",
             "options": "doctype",
             "width": 150,
+        },
+        {
+            "label": _("Supplier"),
+            "fieldname": "supplier",
+            "fieldtype": "Link",
+            "options": "Supplier",
+            "width": 120,
         }
     ]
     batch_logger.debug("Columns definition prepared")
@@ -550,16 +892,39 @@ def get_data(filters):
     
     data = []
     for idx, source in enumerate(sources, 1):
+        supplier = None
+        if source["doctype"] in ["Purchase Receipt", "Subcontracting Receipt"]:
+            supplier = get_supplier_from_doc(source["doctype"], source["docname"])
+        elif source["doctype"] == "Stock Entry" and source.get("purpose") == "Manufacture":
+            supplier = "Pranera"
+            
         data.append({
             "s_no": idx,
             "item_code": source["item_code"],
             "batch": source["batch"],
             "doctype": source["doctype"],
-            "doc_no": source["docname"]
+            "doc_no": source["docname"],
+            "supplier": supplier
         })
     
     batch_logger.info(f"Completed trace for {batch_no}. Found {len(data)} rows")
     return data
+
+def get_supplier_from_doc(doctype, docname):
+    """Get supplier from Purchase Receipt or Subcontracting Receipt"""
+    if not doctype or not docname:
+        return None
+        
+    try:
+        doc = frappe.get_doc(doctype, docname)
+        if doctype == "Purchase Receipt":
+            return doc.supplier
+        elif doctype == "Subcontracting Receipt":
+            return doc.supplier
+        return None
+    except Exception as e:
+        batch_logger.error(f"Error getting supplier from {doctype} {docname}: {str(e)}")
+        return None
 
 def get_batch_source(batch_no):
     """Trace the origin of a batch and return source documents"""
@@ -584,7 +949,8 @@ def get_batch_source(batch_no):
                 "batch": batch,
                 "item_code": batch_doc.item,
                 "doctype": None,
-                "docname": None
+                "docname": None,
+                "purpose": None
             }
             
             # If no source docs, treat as source batch
@@ -599,38 +965,36 @@ def get_batch_source(batch_no):
                 batch_logger.debug(f"Processing source: {source.doctype} {source.name}")
                 
                 if source.doctype in ["Purchase Receipt", "Stock Entry"]:
-                    if source.doctype == "Stock Entry" and source.purpose not in [
-                        "Material Receipt", "Material Transfer", 
-                        "Material Transfer for Manufacture", 
-                        "Send to Subcontractor", "Material Issue"
-                    ]:
-                        batch_logger.info(f"Tracing raw materials from {source.name}")
-                        raw_material_batches = get_raw_material_batches(source.name)
-                        batch_logger.info(f"Found raw material batches: {raw_material_batches}")
-                        
-                        for rm_batch in raw_material_batches:
-                            batch_logger.debug(f"Tracing raw material: {rm_batch}")
-                            _trace_batch(rm_batch)
+                    if source.doctype == "Stock Entry":
+                        batch_data["purpose"] = source.purpose
+                        if source.purpose == "Manufacture":
+                            batch_logger.info(f"Tracing raw materials from {source.name}")
+                            raw_material_batches = get_raw_material_batches(source.name)
+                            batch_logger.info(f"Found raw material batches: {raw_material_batches}")
+                            
+                            for rm_batch in raw_material_batches:
+                                batch_logger.debug(f"Tracing raw material: {rm_batch}")
+                                _trace_batch(rm_batch)
                             
                         # Add the manufacturing entry itself
                         item_code = get_item_code_from_source(source, batch)
-                        batch_data = {
+                        batch_data.update({
                             "batch": batch,
                             "item_code": item_code,
                             "doctype": source.doctype,
-                            "docname": source.name
-                        }
-                        batches.append(batch_data)
+                            "docname": source.name,
+                            "purpose": source.purpose
+                        })
                     else:
                         item_code = get_item_code_from_source(source, batch)
-                        batch_data = {
+                        batch_data.update({
                             "batch": batch,
                             "item_code": item_code,
                             "doctype": source.doctype,
                             "docname": source.name
-                        }
-                        batches.append(batch_data)
-                        
+                        })
+                    batches.append(batch_data)
+                    
                 elif source.doctype == "Subcontracting Receipt":
                     batch_logger.info(f"Processing subcontract: {source.name}")
                     supplied_batches = get_supplied_raw_material_batches(source.name)
@@ -642,12 +1006,12 @@ def get_batch_source(batch_no):
                         
                     # Add the subcontracting receipt itself
                     item_code = get_item_code_from_source(source, batch)
-                    batch_data = {
+                    batch_data.update({
                         "batch": batch,
                         "item_code": item_code,
                         "doctype": source.doctype,
                         "docname": source.name
-                    }
+                    })
                     batches.append(batch_data)
                         
         except Exception as e:
