@@ -1,0 +1,85 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-06-19 12:35:02.875455",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "commercial_name",
+  "qty",
+  "uom",
+  "planned_qty",
+  "need_to_plan_qty",
+  "create_plan"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "columns": 2,
+   "fetch_from": "item_code.custom_commercial_name",
+   "fieldname": "commercial_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Commercial Name"
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty"
+  },
+  {
+   "columns": 1,
+   "fetch_from": "item_code.stock_uom",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "allow_on_submit": 1,
+   "columns": 2,
+   "fieldname": "planned_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Planned Qty"
+  },
+  {
+   "allow_on_submit": 1,
+   "columns": 2,
+   "fieldname": "need_to_plan_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Need to Plan Qty"
+  },
+  {
+   "fieldname": "create_plan",
+   "fieldtype": "Button",
+   "in_list_view": 1,
+   "label": "Create Plan"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-06-28 10:39:32.066766",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Plan Items Summary",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

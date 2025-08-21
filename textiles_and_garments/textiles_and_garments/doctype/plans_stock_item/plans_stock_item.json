@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-26 15:56:55.096531",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "warehouse",
+  "batch",
+  "stock_qty",
+  "previous_reserved_qty",
+  "avail_qty",
+  "reserve_qty",
+  "uom"
+ ],
+ "fields": [
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Batch",
+   "options": "Batch"
+  },
+  {
+   "fieldname": "stock_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Stock Qty"
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Uom",
+   "options": "UOM"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reserve_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "To Reserve Qty"
+  },
+  {
+   "fieldname": "previous_reserved_qty",
+   "fieldtype": "Float",
+   "in_standard_filter": 1,
+   "label": "Previous Reserved Qty"
+  },
+  {
+   "fieldname": "avail_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Avail Qty"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-07-23 18:05:34.402928",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Plans Stock Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

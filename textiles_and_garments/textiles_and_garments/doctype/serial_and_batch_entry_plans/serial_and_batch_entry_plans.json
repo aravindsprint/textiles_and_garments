@@ -1,0 +1,177 @@
+{
+ "actions": [],
+ "creation": "2025-05-27 15:04:44.479669",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "warehouse",
+  "batch_no",
+  "column_break_2",
+  "qty",
+  "delivered_qty",
+  "returned_qty",
+  "actual_delivered_qty",
+  "need_to_deliver_qty",
+  "short_close_qty",
+  "serial_no",
+  "section_break_6",
+  "incoming_rate",
+  "plans",
+  "column_break_8",
+  "outgoing_rate",
+  "stock_value_difference",
+  "is_outward",
+  "stock_queue"
+ ],
+ "fields": [
+  {
+   "depends_on": "eval:parent.has_serial_no == 1",
+   "fieldname": "serial_no",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Serial No",
+   "options": "Serial No",
+   "search_index": 1
+  },
+  {
+   "depends_on": "eval:parent.has_batch_no == 1",
+   "fieldname": "batch_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Batch No",
+   "options": "Batch",
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "search_index": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "depends_on": "eval: parent.doctype == \"Stock Reservation Entry\"",
+   "fieldname": "delivered_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Delivered Qty",
+   "no_copy": 1,
+   "non_negative": 1,
+   "print_hide": 1,
+   "report_hide": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_6",
+   "fieldtype": "Section Break",
+   "label": "Rate Section"
+  },
+  {
+   "fieldname": "incoming_rate",
+   "fieldtype": "Float",
+   "label": "Valuation Rate",
+   "no_copy": 1,
+   "read_only": 1,
+   "read_only_depends_on": "eval:parent.type_of_transaction == \"Outward\""
+  },
+  {
+   "fieldname": "column_break_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "outgoing_rate",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Outgoing Rate",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "stock_value_difference",
+   "fieldtype": "Float",
+   "label": "Change in Stock Value",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_outward",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Is Outward",
+   "read_only": 1
+  },
+  {
+   "fieldname": "stock_queue",
+   "fieldtype": "Small Text",
+   "label": "FIFO Stock Queue (qty, rate)",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "returned_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Returned Qty"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "description": "Delivered Qty - Returned Qty",
+   "fieldname": "actual_delivered_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Actual Delivered Qty"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "description": "Qty - Actual Delivered Qty",
+   "fieldname": "need_to_deliver_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Need to Deliver Qty"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "short_close_qty",
+   "fieldtype": "Float",
+   "label": "Short Close Qty"
+  },
+  {
+   "fieldname": "plans",
+   "fieldtype": "Data",
+   "label": "Plans"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-07-19 12:26:57.303366",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Serial and Batch Entry Plans",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

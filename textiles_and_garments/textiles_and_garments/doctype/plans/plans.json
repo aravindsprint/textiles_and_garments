@@ -1,0 +1,339 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series: naming_series",
+ "creation": "2025-05-26 15:44:14.294752",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_fl7l",
+  "naming_series",
+  "plan_against",
+  "item_code",
+  "plan_qty",
+  "uom_conversion_factor",
+  "plan_qty_after_changed_uom",
+  "create_work_order",
+  "column_break_djzu",
+  "posting_date",
+  "plan_items",
+  "sales_order",
+  "customer",
+  "purchase_or_manufacture",
+  "bom",
+  "unreserved_received_qty",
+  "reserved_received_qty",
+  "section_break_geql",
+  "rm_reserved_qty",
+  "rm_unreserved_qty",
+  "column_break_6hae",
+  "short_close_plan_qty",
+  "short_close_wo_qty",
+  "column_break_6fo9",
+  "section_break_rkav",
+  "reserved_qty",
+  "unreserved_qty",
+  "section_break_qhd5",
+  "search_batch",
+  "get_stock",
+  "column_break_n51v",
+  "remove_zero_reserve_rows",
+  "section_break_k2gh",
+  "plans_stock_item",
+  "section_break_ekok",
+  "get_wip",
+  "update_wip_plans",
+  "set_zero_rows",
+  "plans_wip_item",
+  "section_break_emnm",
+  "reserved_wip_plans",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_fl7l",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Plans",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "PPS/.####"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item code",
+   "options": "Item"
+  },
+  {
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "bom",
+   "fieldtype": "Link",
+   "label": "BOM",
+   "options": "BOM"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "purchase_or_manufacture",
+   "fieldtype": "Select",
+   "label": "Purchase or Manufacture",
+   "options": "\nPurchase\nManufacture\nSubcontract"
+  },
+  {
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "plans_stock_item",
+   "fieldtype": "Table",
+   "label": "Plans Stock Item",
+   "options": "Plans Stock Item"
+  },
+  {
+   "fieldname": "plans_wip_item",
+   "fieldtype": "Table",
+   "label": "Plans WIP Item",
+   "options": "Plans WIP Item"
+  },
+  {
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "get_wip",
+   "fieldtype": "Button",
+   "label": "Get WIP"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reserved_qty",
+   "fieldtype": "Float",
+   "label": "Reserved Qty To Other Plans",
+   "no_copy": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "unreserved_qty",
+   "fieldtype": "Float",
+   "label": "Unreserved Qty To Other Plans",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "plan_qty",
+   "fieldtype": "Float",
+   "label": "Plan Qty"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "rm_reserved_qty",
+   "fieldtype": "Float",
+   "label": "RM Reserved Qty From Stock"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "rm_unreserved_qty",
+   "fieldtype": "Float",
+   "label": "RM Unreserved Qty From Stock"
+  },
+  {
+   "fieldname": "column_break_djzu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "section_break_geql",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_ekok",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "get_stock",
+   "fieldtype": "Button",
+   "label": "Get Stock"
+  },
+  {
+   "fieldname": "column_break_n51v",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "remove_zero_reserve_rows",
+   "fieldtype": "Button",
+   "label": "Remove Zero Reserve Rows"
+  },
+  {
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "section_break_k2gh",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval: (doc.purchase_or_manufacture != \"Purchase\")",
+   "fieldname": "update_wip_plans",
+   "fieldtype": "Button",
+   "label": "Update WIP Plans"
+  },
+  {
+   "fieldname": "plan_against",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Plan Against",
+   "options": "\nMTO\nStock"
+  },
+  {
+   "depends_on": "eval: (doc.plan_against == \"MTO\")",
+   "fetch_from": "plan_items.sales_order",
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "search_batch",
+   "fieldtype": "Data",
+   "label": "Search Batch"
+  },
+  {
+   "fieldname": "section_break_emnm",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reserved_wip_plans",
+   "fieldtype": "Table",
+   "label": "Reserved WIP Plans",
+   "options": "Reserved WIP Plans"
+  },
+  {
+   "fieldname": "plan_items",
+   "fieldtype": "Link",
+   "label": "Plan Items",
+   "options": "Plan Items"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "short_close_plan_qty",
+   "fieldtype": "Float",
+   "label": "Short Close Plan Qty",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "create_work_order",
+   "fieldtype": "Button",
+   "label": "Create Work Order"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "short_close_wo_qty",
+   "fieldtype": "Float",
+   "label": "Short Close WO Qty",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "uom_conversion_factor",
+   "fieldtype": "Float",
+   "label": "UOM Conversion Factor",
+   "precision": "5"
+  },
+  {
+   "depends_on": "eval: (doc.uom_conversion_factor != 1)",
+   "fieldname": "plan_qty_after_changed_uom",
+   "fieldtype": "Float",
+   "label": "Plan Qty After Changed UOM",
+   "precision": "3"
+  },
+  {
+   "fieldname": "set_zero_rows",
+   "fieldtype": "Button",
+   "label": "Set Zero Rows"
+  },
+  {
+   "depends_on": "eval: (doc.plan_against == \"MTO\")",
+   "fetch_from": "sales_order.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "section_break_qhd5",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_6hae",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_6fo9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_rkav",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "unreserved_received_qty",
+   "fieldtype": "Float",
+   "label": "Unreserved Received Qty"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reserved_received_qty",
+   "fieldtype": "Float",
+   "label": "Reserved Received Qty"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Production Stock Reservation",
+   "link_fieldname": "plans_no"
+  }
+ ],
+ "modified": "2025-07-31 13:28:00.004267",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Plans",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

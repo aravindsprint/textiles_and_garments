@@ -1,3 +1,147 @@
+frappe.ui.form.on('Stock Entry', {
+    setup(frm) {
+        console.log("Stock Entry custom_create_psr_for_all_reserved_wip_plans", frm);
+
+        if (
+            frm.doc.custom_create_psr_for_all_reserved_wip_plans == 0 &&
+            (
+                frm.doc.stock_entry_type == "Send to Subcontractor" ||
+                frm.doc.stock_entry_type == "Material Transfer for Manufacture"
+            )
+        ) {
+            frm.doc.items.forEach(so_row => {
+                   
+                so_row.custom_create_psr_for_all_reserved_wip_plans = 1;
+                    
+            });
+            frm.doc.custom_create_psr_for_all_reserved_wip_plans = 1;
+            frm.refresh_field("items");
+        }
+    }
+});
+
+
+frappe.ui.form.on('Stock Entry', {
+    refresh(frm) {
+        console.log("Stock Entry", frm);
+
+        if (frm.doc.items && frm.doc.stock_entry_type == "Send to Subcontractor") {
+            frappe.model.with_doc("Subcontracting Order", frm.doc.subcontracting_order, function() {
+                let po_doc = frappe.model.get_doc("Subcontracting Order", frm.doc.subcontracting_order);
+                let po_items = po_doc.items || [];
+                let so_items = frm.doc.items || [];
+
+                console.log("po_items", po_items);
+                console.log("so_items", so_items);
+
+                so_items.forEach(so_row => {
+                    let matching_po_item = po_items.find(po_row => po_row.item_code === so_row.subcontracted_item);
+                    if (matching_po_item) {
+                        so_row.custom_plans = matching_po_item.custom_plans;
+                    }
+                });
+
+                frm.refresh_field("items");
+            });
+        }
+    }
+});
+
+frappe.ui.form.on('Stock Entry', {
+    validate(frm) {
+        console.log("Stock Entry", frm);
+
+        if (frm.doc.items && frm.doc.stock_entry_type == "Send to Subcontractor") {
+            frappe.model.with_doc("Subcontracting Order", frm.doc.subcontracting_order, function() {
+                let po_doc = frappe.model.get_doc("Subcontracting Order", frm.doc.subcontracting_order);
+                let po_items = po_doc.items || [];
+                let so_items = frm.doc.items || [];
+
+                console.log("po_items", po_items);
+                console.log("so_items", so_items);
+
+                so_items.forEach(so_row => {
+                    let matching_po_item = po_items.find(po_row => po_row.item_code === so_row.subcontracted_item);
+                    if (matching_po_item) {
+                        so_row.custom_plans = matching_po_item.custom_plans;
+                    }
+                });
+
+                frm.refresh_field("items");
+            });
+        }
+    }
+});
+
+frappe.ui.form.on('Stock Entry', {
+    refresh(frm) {
+        console.log("Stock Entry", frm);
+
+        if (frm.doc.items && frm.doc.work_order && frm.doc.stock_entry_type == "Material Transfer for Manufacture" || frm.doc.stock_entry_type == "Manufacture") {
+            frappe.model.with_doc("Work Order", frm.doc.work_order, function() {
+                let wo_doc = frappe.model.get_doc("Work Order", frm.doc.work_order);
+                
+
+                console.log("wo_doc", wo_doc);
+               
+                frm.doc.items.forEach(so_row => {
+                    so_row.custom_plans = wo_doc.custom_plans;
+                });
+
+                frm.refresh_field("items");
+            });
+        }
+    }
+});
+
+frappe.ui.form.on('Stock Entry', {
+    validate(frm) {
+        console.log("Stock Entry", frm);
+
+        // Handle Material Transfer for Manufacture
+        if (frm.doc.items && frm.doc.work_order && frm.doc.stock_entry_type == "Material Transfer for Manufacture") {
+            frappe.model.with_doc("Work Order", frm.doc.work_order, function() {
+                let wo_doc = frappe.model.get_doc("Work Order", frm.doc.work_order);
+                console.log("wo_doc", wo_doc);
+                
+                // Set custom_plans for all items
+                frm.doc.items.forEach(item => {
+                    frappe.model.set_value(item.doctype, item.name, "custom_plans", wo_doc.custom_plans);
+                });
+                
+                frm.refresh_field("items");
+            });
+        }
+
+        // Handle Manufacture entry validation
+        if (frm.doc.items && frm.doc.work_order && frm.doc.stock_entry_type == "Manufacture") {
+            frappe.model.with_doc("Work Order", frm.doc.work_order, function() {
+                let wo_doc = frappe.model.get_doc("Work Order", frm.doc.work_order);
+                console.log("wo_doc", wo_doc);
+                
+                let work_order_item = wo_doc.production_item;
+                let work_order_qty = wo_doc.qty;
+                let work_order_short_close_qty = wo_doc.custom_short_close_wo_qty || 0;
+                let work_order_final_qty = work_order_qty - work_order_short_close_qty;
+                
+                // Find the manufactured item in stock entry
+                let manufactured_item = frm.doc.items.find(item => item.item_code === work_order_item);
+                
+                if (manufactured_item) {
+                    if (manufactured_item.qty > work_order_final_qty) {
+                        frappe.msgprint({
+                            title: __('Validation Error'),
+                            indicator: 'red',
+                            message: __(`Manufactured quantity (${manufactured_item.qty}) cannot exceed the work order's final quantity (${work_order_final_qty}) after accounting for short close quantity.`)
+                        });
+                        frappe.validated = false; // Prevent form submission
+                    }
+                }
+            });
+        }
+    }
+});
+
 frappe.ui.form.on("Stock Entry", {
     refresh: function(frm) {
         console.log("inside public in js", frm);

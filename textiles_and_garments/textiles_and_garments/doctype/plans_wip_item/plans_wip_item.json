@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-26 18:48:03.414186",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "plan",
+  "plan_against",
+  "purchase_or_manufacture",
+  "plan_items",
+  "qty",
+  "unreserved_received_qty",
+  "unreserve_qty",
+  "reserve_qty",
+  "to_reserve_qty",
+  "uom"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "columns": 1,
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Uom",
+   "options": "UOM"
+  },
+  {
+   "columns": 2,
+   "fieldname": "plan",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Plan",
+   "options": "Plans"
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Plan Qty"
+  },
+  {
+   "columns": 1,
+   "fieldname": "unreserve_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Unreserve Qty"
+  },
+  {
+   "columns": 1,
+   "fieldname": "reserve_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Reserve Qty"
+  },
+  {
+   "columns": 2,
+   "fieldname": "plan_items",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Plan Items",
+   "options": "Plan Items"
+  },
+  {
+   "fetch_from": "plan.purchase_or_manufacture",
+   "fieldname": "purchase_or_manufacture",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Purchase or Manufacture"
+  },
+  {
+   "fetch_from": "plan.plan_against",
+   "fieldname": "plan_against",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Plan Against"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "to_reserve_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "To Reserve Qty"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "unreserved_received_qty",
+   "fieldtype": "Float",
+   "label": "Unreserved Received Qty"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-07-31 16:26:55.057206",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Plans WIP Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
