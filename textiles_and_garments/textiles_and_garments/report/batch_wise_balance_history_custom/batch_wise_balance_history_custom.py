@@ -57,9 +57,9 @@ def execute(filters=None):
 						data.append(
 							[
 								item,
-								item_map[item].get("custom_commercial_name", ""),  # From Item
-								item_map[item].get("custom_color", ""),     # From Item
-								item_map[item].get("custom_width", 0),        # From Item
+								item_map[item].get("commercial_name", ""),  # From Item
+								item_map[item].get("color", ""),     # From Item
+								item_map[item].get("width", 0),        # From Item
 								item_map[item]["item_name"],
 								# item_map[item]["description"],
 								wh,
@@ -107,8 +107,8 @@ def get_columns(filters):
 	columns = [
 		_("Item") + ":Link/Item:290",
 		_("Commercial Name") + "::210",      # New column
-		_("custom_color") + "::180",                # New column
-		_("custom_width") + ":Float:60",            # New column
+		_("color") + "::180",                # New column
+		_("width") + ":Float:60",            # New column
 		_("Item Name") + "::150",
 		# _("Description") + "::150",
 		_("Warehouse") + ":Link/Warehouse:100",
@@ -264,9 +264,9 @@ def get_item_details(filters):
 			"item_name", 
 			"description", 
 			"stock_uom",
-			"custom_commercial_name",
-			"custom_color",
-			"custom_width"
+			"commercial_name",
+			"color",
+			"width"
 		)
 	)
 	
