@@ -52,6 +52,11 @@ def execute(filters=None):
 						continue
 						
 					qty_dict = iwb_map[item][wh][batch]
+					
+					# Filter: Only include records where balance quantity is greater than 0
+					if not (qty_dict.bal_qty > 0):
+						continue
+					
 					if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
 						batch_details = valid_batches.get(batch, {})
 						data.append(
@@ -274,7 +279,6 @@ def get_item_details(filters):
 		item_map[d.name] = d
 
 	return item_map
-
 
 # SLE_COUNT_LIMIT = 100_000
 
