@@ -113,7 +113,7 @@ def get_columns(filters):
 		_("Item") + ":Link/Item:290",
 		_("Commercial Name") + "::210",      # New column
 		_("color") + "::180",                # New column
-		_("width") + ":Float:60",            # New column
+		_("width") + "::60",            # New column
 		_("Item Name") + "::150",
 		# _("Description") + "::150",
 		_("Warehouse") + ":Link/Warehouse:100",
