@@ -93,7 +93,7 @@ def get_valid_batches_with_details():
 			batch.batch_status,
 			batch.custom_parent_batch
 		)
-		.where((batch.batch_qty > 0) & (batch.disabled == 0))
+		.where((batch.batch_qty > 0))
 	)
 	
 	valid_batches = {}
