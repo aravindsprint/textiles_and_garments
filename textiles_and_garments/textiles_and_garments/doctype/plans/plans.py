@@ -22,9 +22,63 @@ class Plans(Document):
     def validate(self):
         self.validate_plan_qty()
         self.set_reserved_and_unreserved_qty_based_wip()
+
+    def on_submit(self):
+        self.update_production_wip_plans()    
          
 
     
+    def update_production_wip_plans(plans_wip_item):
+        if isinstance(plans_wip_item, str):
+            plans_wip_item = json.loads(plans_wip_item)
+
+        for row in plans_wip_item:
+            target_child_plan = row.get("plan")  # This is the "Plans" document to update
+            reserve_plan_name = row.get("parent")  # The 'plan' value inside the child table
+            reserve_qty = flt(row.get("to_reserve_qty"))
+
+            if not target_child_plan or not reserve_plan_name:
+                continue
+
+            try:
+                # Fetch the target Plans document
+                plan_doc = frappe.get_doc("Plans", target_child_plan)
+
+                # Check if the child row already exists
+                existing_rows = [child for child in plan_doc.get("reserved_wip_plans") if child.plan == reserve_plan_name]
+
+                if reserve_qty == 0:
+                    # Delete the row if reserve_qty is 0
+                    plan_doc.reserved_wip_plans = [
+                        child for child in plan_doc.reserved_wip_plans if child.plan != reserve_plan_name
+                    ]
+                else:
+                    if existing_rows:
+                        # Update existing row
+                        existing_rows[0].reserve_qty = reserve_qty
+                    else:
+                        # Insert new row
+                        plan_doc.append("reserved_wip_plans", {
+                            "plan": reserve_plan_name,
+                            "reserve_qty": reserve_qty
+                        })
+
+                # Recalculate total reserved_qty from child table
+                total_reserved_qty = sum(flt(c.reserve_qty) for c in plan_doc.get("reserved_wip_plans"))
+                plan_doc.reserved_qty = total_reserved_qty
+                # plan_doc.unreserved_qty = flt(plan_doc.plan_qty) - total_reserved_qty
+                plan_doc.unreserved_qty = flt(plan_doc.plan_qty) - flt(plan_doc.unreserved_received_qty) - total_reserved_qty
+
+                # Save the updated Plans doc
+                plan_doc.save(ignore_permissions=True)
+
+            except frappe.DoesNotExistError:
+                frappe.log_error(f"Plans document '{target_child_plan}' not found.")
+                continue
+
+        frappe.db.commit()
+        return "Reserved WIP Plans updated successfully."
+        
     def set_reserved_and_unreserved_qty_based_wip(self):
         print("\n\nset_reserved_and_unreserved_qty_based_wip\n\n")
 
