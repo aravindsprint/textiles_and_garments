@@ -28,11 +28,9 @@ class Plans(Document):
          
 
     
-    def update_production_wip_plans(plans_wip_item):
-        if isinstance(plans_wip_item, str):
-            plans_wip_item = json.loads(plans_wip_item)
-
-        for row in plans_wip_item:
+    def update_production_wip_plans(self):
+        # Iterate over the child table rows
+        for row in self.plans_wip_item:
             target_child_plan = row.get("plan")  # This is the "Plans" document to update
             reserve_plan_name = row.get("parent")  # The 'plan' value inside the child table
             reserve_qty = flt(row.get("to_reserve_qty"))
@@ -66,7 +64,6 @@ class Plans(Document):
                 # Recalculate total reserved_qty from child table
                 total_reserved_qty = sum(flt(c.reserve_qty) for c in plan_doc.get("reserved_wip_plans"))
                 plan_doc.reserved_qty = total_reserved_qty
-                # plan_doc.unreserved_qty = flt(plan_doc.plan_qty) - total_reserved_qty
                 plan_doc.unreserved_qty = flt(plan_doc.plan_qty) - flt(plan_doc.unreserved_received_qty) - total_reserved_qty
 
                 # Save the updated Plans doc
@@ -77,8 +74,7 @@ class Plans(Document):
                 continue
 
         frappe.db.commit()
-        return "Reserved WIP Plans updated successfully."
-        
+    
     def set_reserved_and_unreserved_qty_based_wip(self):
         print("\n\nset_reserved_and_unreserved_qty_based_wip\n\n")
 
