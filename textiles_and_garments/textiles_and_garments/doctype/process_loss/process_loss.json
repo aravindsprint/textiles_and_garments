@@ -1,0 +1,155 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-08-26 10:36:18.837493",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_4shf",
+  "naming_series",
+  "posting_date",
+  "section_break_e7mc",
+  "purchase_orders",
+  "section_break_y13s",
+  "calculate_process_loss",
+  "section_break_5spd",
+  "sent_details",
+  "section_break_05s0",
+  "return_details",
+  "section_break_vhfz",
+  "received_details",
+  "section_break_0jsg",
+  "process_loss_details",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_4shf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Process Loss",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "PL/.####"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "section_break_e7mc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_5spd",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_05s0",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_vhfz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "purchase_orders",
+   "fieldtype": "Table",
+   "label": "Purchase Orders",
+   "options": "Purchase Orders"
+  },
+  {
+   "fieldname": "sent_details",
+   "fieldtype": "Table",
+   "label": "Sent Details",
+   "options": "Sent Details"
+  },
+  {
+   "fieldname": "return_details",
+   "fieldtype": "Table",
+   "label": "Return Details",
+   "options": "Return Details"
+  },
+  {
+   "fieldname": "section_break_0jsg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "received_details",
+   "fieldtype": "Table",
+   "label": "Received Details",
+   "options": "Received Details"
+  },
+  {
+   "fieldname": "process_loss_details",
+   "fieldtype": "Table",
+   "label": "Process Loss Details",
+   "options": "Process Loss Details"
+  },
+  {
+   "fieldname": "section_break_y13s",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "calculate_process_loss",
+   "fieldtype": "Button",
+   "label": "Calculate Process Loss"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-08-26 12:06:35.691780",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Process Loss",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

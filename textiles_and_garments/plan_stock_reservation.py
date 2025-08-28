@@ -1036,137 +1036,137 @@ def cancel_plans_for_wo_short_close_qty(docname, qty):
         return {"status": "error", "message": str(e)}
 
 # uncomment this below code while deploy in pranera instance
-# def on_submit_wo(doc, method):
-#     print("\n\non_submit_wo triggered]\n")
+def on_submit_wo(doc, method):
+    print("\n\non_submit_wo triggered]\n")
 
-#     if doc.custom_short_close_wo_qty >= 0:
-#         update_plans_for_wo_short_close_qty(doc.custom_plans, doc.custom_short_close_wo_qty)
+    if doc.custom_short_close_wo_qty >= 0:
+        update_plans_for_wo_short_close_qty(doc.custom_plans, doc.custom_short_close_wo_qty)
 
-#     if not doc.custom_plans or doc.custom_short_close_plan_qty is None:
-#         return
+    if not doc.custom_plans or doc.custom_short_close_plan_qty is None:
+        return
 
-#     # Optional: Fetch plan_qty
-#     plan_qty = frappe.db.get_value("Plans", doc.custom_plans, "plan_qty") or 0
+    # Optional: Fetch plan_qty
+    plan_qty = frappe.db.get_value("Plans", doc.custom_plans, "plan_qty") or 0
 
-#     # Get total qty and short close qty from submitted Work Orders
-#     existing_data = frappe.db.sql("""
-#         SELECT 
-#             COALESCE(SUM(wo.qty), 0) AS total_qty,
-#             COALESCE(SUM(wo.custom_short_close_plan_qty), 0) AS total_short_close
-#         FROM 
-#             `tabWork Order` wo
-#         WHERE 
-#             wo.custom_plans = %s
-#             AND wo.docstatus = 1
-#     """, (doc.custom_plans,))[0]
+    # Get total qty and short close qty from submitted Work Orders
+    existing_data = frappe.db.sql("""
+        SELECT 
+            COALESCE(SUM(wo.qty), 0) AS total_qty,
+            COALESCE(SUM(wo.custom_short_close_plan_qty), 0) AS total_short_close
+        FROM 
+            `tabWork Order` wo
+        WHERE 
+            wo.custom_plans = %s
+            AND wo.docstatus = 1
+    """, (doc.custom_plans,))[0]
 
-#     total_wo_qty = existing_data[0]
-#     total_short_close_qty = existing_data[1]
+    total_wo_qty = existing_data[0]
+    total_short_close_qty = existing_data[1]
 
-#     print(f"\n📘 Plan: {doc.custom_plans}")
-#     print(f"➤ WO Qty: {total_wo_qty}, Short Close Qty: {total_short_close_qty}")
+    print(f"\n📘 Plan: {doc.custom_plans}")
+    print(f"➤ WO Qty: {total_wo_qty}, Short Close Qty: {total_short_close_qty}")
 
-#     # ✅ Update the short_close_plan_qty in Plans doc
-#     frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
+    # ✅ Update the short_close_plan_qty in Plans doc
+    frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
 
-#     # 🔄 Adjust plan_qty in plan_item_planned_wise inside Plan Items
-#     plan_items = frappe.get_all(
-#         "Plan Items",
-#         filters={"plan": doc.custom_plans},
-#         fields=["name"]
-#     )
+    # 🔄 Adjust plan_qty in plan_item_planned_wise inside Plan Items
+    plan_items = frappe.get_all(
+        "Plan Items",
+        filters={"plan": doc.custom_plans},
+        fields=["name"]
+    )
 
-#     for plan_item in plan_items:
-#         plan_item_doc = frappe.get_doc("Plan Items", plan_item.name)
+    for plan_item in plan_items:
+        plan_item_doc = frappe.get_doc("Plan Items", plan_item.name)
 
-#         for row in plan_item_doc.get("plan_item_planned_wise", []):
-#             if row.plan == doc.custom_plans:
-#                 original_qty = row.plan_qty or 0
-#                 new_qty = max(original_qty - total_short_close_qty, 0)
-#                 print(f"🔧 Updating row {row.name} in plan_item_planned_wise: {original_qty} → {new_qty}")
-#                 row.plan_qty = new_qty
+        for row in plan_item_doc.get("plan_item_planned_wise", []):
+            if row.plan == doc.custom_plans:
+                original_qty = row.plan_qty or 0
+                new_qty = max(original_qty - total_short_close_qty, 0)
+                print(f"🔧 Updating row {row.name} in plan_item_planned_wise: {original_qty} → {new_qty}")
+                row.plan_qty = new_qty
 
-#         # 💾 Save Plan Item doc after updating both tables
-#         plan_item_doc.save(ignore_permissions=True)
+        # 💾 Save Plan Item doc after updating both tables
+        plan_item_doc.save(ignore_permissions=True)
 
-#         # ✅ Update summary table inside Plan Items doc
-#         update_plan_items_summary_wo(plan_item_doc.name)
+        # ✅ Update summary table inside Plan Items doc
+        update_plan_items_summary_wo(plan_item_doc.name)
 
 
 
-# def on_update_after_submit_wo(doc, method):
-#     print("\n\non_update_after_submit_wo triggered]\n")
+def on_update_after_submit_wo(doc, method):
+    print("\n\non_update_after_submit_wo triggered]\n")
 
-#     if doc.custom_short_close_wo_qty >= 0:
-#         update_plans_for_wo_short_close_qty(doc.custom_plans, doc.custom_short_close_wo_qty)
+    if doc.custom_short_close_wo_qty >= 0:
+        update_plans_for_wo_short_close_qty(doc.custom_plans, doc.custom_short_close_wo_qty)
 
     
-#     if not doc.custom_plans and doc.custom_short_close_plan_qty is None:
-#         return
+    if not doc.custom_plans and doc.custom_short_close_plan_qty is None:
+        return
 
-#     # if doc.custom_short_close_plan_qty > 0:
-#     # Optional: Fetch plan_qty
-#     plan_qty = frappe.db.get_value("Plans", doc.custom_plans, "plan_qty") or 0
+    # if doc.custom_short_close_plan_qty > 0:
+    # Optional: Fetch plan_qty
+    plan_qty = frappe.db.get_value("Plans", doc.custom_plans, "plan_qty") or 0
 
-#     # Get total qty and short close qty from submitted Work Orders
-#     existing_data = frappe.db.sql("""
-#         SELECT 
-#             COALESCE(SUM(wo.qty), 0) AS total_qty,
-#             COALESCE(SUM(wo.custom_short_close_plan_qty), 0) AS total_short_close
-#         FROM 
-#             `tabWork Order` wo
-#         WHERE 
-#             wo.custom_plans = %s
-#             AND wo.docstatus = 1
-#     """, (doc.custom_plans,))[0]
+    # Get total qty and short close qty from submitted Work Orders
+    existing_data = frappe.db.sql("""
+        SELECT 
+            COALESCE(SUM(wo.qty), 0) AS total_qty,
+            COALESCE(SUM(wo.custom_short_close_plan_qty), 0) AS total_short_close
+        FROM 
+            `tabWork Order` wo
+        WHERE 
+            wo.custom_plans = %s
+            AND wo.docstatus = 1
+    """, (doc.custom_plans,))[0]
 
-#     existing_short_close_wo_data = frappe.db.sql("""
-#         SELECT 
-#             COALESCE(SUM(wo.custom_short_close_wo_qty), 0) AS total_short_close_wo
-#         FROM 
-#             `tabWork Order` wo
-#         WHERE 
-#             wo.custom_plans = %s
-#             AND wo.docstatus = 1
-#     """, (doc.custom_plans,))[0]
+    existing_short_close_wo_data = frappe.db.sql("""
+        SELECT 
+            COALESCE(SUM(wo.custom_short_close_wo_qty), 0) AS total_short_close_wo
+        FROM 
+            `tabWork Order` wo
+        WHERE 
+            wo.custom_plans = %s
+            AND wo.docstatus = 1
+    """, (doc.custom_plans,))[0]
 
-#     total_wo_qty_after_short_close = existing_data[0] - existing_data[1]
-#     total_short_close_qty = existing_data[1]
+    total_wo_qty_after_short_close = existing_data[0] - existing_data[1]
+    total_short_close_qty = existing_data[1]
 
-#     print(f"\n📘 Plan: {doc.custom_plans}")
-#     print(f"➤ WO Qty: {total_wo_qty_after_short_close}, Short Close Qty: {total_short_close_qty}")
+    print(f"\n📘 Plan: {doc.custom_plans}")
+    print(f"➤ WO Qty: {total_wo_qty_after_short_close}, Short Close Qty: {total_short_close_qty}")
 
-#     # ✅ Update the short_close_plan_qty in Plans doc
-#     frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
+    # ✅ Update the short_close_plan_qty in Plans doc
+    frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
 
-#     # frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
+    # frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
 
 
-#     # frappe.db.set_value("Plans", doc.custom_plans, "rm_reserved_qty", total_wo_qty_after_short_close)
+    # frappe.db.set_value("Plans", doc.custom_plans, "rm_reserved_qty", total_wo_qty_after_short_close)
 
-#     # 🔄 Adjust plan_qty in plan_item_planned_wise inside Plan Items
-#     plan_items = frappe.get_all(
-#         "Plan Items",
-#         filters={"plan": doc.custom_plans},
-#         fields=["name"]
-#     )
+    # 🔄 Adjust plan_qty in plan_item_planned_wise inside Plan Items
+    plan_items = frappe.get_all(
+        "Plan Items",
+        filters={"plan": doc.custom_plans},
+        fields=["name"]
+    )
 
-#     for plan_item in plan_items:
-#         plan_item_doc = frappe.get_doc("Plan Items", plan_item.name)
+    for plan_item in plan_items:
+        plan_item_doc = frappe.get_doc("Plan Items", plan_item.name)
 
-#         for row in plan_item_doc.get("plan_item_planned_wise", []):
-#             if row.plan == doc.custom_plans:
-#                 original_qty = row.plan_qty or 0
-#                 # new_qty = max(original_qty - total_short_close_qty, 0)
-#                 new_qty = total_wo_qty_after_short_close
-#                 print(f"🔧 Updating row {row.name} in plan_item_planned_wise: {original_qty} → {new_qty}")
-#                 row.plan_qty = new_qty
+        for row in plan_item_doc.get("plan_item_planned_wise", []):
+            if row.plan == doc.custom_plans:
+                original_qty = row.plan_qty or 0
+                # new_qty = max(original_qty - total_short_close_qty, 0)
+                new_qty = total_wo_qty_after_short_close
+                print(f"🔧 Updating row {row.name} in plan_item_planned_wise: {original_qty} → {new_qty}")
+                row.plan_qty = new_qty
 
-#         # 💾 Save Plan Item doc after updating both tables
-#         plan_item_doc.save(ignore_permissions=True)
+        # 💾 Save Plan Item doc after updating both tables
+        plan_item_doc.save(ignore_permissions=True)
 
-#         # ✅ Update summary table inside Plan Items doc
-#         update_plan_items_summary_wo(plan_item_doc.name)
+        # ✅ Update summary table inside Plan Items doc
+        update_plan_items_summary_wo(plan_item_doc.name)
 # uncomment this above code while deploy in pranera instance
 
 
