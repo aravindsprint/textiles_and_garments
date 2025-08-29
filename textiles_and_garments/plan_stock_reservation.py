@@ -889,7 +889,9 @@ def on_update_after_submit_po(doc, method):
 
         total_po_qty_after_short_close = existing_data[0] - existing_short_close_po_data[0] - existing_data[1]
 
-        total_short_close_qty = existing_data[1]
+        # total_short_close_qty = existing_data[1]
+
+        total_short_close_qty = existing_short_close_po_data[0]
 
         print(f"\n📘 existing_data: {existing_data}")
         print(f"\n📘 Plan: {item.custom_plans}")
