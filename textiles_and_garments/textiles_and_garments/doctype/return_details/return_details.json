@@ -9,6 +9,7 @@
   "purchase_order",
   "subcontracting_order",
   "item_code",
+  "po_item_code",
   "po_qty",
   "return_qty",
   "stock_entry",
@@ -61,12 +62,19 @@
    "in_list_view": 1,
    "label": "Subcontracting Order",
    "options": "Subcontracting Order"
+  },
+  {
+   "fieldname": "po_item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "PO Item Code",
+   "options": "Item"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-08-26 10:56:48.623887",
+ "modified": "2025-08-29 16:14:07.639686",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Return Details",

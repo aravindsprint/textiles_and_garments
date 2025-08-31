@@ -20,6 +20,7 @@
   "section_break_vhfz",
   "received_details",
   "section_break_0jsg",
+  "calculate_summary",
   "process_loss_details",
   "amended_from"
  ],
@@ -107,13 +108,18 @@
    "fieldname": "calculate_process_loss",
    "fieldtype": "Button",
    "label": "Calculate Process Loss"
+  },
+  {
+   "fieldname": "calculate_summary",
+   "fieldtype": "Button",
+   "label": "Calculate Summary"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-26 12:06:35.691780",
+ "modified": "2025-08-31 10:40:15.488853",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Process Loss",
