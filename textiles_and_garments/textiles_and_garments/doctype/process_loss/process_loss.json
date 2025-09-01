@@ -9,6 +9,7 @@
   "section_break_4shf",
   "naming_series",
   "posting_date",
+  "supplier_bill_no",
   "section_break_e7mc",
   "purchase_orders",
   "section_break_y13s",
@@ -113,13 +114,18 @@
    "fieldname": "calculate_summary",
    "fieldtype": "Button",
    "label": "Calculate Summary"
+  },
+  {
+   "fieldname": "supplier_bill_no",
+   "fieldtype": "Data",
+   "label": "Supplier Bill No"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-31 10:40:15.488853",
+ "modified": "2025-09-01 09:32:57.781204",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Process Loss",
