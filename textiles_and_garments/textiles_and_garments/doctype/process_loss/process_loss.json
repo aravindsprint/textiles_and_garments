@@ -22,6 +22,11 @@
   "received_details",
   "section_break_0jsg",
   "calculate_summary",
+  "section_break_i27z",
+  "collar_avg_weight",
+  "column_break_kaes",
+  "cuff_avg_weight",
+  "section_break_3fxj",
   "process_loss_details",
   "amended_from"
  ],
@@ -119,13 +124,37 @@
    "fieldname": "supplier_bill_no",
    "fieldtype": "Data",
    "label": "Supplier Bill No"
+  },
+  {
+   "fieldname": "section_break_i27z",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0.034",
+   "fieldname": "collar_avg_weight",
+   "fieldtype": "Float",
+   "label": "Collar Avg Weight"
+  },
+  {
+   "fieldname": "column_break_kaes",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0.013",
+   "fieldname": "cuff_avg_weight",
+   "fieldtype": "Float",
+   "label": "Cuff Avg Weight"
+  },
+  {
+   "fieldname": "section_break_3fxj",
+   "fieldtype": "Section Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-09-01 09:32:57.781204",
+ "modified": "2025-09-01 15:02:13.336530",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Process Loss",
