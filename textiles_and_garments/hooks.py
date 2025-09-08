@@ -151,49 +151,49 @@ doctype_js = {
 # 		"on_trash": "method"
 # 	}
 # }
-# doc_events = {
-#     "Stock Entry": {
-#         "validate": [
-#             # "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
-#             "textiles_and_garments.stock_entry.validate_stock_entry_before_submit",
-#             "textiles_and_garments.stock_entry.validate_return_stock_entry",
-#             # "textiles_and_garments.stock_entry.validate_stock_entry1"
-#         ],
-#         "on_submit": [
-#             "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
-#             "textiles_and_garments.stock_entry.update_psr_on_submit",
-#             "textiles_and_garments.stock_entry.update_psr_on_return_submit"
-#             # "textiles_and_garments.stock_entry.validate_stock_entry1"
-#         ],
-#         "on_update_after_submit":[
-#             # "textiles_and_garments.stock_entry.update_psr_on_submit",
-#         ],
-#         "on_cancel": [
-#         "textiles_and_garments.plan_stock_reservation.reset_psr_on_return_cancel", 
-#         "textiles_and_garments.plan_stock_reservation.on_stock_entry_cancel_reservation"
-#         ],
-#         # "on_cancel": "textiles_and_garments.plan_stock_reservation.on_stock_entry_cancel_reservation",
-#         # "after_insert": "textiles_and_garments.stock_entry.update_psr_on_return_submit"
-#     },
-#     "Purchase Receipt": {
-#         "on_submit": "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
-#         "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_cancel_reservation"
-#     },
-#     "Subcontracting Receipt": {
-#         "on_submit": "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
-#         "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_cancel_reservation"
-#     },
-#     "Purchase Order": {
-#         "validate": "textiles_and_garments.plan_stock_reservation.validate_purchase_order_qty",
-#         "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_po",
-#     },
-#     "Work Order": {
-#         "validate": "textiles_and_garments.plan_stock_reservation.validate_work_order_qty",
-#         "on_submit_wo": "textiles_and_garments.plan_stock_reservation.on_submit_wo",
-#         "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_wo",
-#         "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_wo"
-#     }
-# }
+doc_events = {
+    "Stock Entry": {
+        "validate": [
+            # "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
+            "textiles_and_garments.stock_entry.validate_stock_entry_before_submit",
+            "textiles_and_garments.stock_entry.validate_return_stock_entry",
+            # "textiles_and_garments.stock_entry.validate_stock_entry1"
+        ],
+        "on_submit": [
+            "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
+            "textiles_and_garments.stock_entry.update_psr_on_submit",
+            "textiles_and_garments.stock_entry.update_psr_on_return_submit"
+            # "textiles_and_garments.stock_entry.validate_stock_entry1"
+        ],
+        "on_update_after_submit":[
+            # "textiles_and_garments.stock_entry.update_psr_on_submit",
+        ],
+        "on_cancel": [
+        "textiles_and_garments.plan_stock_reservation.reset_psr_on_return_cancel", 
+        "textiles_and_garments.plan_stock_reservation.on_stock_entry_cancel_reservation"
+        ],
+        # "on_cancel": "textiles_and_garments.plan_stock_reservation.on_stock_entry_cancel_reservation",
+        # "after_insert": "textiles_and_garments.stock_entry.update_psr_on_return_submit"
+    },
+    "Purchase Receipt": {
+        "on_submit": "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
+        "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_cancel_reservation"
+    },
+    "Subcontracting Receipt": {
+        "on_submit": "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
+        "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_cancel_reservation"
+    },
+    "Purchase Order": {
+        "validate": "textiles_and_garments.plan_stock_reservation.validate_purchase_order_qty",
+        "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_po",
+    },
+    "Work Order": {
+        "before_submit": "textiles_and_garments.plan_stock_reservation.validate_work_order_qty",
+        "on_submit_wo": "textiles_and_garments.plan_stock_reservation.on_submit_wo",
+        "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_wo",
+        "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_wo"
+    }
+}
 
 
 # Scheduled Tasks
