@@ -1338,6 +1338,206 @@ class ProcessLoss(Document):
 #     except:
 #         return ""
 
+# @frappe.whitelist()
+# def calculate_summary(docname):
+#     print("\n\ncalculate_summary\n\n")
+
+#     try:
+#         process_loss_doc = frappe.get_doc("Process Loss", docname)
+
+#         sent_details = process_loss_doc.get("sent_details", [])
+#         return_details = process_loss_doc.get("return_details", [])
+#         received_details = process_loss_doc.get("received_details", [])
+
+#         print(f"\nSent Details: {len(sent_details)} items")
+#         print(f"Return Details: {len(return_details)} items")
+#         print(f"Received Details: {len(received_details)} items")
+
+#         collar_avg_weight = flt(process_loss_doc.get("collar_avg_weight", 0))
+#         cuff_avg_weight = flt(process_loss_doc.get("cuff_avg_weight", 0))
+
+#         print(f"\nCollar Avg Weight: {collar_avg_weight}")
+#         print(f"Cuff Avg Weight: {cuff_avg_weight}")
+
+#         summary_data = {}
+
+#         # --------------------------
+#         # Process Sent Details
+#         # --------------------------
+#         for sent_item in sent_details:
+#             main_item_code = sent_item.get("po_item_code") or sent_item.get("main_item_code") or sent_item.get("item_code")
+#             key = (
+#                 sent_item.get("purchase_order"),
+#                 sent_item.get("subcontracting_order"),
+#                 main_item_code
+#             )
+
+#             if key not in summary_data:
+#                 summary_data[key] = {
+#                     "purchase_order": sent_item.get("purchase_order"),
+#                     "subcontracting_order": sent_item.get("subcontracting_order"),
+#                     "item_code": main_item_code,
+#                     "uom": "",  # will be filled from received
+#                     "po_qty": 0,  # will be set from received_details later
+#                     "sent_qty": 0,
+#                     "return_qty": 0,
+#                     "received_qty": 0,
+#                     "sent_uom": sent_item.get("uom"),
+#                     "is_converted": False
+#                 }
+
+#             summary_data[key]["sent_qty"] += flt(sent_item.get("sent_qty", 0))
+
+#         # --------------------------
+#         # Process Return Details
+#         # --------------------------
+#         for return_item in return_details:
+#             main_item_code = return_item.get("po_item_code") or return_item.get("item_code")
+#             key = (
+#                 return_item.get("purchase_order"),
+#                 return_item.get("subcontracting_order"),
+#                 main_item_code
+#             )
+
+#             if key not in summary_data:
+#                 summary_data[key] = {
+#                     "purchase_order": return_item.get("purchase_order"),
+#                     "subcontracting_order": return_item.get("subcontracting_order"),
+#                     "item_code": main_item_code,
+#                     "uom": "",
+#                     "po_qty": 0,
+#                     "sent_qty": 0,
+#                     "return_qty": 0,
+#                     "received_qty": 0,
+#                     "sent_uom": "",
+#                     "is_converted": False
+#                 }
+
+#             summary_data[key]["return_qty"] += flt(return_item.get("return_qty", 0))
+
+#         # --------------------------
+#         # Process Received Details
+#         # --------------------------
+#         for received_item in received_details:
+#             main_item_code = received_item.get("item_code")
+#             key = (
+#                 received_item.get("purchase_order"),
+#                 received_item.get("subcontracting_order"),
+#                 main_item_code
+#             )
+
+#             if key not in summary_data:
+#                 summary_data[key] = {
+#                     "purchase_order": received_item.get("purchase_order"),
+#                     "subcontracting_order": received_item.get("subcontracting_order"),
+#                     "item_code": main_item_code,
+#                     "uom": received_item.get("uom"),
+#                     "po_qty": flt(received_item.get("po_qty", 0)),  # ✅ Always set from received_details
+#                     "sent_qty": 0,
+#                     "return_qty": 0,
+#                     "received_qty": 0,
+#                     "sent_uom": "",
+#                     "is_converted": False
+#                 }
+#             else:
+#                 summary_data[key]["uom"] = received_item.get("uom")
+#                 summary_data[key]["po_qty"] = flt(received_item.get("po_qty", 0))  # ✅ Always override
+
+#             summary_data[key]["received_qty"] += flt(received_item.get("received_qty", 0))
+
+#         # --------------------------
+#         # Convert Sent Qty (if required)
+#         # --------------------------
+#         for key, data in summary_data.items():
+#             if data["sent_uom"] in ["Kg", "Kgs"] and data["uom"] in ["Pcs", "Nos"]:
+#                 item_code = data["item_code"]
+#                 item_type = get_item_type(item_code)
+#                 print("\n\nitem_code\n\n", item_code)
+#                 print("\n\nitem_type\n\n", item_type)
+
+#                 conversion_factor = 1
+#                 if item_type == "Collar" and collar_avg_weight > 0:
+#                     conversion_factor = collar_avg_weight
+#                     print(f"Using collar conversion factor: {conversion_factor} for {item_code}")
+#                 elif item_type == "Cuff" and cuff_avg_weight > 0:
+#                     conversion_factor = cuff_avg_weight
+#                     print(f"Using cuff conversion factor: {conversion_factor} for {item_code}")
+#                 else:
+#                     print(f"No conversion factor found for {item_code}, type: {item_type}")
+
+#                 if conversion_factor > 0 and conversion_factor != 1:
+#                     original_sent_qty = data["sent_qty"]
+#                     data["sent_qty"] = original_sent_qty / conversion_factor
+#                     data["is_converted"] = True
+#                     print(f"Converted {original_sent_qty} {data['sent_uom']} to {data['sent_qty']} {data['uom']} for {item_code} (factor: {conversion_factor})")
+
+#         # --------------------------
+#         # Calculate Process Loss
+#         # --------------------------
+#         process_loss_details = []
+#         for key, data in summary_data.items():
+#             process_loss_qty = flt(data["sent_qty"]) - flt(data["return_qty"]) - flt(data["received_qty"])
+#             process_loss_percentage = 0
+#             if data["sent_qty"] > 0:
+#                 process_loss_percentage = (process_loss_qty / data["sent_qty"]) * 100
+
+#             process_loss_details.append({
+#                 "purchase_order": data["purchase_order"],
+#                 "subcontracting_order": data["subcontracting_order"],
+#                 "item_code": data["item_code"],
+#                 "uom": data["uom"],
+#                 "po_qty": data["po_qty"],
+#                 "sent_qty": data["sent_qty"],
+#                 "return_qty": data["return_qty"],
+#                 "received_qty": data["received_qty"],
+#                 "process_loss_qty": process_loss_qty,
+#                 "process_loss_percentage": process_loss_percentage
+#             })
+
+#         print(f"\nProcess Loss Details: {len(process_loss_details)} items")
+#         print(f"Process Loss Details: {process_loss_details}")
+
+#         # --------------------------
+#         # Update Process Loss Doc
+#         # --------------------------
+#         process_loss_doc.set("process_loss_details", [])
+
+#         for item in process_loss_details:
+#             process_loss_doc.append("process_loss_details", {
+#                 "purchase_order": item.get("purchase_order"),
+#                 "subcontracting_order": item.get("subcontracting_order"),
+#                 "item_code": item.get("item_code"),
+#                 "uom": item.get("uom"),
+#                 "po_qty": item.get("po_qty"),
+#                 "sent_qty": item.get("sent_qty"),
+#                 "return_qty": item.get("return_qty"),
+#                 "received_qty": item.get("received_qty"),
+#                 "process_loss_qty": item.get("process_loss_qty"),
+#                 "process_loss_percentage": item.get("process_loss_percentage")
+#             })
+
+#         process_loss_doc.save()
+#         frappe.db.commit()
+
+#         print(f"\n\nSuccessfully updated process_loss_details for {docname}")
+#         return process_loss_details
+
+#     except Exception as e:
+#         frappe.log_error(f"Error calculating summary for {docname}: {str(e)}")
+#         frappe.throw(f"Failed to calculate summary: {str(e)}")
+#         return []
+
+# # --------------------------
+# # Helper Function
+# # --------------------------
+# def get_item_type(item_code):
+#     try:
+#         item_doc = frappe.get_doc("Item", item_code)
+#         return item_doc.get("custom_item_type", "")
+#     except:
+#         return ""
+
+
 @frappe.whitelist()
 def calculate_summary(docname):
     print("\n\ncalculate_summary\n\n")
@@ -1366,6 +1566,12 @@ def calculate_summary(docname):
         # --------------------------
         for sent_item in sent_details:
             main_item_code = sent_item.get("po_item_code") or sent_item.get("main_item_code") or sent_item.get("item_code")
+            
+            # Skip DYES% and CHEM% items for sent_qty calculation
+            if main_item_code and (main_item_code.startswith("DYES") or main_item_code.startswith("CHEM")):
+                print(f"Skipping sent item: {main_item_code} (DYES/CHEM item)")
+                continue
+                
             key = (
                 sent_item.get("purchase_order"),
                 sent_item.get("subcontracting_order"),
@@ -1393,6 +1599,12 @@ def calculate_summary(docname):
         # --------------------------
         for return_item in return_details:
             main_item_code = return_item.get("po_item_code") or return_item.get("item_code")
+            
+            # Skip DYES% and CHEM% items for return_qty calculation
+            if main_item_code and (main_item_code.startswith("DYES") or main_item_code.startswith("CHEM")):
+                print(f"Skipping return item: {main_item_code} (DYES/CHEM item)")
+                continue
+                
             key = (
                 return_item.get("purchase_order"),
                 return_item.get("subcontracting_order"),
@@ -1536,8 +1748,7 @@ def get_item_type(item_code):
         return item_doc.get("custom_item_type", "")
     except:
         return ""
-
-
+        
 
 
 @frappe.whitelist()
