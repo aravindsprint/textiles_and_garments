@@ -1565,7 +1565,10 @@ def calculate_summary(docname):
         # Process Sent Details
         # --------------------------
         for sent_item in sent_details:
-            main_item_code = sent_item.get("po_item_code") or sent_item.get("main_item_code") or sent_item.get("item_code")
+            # main_item_code = sent_item.get("po_item_code") or sent_item.get("main_item_code") or sent_item.get("item_code")
+            main_item_code = sent_item.get("item_code")
+            print("\n\nmain_item_code\n\n",main_item_code)
+            po_item_code = sent_item.get("po_item_code")
             
             # Skip DYES% and CHEM% items for sent_qty calculation
             if main_item_code and (main_item_code.startswith("DYES") or main_item_code.startswith("CHEM")):
@@ -1575,14 +1578,14 @@ def calculate_summary(docname):
             key = (
                 sent_item.get("purchase_order"),
                 sent_item.get("subcontracting_order"),
-                main_item_code
+                po_item_code
             )
 
             if key not in summary_data:
                 summary_data[key] = {
                     "purchase_order": sent_item.get("purchase_order"),
                     "subcontracting_order": sent_item.get("subcontracting_order"),
-                    "item_code": main_item_code,
+                    "item_code": po_item_code,
                     "uom": "",  # will be filled from received
                     "po_qty": 0,  # will be set from received_details later
                     "sent_qty": 0,
@@ -1598,7 +1601,9 @@ def calculate_summary(docname):
         # Process Return Details
         # --------------------------
         for return_item in return_details:
-            main_item_code = return_item.get("po_item_code") or return_item.get("item_code")
+            # main_item_code = return_item.get("po_item_code") or return_item.get("item_code")
+            main_item_code = return_item.get("item_code")
+            po_item_code = sent_item.get("po_item_code")
             
             # Skip DYES% and CHEM% items for return_qty calculation
             if main_item_code and (main_item_code.startswith("DYES") or main_item_code.startswith("CHEM")):
@@ -1608,14 +1613,14 @@ def calculate_summary(docname):
             key = (
                 return_item.get("purchase_order"),
                 return_item.get("subcontracting_order"),
-                main_item_code
+                po_item_code
             )
 
             if key not in summary_data:
                 summary_data[key] = {
                     "purchase_order": return_item.get("purchase_order"),
                     "subcontracting_order": return_item.get("subcontracting_order"),
-                    "item_code": main_item_code,
+                    "item_code": po_item_code,
                     "uom": "",
                     "po_qty": 0,
                     "sent_qty": 0,
@@ -1632,6 +1637,7 @@ def calculate_summary(docname):
         # --------------------------
         for received_item in received_details:
             main_item_code = received_item.get("item_code")
+            print("\n\nmain_item_code\n\n",main_item_code)
             key = (
                 received_item.get("purchase_order"),
                 received_item.get("subcontracting_order"),
@@ -1661,6 +1667,7 @@ def calculate_summary(docname):
         # Convert Sent Qty (if required)
         # --------------------------
         for key, data in summary_data.items():
+            print("\n\ndata01\n\n", data)
             if data["sent_uom"] in ["Kg", "Kgs"] and data["uom"] in ["Pcs", "Nos"]:
                 item_code = data["item_code"]
                 item_type = get_item_type(item_code)
@@ -1688,6 +1695,7 @@ def calculate_summary(docname):
         # --------------------------
         process_loss_details = []
         for key, data in summary_data.items():
+            print("\n\ndata\n\n",data)
             process_loss_qty = flt(data["sent_qty"]) - flt(data["return_qty"]) - flt(data["received_qty"])
             process_loss_percentage = 0
             if data["sent_qty"] > 0:
