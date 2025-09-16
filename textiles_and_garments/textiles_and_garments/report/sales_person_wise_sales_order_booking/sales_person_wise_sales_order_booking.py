@@ -29,31 +29,7 @@ def get_columns(filters):
             "options": "Sales Person",
             "width": 100,
         },
-        {
-            "label": _("Customer"),
-            "fieldname": "customer",
-            "fieldtype": "Data",
-            "width": 100,
-        },
-        {
-            "label": _("Date"),
-            "fieldname": "posting_date",
-            "fieldtype": "Date",
-            "width": 150,
-        },
-        {
-            "label": _("Delivery Date"),
-            "fieldname": "delivery_date",
-            "fieldtype": "Date",
-            "width": 150,
-        },
-        {
-            "label": _("Sales Order"),
-            "fieldname": "name",
-            "fieldtype": "Link",
-            "options": "Sales Order",
-            "width": 150,
-        },
+        
         {
             "label": _("Item Code"),
             "fieldname": "item_code",
@@ -91,6 +67,37 @@ def get_columns(filters):
             "fieldtype": "Data",
             "width": 70,
         },
+        {
+            "label": _("Amount"),
+            "fieldname": "amount",
+            "fieldtype": "Float",
+            "width": 90,
+        },
+        {
+            "label": _("Customer"),
+            "fieldname": "customer",
+            "fieldtype": "Data",
+            "width": 100,
+        },
+        {
+            "label": _("Date"),
+            "fieldname": "posting_date",
+            "fieldtype": "Date",
+            "width": 150,
+        },
+        {
+            "label": _("Delivery Date"),
+            "fieldname": "delivery_date",
+            "fieldtype": "Date",
+            "width": 150,
+        },
+        {
+            "label": _("Sales Order"),
+            "fieldname": "name",
+            "fieldtype": "Link",
+            "options": "Sales Order",
+            "width": 150,
+        },
         # {
         #     "label": _("Delivered Qty"),
         #     "fieldname": "delivered_qty",
@@ -103,12 +110,7 @@ def get_columns(filters):
         #     "fieldtype": "Float",
         #     "width": 90,
         # },
-        {
-            "label": _("Amount"),
-            "fieldname": "amount",
-            "fieldtype": "Float",
-            "width": 90,
-        },
+        
         {
             "label": _("Item Status"),
             "fieldname": "custom_item_status",
@@ -134,7 +136,7 @@ def get_data(filters):
     return data
 
 def get_sales_order_data(filters):
-	# uncomment below for the pranera erpnext
+    # uncomment below for the pranera erpnext
     # query = """
     #     SELECT
     #         soi.item_code AS item_code,
@@ -170,12 +172,45 @@ def get_sales_order_data(filters):
     # """
 
     # uncomment below for the local erpnext
+    # query = """
+    #     SELECT
+    #         soi.item_code AS item_code,
+    #         soi.custom_commercial_name AS commercial_name,
+    #         soi.custom_color AS color,
+    #         soi.custom_width AS width,
+    #         soi.custom_item_status AS custom_item_status,
+    #         soi.qty AS qty,
+    #         soi.rate AS rate,
+    #         soi.amount AS original_amount,
+    #         COALESCE(soi.delivered_qty, 0) AS delivered_qty,
+    #         (soi.qty - COALESCE(soi.delivered_qty, 0)) AS pending_qty,
+    #         ((soi.qty - COALESCE(soi.delivered_qty, 0)) * soi.rate) AS amount,
+    #         soi.stock_uom AS stock_uom,
+    #         so.transaction_date AS posting_date,
+    #         so.customer AS customer,
+    #         st.sales_person,
+    #         sp.parent_sales_person,
+    #         so.name AS name,
+    #         so.delivery_date AS delivery_date,
+    #         so.delivery_status AS delivery_status
+    #     FROM 
+    #         `tabSales Order Item` AS soi
+    #     LEFT JOIN 
+    #         `tabSales Order` AS so
+    #     ON 
+    #         so.name = soi.parent
+    #     LEFT JOIN `tabSales Team` st on st.parent = so.customer
+    #     LEFT JOIN `tabSales Person` sp on st.sales_person = sp.name    
+    #     WHERE 
+    #         so.docstatus = 1
+    # """
+
     query = """
         SELECT
             soi.item_code AS item_code,
-            soi.custom_commercial_name AS commercial_name,
-            soi.custom_color AS color,
-            soi.custom_width AS width,
+            soi.commercial_name AS commercial_name,
+            soi.color AS color,
+            soi.width AS width,
             soi.custom_item_status AS custom_item_status,
             soi.qty AS qty,
             soi.rate AS rate,
