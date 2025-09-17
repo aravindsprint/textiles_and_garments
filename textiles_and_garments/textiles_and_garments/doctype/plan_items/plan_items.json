@@ -8,11 +8,11 @@
  "field_order": [
   "section_break_fl7l",
   "naming_series",
-  "sales_order",
-  "customer",
   "column_break_djzu",
   "posting_date",
   "section_break_geql",
+  "sales_order_item_details",
+  "section_break_nrnn",
   "plan_items_detail",
   "section_break_ngni",
   "plan_item_planned_wise",
@@ -97,22 +97,20 @@
    "options": "Plan Items Summary"
   },
   {
-   "fieldname": "sales_order",
-   "fieldtype": "Link",
-   "label": "Sales Order",
-   "options": "Sales Order"
+   "fieldname": "sales_order_item_details",
+   "fieldtype": "Table",
+   "label": "Sales Order Item Details",
+   "options": "Sales Order Item Details"
   },
   {
-   "fieldname": "customer",
-   "fieldtype": "Link",
-   "label": "Customer",
-   "options": "Customer"
+   "fieldname": "section_break_nrnn",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-26 10:46:00.218828",
+ "modified": "2025-09-17 09:22:31.041480",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Plan Items",

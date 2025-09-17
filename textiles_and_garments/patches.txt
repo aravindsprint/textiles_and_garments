@@ -7,3 +7,4 @@
 textiles_and_garments.patches.insert_stock_entry_customfields_11
 # textiles_and_garments.patches.close_sales_order
 # textiles_and_garments.patches.revert
+textiles_and_garments.patches.close_work_order
