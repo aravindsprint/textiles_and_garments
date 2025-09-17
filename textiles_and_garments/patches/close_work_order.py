@@ -349,12 +349,18 @@ work_orders = [
     "PRO/SEW/19/169"
 ]
 
+def execute():
+    """Main function that Frappe will execute when running this patch"""
+    close_work_orders()
+    return f"Successfully updated {len(work_orders)} Work Orders to 'Stopped' status."
+
 def close_work_orders():
+    """Update work orders status to Stopped"""
     for wo in work_orders:
-        frappe.db.set_value("Work Order", wo, "status", "Stopped")
+        # Check if work order exists before updating
+        if frappe.db.exists("Work Order", wo):
+            frappe.db.set_value("Work Order", wo, "status", "Stopped")
+        else:
+            frappe.log_error(f"Work Order {wo} not found", "Patch Error")
     
     frappe.db.commit()
-    frappe.msgprint(f"{len(work_orders)} Work Orders updated to 'Closed'.")
-
-# Run the function
-close_work_orders()
