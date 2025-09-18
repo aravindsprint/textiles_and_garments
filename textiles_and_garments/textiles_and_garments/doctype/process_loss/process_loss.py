@@ -2326,6 +2326,292 @@ def update_received_details(docname, received_details_data):
 #     print("\n\nFinal received_details:\n", received_details)
 #     return received_details
 
+# def get_received_items_details(purchase_order_list):
+#     """Get received items data from Subcontracting Receipt Item table"""
+#     if not purchase_order_list:
+#         return []
+    
+#     # Convert to tuple for SQL query
+#     po_tuple = tuple(purchase_order_list)
+#     print("\npo_tuple for received items\n", po_tuple)
+    
+#     # Get all Subcontracting Orders linked to these Purchase Orders
+#     sco_list = frappe.db.sql("""
+#         SELECT name, purchase_order, supplier_warehouse
+#         FROM `tabSubcontracting Order`
+#         WHERE purchase_order IN %s AND docstatus = 1
+#     """, (po_tuple,), as_dict=True)
+    
+#     print("\n\nSubcontracting Orders for received items:\n", sco_list)
+    
+#     if not sco_list:
+#         return []
+    
+#     # Get SCO names
+#     sco_names = [sco['name'] for sco in sco_list]
+#     sco_tuple = tuple(sco_names)
+    
+#     # Get all Subcontracting Receipt Items directly filtered by subcontracting_order
+#     receipt_items = frappe.db.sql("""
+#         SELECT 
+#             sri.parent as subcontracting_receipt,
+#             sri.name as subcontracting_receipt_item,
+#             sri.item_code,
+#             sri.qty as received_qty,
+#             sri.stock_uom,
+#             sri.subcontracting_order,
+#             sr.posting_date
+#         FROM `tabSubcontracting Receipt Item` sri
+#         INNER JOIN `tabSubcontracting Receipt` sr ON sri.parent = sr.name
+#         WHERE sri.subcontracting_order IN %s AND sr.docstatus = 1
+#         ORDER BY sr.posting_date
+#     """, (sco_tuple,), as_dict=True)
+    
+#     print("\n\nSubcontracting Receipt Items found:\n", receipt_items)
+    
+#     if not receipt_items:
+#         return []
+    
+#     # Get Subcontracting Order Items for po_qty and purchase_order_item mapping
+#     sco_order_items = frappe.db.sql("""
+#         SELECT 
+#             parent as subcontracting_order,
+#             item_code,
+#             qty as po_qty,
+#             purchase_order_item
+#         FROM `tabSubcontracting Order Item`
+#         WHERE parent IN %s
+#     """, (sco_tuple,), as_dict=True)
+    
+#     print("\n\nSubcontracting Order Items found:\n", sco_order_items)
+    
+#     # Create mapping for po_qty and purchase_order_item by (subcontracting_order, item_code)
+#     po_qty_map = {}
+#     purchase_order_item_map = {}
+#     for item in sco_order_items:
+#         key = (item['subcontracting_order'], item['item_code'])
+#         po_qty_map[key] = item.get('po_qty', 0)
+#         purchase_order_item_map[key] = item.get('purchase_order_item', '')
+    
+#     # Get PO Rate from Purchase Order Item table
+#     purchase_order_items_list = list(set([item.get('purchase_order_item') for item in sco_order_items if item.get('purchase_order_item')]))
+#     po_rate_map = {}
+    
+#     if purchase_order_items_list:
+#         po_item_tuple = tuple(purchase_order_items_list)
+#         purchase_order_items = frappe.db.sql("""
+#             SELECT 
+#                 name,
+#                 rate as po_rate
+#             FROM `tabPurchase Order Item`
+#             WHERE name IN %s
+#         """, (po_item_tuple,), as_dict=True)
+        
+#         po_rate_map = {item['name']: item.get('po_rate', 0) for item in purchase_order_items}
+    
+#     print("\n\nPurchase Order Items Rate Map:\n", po_rate_map)
+    
+#     # Get UOM for each item from Item master (as fallback)
+#     item_codes = list(set([item['item_code'] for item in receipt_items if item['item_code']]))
+#     item_uom_map = {}
+    
+#     if item_codes:
+#         item_tuple = tuple(item_codes)
+#         item_data = frappe.db.sql("""
+#             SELECT item_code, stock_uom
+#             FROM `tabItem`
+#             WHERE item_code IN %s
+#         """, (item_tuple,), as_dict=True)
+        
+#         item_uom_map = {item['item_code']: item['stock_uom'] for item in item_data}
+    
+#     # Create mapping from SCO name to purchase order
+#     sco_po_map = {sco['name']: sco['purchase_order'] for sco in sco_list}
+    
+#     # Get all Purchase Receipts linked to these Subcontracting Receipts
+#     subcontracting_receipts = list(set([item['subcontracting_receipt'] for item in receipt_items]))
+#     pr_receipt_map = {}
+#     pr_items_map = {}
+    
+#     if subcontracting_receipts:
+#         pr_tuple = tuple(subcontracting_receipts)
+#         # Get Purchase Receipts
+#         purchase_receipts = frappe.db.sql("""
+#             SELECT name, subcontracting_receipt
+#             FROM `tabPurchase Receipt`
+#             WHERE subcontracting_receipt IN %s AND docstatus = 1
+#         """, (pr_tuple,), as_dict=True)
+        
+#         pr_receipt_map = {pr['subcontracting_receipt']: pr['name'] for pr in purchase_receipts}
+        
+#         # Get Purchase Receipt Items with subcontracting_receipt_item reference
+#         purchase_receipt_names = list(pr_receipt_map.values())
+#         if purchase_receipt_names:
+#             pr_name_tuple = tuple(purchase_receipt_names)
+#             purchase_receipt_items = frappe.db.sql("""
+#                 SELECT 
+#                     parent as purchase_receipt,
+#                     name as purchase_receipt_item,
+#                     subcontracting_receipt_item,
+#                     item_code,
+#                     qty,
+#                     rate,
+#                     amount
+#                 FROM `tabPurchase Receipt Item`
+#                 WHERE parent IN %s
+#             """, (pr_name_tuple,), as_dict=True)
+            
+#             for pri in purchase_receipt_items:
+#                 if pri['purchase_receipt'] not in pr_items_map:
+#                     pr_items_map[pri['purchase_receipt']] = {}
+#                 pr_items_map[pri['purchase_receipt']][pri['subcontracting_receipt_item']] = pri
+    
+#     print("\n\nPurchase Receipts found:\n", pr_receipt_map)
+#     print("\n\nPurchase Receipt Items found:\n", pr_items_map)
+    
+#     # Get all Purchase Invoices linked to these Purchase Receipts
+#     purchase_receipt_names = list(pr_receipt_map.values())
+#     pi_receipt_map = {}  # Changed to store list of PIs per PR
+#     pi_bill_map = {}
+#     pi_items_map = {}
+    
+#     if purchase_receipt_names:
+#         pr_tuple = tuple(purchase_receipt_names)
+#         # Get Purchase Invoices linked to Purchase Receipts
+#         purchase_invoices = frappe.db.sql("""
+#             SELECT pi.name, pi.bill_no, pii.purchase_receipt, pii.pr_detail
+#             FROM `tabPurchase Invoice` pi
+#             INNER JOIN `tabPurchase Invoice Item` pii ON pi.name = pii.parent
+#             WHERE pii.purchase_receipt IN %s AND pi.docstatus != 2
+#         """, (pr_tuple,), as_dict=True)
+        
+#         # Store multiple PIs per PR
+#         for pi in purchase_invoices:
+#             if pi['purchase_receipt'] not in pi_receipt_map:
+#                 pi_receipt_map[pi['purchase_receipt']] = []
+#             pi_receipt_map[pi['purchase_receipt']].append(pi['name'])
+#             pi_bill_map[pi['name']] = pi.get('bill_no', '')
+        
+#         # Get Purchase Invoice Items for additional details
+#         purchase_invoice_names = list(set([pi['name'] for pi in purchase_invoices]))
+#         if purchase_invoice_names:
+#             pi_tuple = tuple(purchase_invoice_names)
+#             purchase_invoice_items = frappe.db.sql("""
+#                 SELECT 
+#                     parent as purchase_invoice,
+#                     pr_detail,
+#                     item_code,
+#                     qty,
+#                     rate,
+#                     amount
+#                 FROM `tabPurchase Invoice Item`
+#                 WHERE parent IN %s
+#             """, (pi_tuple,), as_dict=True)
+            
+#             for pii in purchase_invoice_items:
+#                 if pii['purchase_invoice'] not in pi_items_map:
+#                     pi_items_map[pii['purchase_invoice']] = {}
+#                 # Use pr_detail as the key directly (it contains the Purchase Receipt Item name)
+#                 pi_items_map[pii['purchase_invoice']][pii['pr_detail']] = pii
+    
+#     print("\n\nPurchase Invoices found:\n", pi_receipt_map)
+#     print("\n\nPurchase Invoice Bill Numbers:\n", pi_bill_map)
+#     print("\n\nPurchase Invoice Items found:\n", pi_items_map)
+    
+#     # Combine data for received_details
+#     received_details = []
+    
+#     for item in receipt_items:
+#         # Use UOM from receipt item, fallback to item master
+#         uom = item.get('stock_uom') or item_uom_map.get(item['item_code'], '')
+        
+#         # Get purchase order from mapping
+#         purchase_order = sco_po_map.get(item['subcontracting_order'], '')
+        
+#         # Get po_qty and purchase_order_item from mapping
+#         key = (item['subcontracting_order'], item['item_code'])
+#         po_qty = po_qty_map.get(key, 0)
+#         purchase_order_item = purchase_order_item_map.get(key, '')
+        
+#         # Get po_rate from Purchase Order Item table
+#         po_rate = po_rate_map.get(purchase_order_item, 0)
+        
+#         # Get linked Purchase Receipt
+#         purchase_receipt = pr_receipt_map.get(item['subcontracting_receipt'], '')
+        
+#         # Get Purchase Receipt Item details using subcontracting_receipt_item
+#         pr_item_details = {}
+#         if purchase_receipt in pr_items_map:
+#             pr_item_details = pr_items_map[purchase_receipt].get(item['subcontracting_receipt_item'], {})
+        
+#         # Get the Purchase Receipt Item name (this will be used as pr_detail)
+#         purchase_receipt_item_name = pr_item_details.get('purchase_receipt_item', '')
+        
+#         # Get linked Purchase Invoices and Bill Nos (handle multiple PIs)
+#         purchase_invoices = pi_receipt_map.get(purchase_receipt, [])
+#         pi_details_list = []
+        
+#         # Collect all PI details for this PR item
+#         for purchase_invoice in purchase_invoices:
+#             bill_no = pi_bill_map.get(purchase_invoice, '')
+            
+#             # Get Purchase Invoice Item details using purchase_receipt_item_name as pr_detail
+#             pi_item_details = {}
+#             if purchase_invoice in pi_items_map and purchase_receipt_item_name:
+#                 pi_item_details = pi_items_map[purchase_invoice].get(purchase_receipt_item_name, {})
+            
+#             if pi_item_details:  # Only add if there are actual details
+#                 pi_details_list.append({
+#                     'purchase_invoice': purchase_invoice,
+#                     'bill_no': bill_no,
+#                     'pi_qty': pi_item_details.get('qty', 0),
+#                     'pi_rate': pi_item_details.get('rate', 0),
+#                     'pi_amount': pi_item_details.get('amount', 0),
+#                     'diff_rate': pi_item_details.get('rate', 0) - po_rate
+#                 })
+        
+#         # If no PI details found, create empty entry
+#         if not pi_details_list:
+#             pi_details_list.append({
+#                 'purchase_invoice': '',
+#                 'bill_no': '',
+#                 'pi_qty': 0,
+#                 'pi_rate': 0,
+#                 'pi_amount': 0,
+#                 'diff_rate': 0
+#             })
+        
+#         # Create one entry for each PI (or one entry if no PIs)
+#         for pi_details in pi_details_list:
+#             received_details.append({
+#                 'purchase_order': purchase_order,
+#                 'subcontracting_order': item['subcontracting_order'],
+#                 'item_code': item['item_code'],
+#                 'po_rate': po_rate,  # Use PO Rate from Purchase Order Item
+#                 'po_qty': po_qty,
+#                 'received_qty': item['received_qty'],
+#                 'subcontracting_receipt': item['subcontracting_receipt'],
+#                 'subcontracting_receipt_item': item['subcontracting_receipt_item'],
+#                 'purchase_receipt': purchase_receipt,
+#                 'purchase_receipt_item': purchase_receipt_item_name,
+#                 'pr_detail': purchase_receipt_item_name,
+#                 'pr_qty': pr_item_details.get('qty', 0),
+#                 'pr_rate': pr_item_details.get('rate', 0),
+#                 'pr_amount': pr_item_details.get('amount', 0),
+#                 'purchase_invoice': pi_details['purchase_invoice'],
+#                 'bill_no': pi_details['bill_no'],
+#                 'pi_qty': pi_details['pi_qty'],
+#                 'pi_rate': pi_details['pi_rate'],
+#                 'pi_amount': pi_details['pi_amount'],
+#                 'diff_rate': pi_details['diff_rate'],
+#                 'uom': uom
+#             })
+    
+#     print("\n\nFinal received_details:\n", received_details)
+#     return received_details
+
+
+
 def get_received_items_details(purchase_order_list):
     """Get received items data from Subcontracting Receipt Item table"""
     if not purchase_order_list:
@@ -2471,9 +2757,8 @@ def get_received_items_details(purchase_order_list):
     
     # Get all Purchase Invoices linked to these Purchase Receipts
     purchase_receipt_names = list(pr_receipt_map.values())
-    pi_receipt_map = {}  # Changed to store list of PIs per PR
+    pi_receipt_map = {}  # Store list of PIs per PR
     pi_bill_map = {}
-    pi_items_map = {}
     
     if purchase_receipt_names:
         pr_tuple = tuple(purchase_receipt_names)
@@ -2491,34 +2776,11 @@ def get_received_items_details(purchase_order_list):
                 pi_receipt_map[pi['purchase_receipt']] = []
             pi_receipt_map[pi['purchase_receipt']].append(pi['name'])
             pi_bill_map[pi['name']] = pi.get('bill_no', '')
-        
-        # Get Purchase Invoice Items for additional details
-        purchase_invoice_names = list(set([pi['name'] for pi in purchase_invoices]))
-        if purchase_invoice_names:
-            pi_tuple = tuple(purchase_invoice_names)
-            purchase_invoice_items = frappe.db.sql("""
-                SELECT 
-                    parent as purchase_invoice,
-                    pr_detail,
-                    item_code,
-                    qty,
-                    rate,
-                    amount
-                FROM `tabPurchase Invoice Item`
-                WHERE parent IN %s
-            """, (pi_tuple,), as_dict=True)
-            
-            for pii in purchase_invoice_items:
-                if pii['purchase_invoice'] not in pi_items_map:
-                    pi_items_map[pii['purchase_invoice']] = {}
-                # Use pr_detail as the key directly (it contains the Purchase Receipt Item name)
-                pi_items_map[pii['purchase_invoice']][pii['pr_detail']] = pii
     
     print("\n\nPurchase Invoices found:\n", pi_receipt_map)
     print("\n\nPurchase Invoice Bill Numbers:\n", pi_bill_map)
-    print("\n\nPurchase Invoice Items found:\n", pi_items_map)
     
-    # Combine data for received_details
+    # Combine data for received_details - ONE ENTRY PER RECEIPT ITEM
     received_details = []
     
     for item in receipt_items:
@@ -2541,7 +2803,7 @@ def get_received_items_details(purchase_order_list):
         
         # Get Purchase Receipt Item details using subcontracting_receipt_item
         pr_item_details = {}
-        if purchase_receipt in pr_items_map:
+        if purchase_receipt and purchase_receipt in pr_items_map:
             pr_item_details = pr_items_map[purchase_receipt].get(item['subcontracting_receipt_item'], {})
         
         # Get the Purchase Receipt Item name (this will be used as pr_detail)
@@ -2549,68 +2811,48 @@ def get_received_items_details(purchase_order_list):
         
         # Get linked Purchase Invoices and Bill Nos (handle multiple PIs)
         purchase_invoices = pi_receipt_map.get(purchase_receipt, [])
-        pi_details_list = []
         
-        # Collect all PI details for this PR item
-        for purchase_invoice in purchase_invoices:
-            bill_no = pi_bill_map.get(purchase_invoice, '')
+        # Instead of creating multiple entries, aggregate PI data or take the first one
+        if purchase_invoices:
+            # For multiple PIs, you might want to aggregate or choose one approach
+            # Option 1: Take the first PI
+            first_pi = purchase_invoices[0]
+            bill_no = pi_bill_map.get(first_pi, '')
             
-            # Get Purchase Invoice Item details using purchase_receipt_item_name as pr_detail
-            pi_item_details = {}
-            if purchase_invoice in pi_items_map and purchase_receipt_item_name:
-                pi_item_details = pi_items_map[purchase_invoice].get(purchase_receipt_item_name, {})
+            # Option 2: Or you can create comma-separated values for multiple PIs
+            # pi_list = ", ".join(purchase_invoices)
+            # bill_list = ", ".join([pi_bill_map.get(pi, '') for pi in purchase_invoices if pi_bill_map.get(pi, '')])
             
-            if pi_item_details:  # Only add if there are actual details
-                pi_details_list.append({
-                    'purchase_invoice': purchase_invoice,
-                    'bill_no': bill_no,
-                    'pi_qty': pi_item_details.get('qty', 0),
-                    'pi_rate': pi_item_details.get('rate', 0),
-                    'pi_amount': pi_item_details.get('amount', 0),
-                    'diff_rate': pi_item_details.get('rate', 0) - po_rate
-                })
+            purchase_invoice = first_pi
+        else:
+            purchase_invoice = ''
+            bill_no = ''
         
-        # If no PI details found, create empty entry
-        if not pi_details_list:
-            pi_details_list.append({
-                'purchase_invoice': '',
-                'bill_no': '',
-                'pi_qty': 0,
-                'pi_rate': 0,
-                'pi_amount': 0,
-                'diff_rate': 0
-            })
-        
-        # Create one entry for each PI (or one entry if no PIs)
-        for pi_details in pi_details_list:
-            received_details.append({
-                'purchase_order': purchase_order,
-                'subcontracting_order': item['subcontracting_order'],
-                'item_code': item['item_code'],
-                'po_rate': po_rate,  # Use PO Rate from Purchase Order Item
-                'po_qty': po_qty,
-                'received_qty': item['received_qty'],
-                'subcontracting_receipt': item['subcontracting_receipt'],
-                'subcontracting_receipt_item': item['subcontracting_receipt_item'],
-                'purchase_receipt': purchase_receipt,
-                'purchase_receipt_item': purchase_receipt_item_name,
-                'pr_detail': purchase_receipt_item_name,
-                'pr_qty': pr_item_details.get('qty', 0),
-                'pr_rate': pr_item_details.get('rate', 0),
-                'pr_amount': pr_item_details.get('amount', 0),
-                'purchase_invoice': pi_details['purchase_invoice'],
-                'bill_no': pi_details['bill_no'],
-                'pi_qty': pi_details['pi_qty'],
-                'pi_rate': pi_details['pi_rate'],
-                'pi_amount': pi_details['pi_amount'],
-                'diff_rate': pi_details['diff_rate'],
-                'uom': uom
-            })
+        # Create only ONE entry per receipt item
+        received_details.append({
+            'purchase_order': purchase_order,
+            'subcontracting_order': item['subcontracting_order'],
+            'item_code': item['item_code'],
+            'po_rate': po_rate,  # Use PO Rate from Purchase Order Item
+            'po_qty': po_qty,
+            'received_qty': item['received_qty'],
+            'subcontracting_receipt': item['subcontracting_receipt'],
+            'subcontracting_receipt_item': item['subcontracting_receipt_item'],
+            'purchase_receipt': purchase_receipt,
+            'purchase_receipt_item': purchase_receipt_item_name,
+            'pr_detail': purchase_receipt_item_name,
+            'pr_qty': pr_item_details.get('qty', 0),
+            'pr_rate': pr_item_details.get('rate', 0),
+            'pr_amount': pr_item_details.get('amount', 0),
+            'purchase_invoice': purchase_invoice,
+            'bill_no': bill_no,
+            'uom': uom
+        })
     
-    print("\n\nFinal received_details:\n", received_details)
+    print("\n\nFinal received_details (deduplicated):\n", received_details)
     return received_details
 
-
+    
 
 def update_sent_details(docname, sent_details_data):
     """Update the sent_details table in the Process Loss document"""
