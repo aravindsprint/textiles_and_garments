@@ -550,6 +550,325 @@ frappe.ui.form.on("Plan Items", {
 
 
 
+// function show_sales_order_multi_select_dialog(frm) {
+//     frappe.call({
+//         method: "textiles_and_garments.textiles_and_garments.doctype.plan_items.plan_items.get_selected_sales_order",
+//         args: {},
+//         callback: function (res) {
+//             const sales_orders = res.message || [];
+
+//             // Create a custom dialog to display Sales Order details
+//             const dialog = new frappe.ui.Dialog({
+//                 title: __('Select Sales Orders'),
+//                 fields: [
+//                     {
+//                         fieldtype: 'HTML',
+//                         fieldname: 'filter_section'
+//                     },
+//                     {
+//                         fieldtype: 'HTML',
+//                         fieldname: 'results_section'
+//                     }
+//                 ],
+//                 primary_action_label: 'Add Selected',
+//                 primary_action: function() {
+//                     const selected = [];
+//                     dialog.$wrapper.find('input[type="checkbox"]:checked').each(function() {
+//                         selected.push($(this).val());
+//                     });
+
+//                     if (selected.length === 0) {
+//                         frappe.msgprint("Please select at least one Sales Order.");
+//                         return;
+//                     }
+
+//                     const selected_sales_orders = sales_orders.filter(r => selected.includes(r.name));
+//                     console.log("selected_sales_orders", selected_sales_orders);
+                    
+//                     const existing_sales_orders = (frm.doc.sales_order_item_details || []).map(row => row.sales_order);
+//                     console.log("existing_sales_orders", existing_sales_orders);
+                    
+//                     const new_sales_orders = selected_sales_orders.filter(sales_order => !existing_sales_orders.includes(sales_order.name));
+//                     console.log("new_sales_orders", new_sales_orders);
+
+//                     if (new_sales_orders.length === 0) {
+//                         frappe.msgprint("Selected Sales Orders are already added.");
+//                         dialog.hide();
+//                         return;
+//                     }
+
+//                     // Fetch Sales Order Items for each selected Sales Order
+//                     frappe.call({
+//                         method: "textiles_and_garments.textiles_and_garments.doctype.plan_items.plan_items.get_sales_order_items",
+//                         args: {
+//                             sales_orders: new_sales_orders.map(so => so.name)
+//                         },
+//                         callback: function(items_res) {
+//                             const sales_order_items = items_res.message || [];
+//                             console.log("sales_order_items", sales_order_items);
+
+//                             // Get unique item codes to find BOMs
+//                             const item_codes = [...new Set(sales_order_items.map(item => item.item_code))];
+                            
+//                             // Fetch latest BOM for each item
+//                             frappe.call({
+//                                 method: "textiles_and_garments.textiles_and_garments.doctype.plan_items.plan_items.get_latest_boms_for_items",
+//                                 args: {
+//                                     item_codes: item_codes
+//                                 },
+//                                 callback: function(boms_res) {
+//                                     const boms_by_item = boms_res.message || {};
+//                                     console.log("boms_by_item", boms_by_item);
+
+//                                     // Get BOMs that were found
+//                                     const bom_names = Object.values(boms_by_item)
+//                                         .filter(bom => bom !== null)
+//                                         .map(bom => bom.name);
+//                                     console.log("bom_names",bom_names);
+//                                     if (bom_names.length === 0) {
+//                                         frappe.msgprint("No BOMs found for the selected items. Cannot create plan items.");
+//                                         dialog.hide();
+//                                         return;
+//                                     }
+
+//                                     // Fetch all BOM items recursively
+//                                     frappe.call({
+//                                         method: "textiles_and_garments.textiles_and_garments.doctype.plan_items.plan_items.get_all_bom_items_recursive",
+//                                         args: {
+//                                             bom_names: bom_names
+//                                         },
+//                                         callback: function(all_bom_items_res) {
+//                                             const all_bom_items = all_bom_items_res.message || {};
+//                                             console.log("all_bom_items", all_bom_items);
+
+//                                             // Group sales order items by sales order
+//                                             const items_by_sales_order = {};
+//                                             sales_order_items.forEach(item => {
+//                                                 if (!items_by_sales_order[item.parent]) {
+//                                                     items_by_sales_order[item.parent] = [];
+//                                                 }
+//                                                 items_by_sales_order[item.parent].push(item);
+//                                             });
+
+//                                             frm.clear_table('sales_order_item_details');
+//                                             frm.clear_table('plan_items_detail');
+
+//                                             // Add items to both tables
+//                                             new_sales_orders.forEach(sales_order => {
+//                                                 const items = items_by_sales_order[sales_order.name] || [];
+                                                
+//                                                 if (items.length > 0) {
+//                                                     items.forEach(item => {
+//                                                         console.log("item",item);
+//                                                         const latest_bom = boms_by_item[item.item_code] || null;
+//                                                         console.log("latest_bom",latest_bom);
+                                                        
+//                                                         // Add to sales_order_item_details
+//                                                         frm.add_child('sales_order_item_details', {
+//                                                             sales_order: sales_order.name,
+//                                                             customer: sales_order.customer,
+//                                                             date: sales_order.transaction_date,
+//                                                             item_code: item.item_code,
+//                                                             qty: item.qty,
+//                                                             uom: item.uom,
+//                                                             grand_total: sales_order.grand_total,
+//                                                             bom: latest_bom ? latest_bom.name : null,
+//                                                             color: item.color,
+//                                                             commercial_name: item.commercial_name
+//                                                         });
+
+//                                                         // Add BOM items to plan_items_detail recursively
+//                                                         if (latest_bom && all_bom_items[latest_bom.name]) {
+//                                                             processBomItemsRecursively(
+//                                                                 frm, 
+//                                                                 all_bom_items[latest_bom.name], 
+//                                                                 item.qty, 
+//                                                                 latest_bom.quantity, 
+//                                                                 item.item_code,
+//                                                                 1 // level 1
+//                                                             );
+//                                                         }
+//                                                     });
+//                                                 } else {
+//                                                     // Add the sales order even if no items found
+//                                                     frm.add_child('sales_order_item_details', {
+//                                                         sales_order: sales_order.name,
+//                                                         customer: sales_order.customer,
+//                                                         date: sales_order.transaction_date,
+//                                                         grand_total: sales_order.grand_total
+//                                                     });
+//                                                 }
+//                                             });
+
+//                                             frm.refresh_field('sales_order_item_details');
+//                                             frm.refresh_field('plan_items_detail');
+//                                             frappe.msgprint(`${new_sales_orders.length} new Sales Order(s) with ${sales_order_items.length} items added. All BOM levels have been processed.`);
+//                                             dialog.hide();
+//                                         },
+//                                         error: function(err) {
+//                                             console.error("Error fetching recursive BOM items:", err);
+//                                             frappe.msgprint("Error fetching BOM items recursively. Please try again.");
+//                                             dialog.hide();
+//                                         }
+//                                     });
+//                                 },
+//                                 error: function(err) {
+//                                     console.error("Error fetching BOMs:", err);
+//                                     frappe.msgprint("Error fetching BOM information. Please try again.");
+//                                     dialog.hide();
+//                                 }
+//                             });
+//                         },
+//                         error: function(err) {
+//                             console.error("Error fetching sales order items:", err);
+//                             frappe.msgprint("Error fetching Sales Order items. Please try again.");
+//                             dialog.hide();
+//                         }
+//                     });
+//                 }
+//             });
+
+//             // Helper function to process BOM items recursively
+//             function processBomItemsRecursively(frm, bom_items, source_qty, bom_quantity, source_item, level) {
+//                 bom_items.forEach(bom_item => {
+//                     // Calculate required quantity based on BOM ratio
+//                     const required_qty = (bom_item.qty / bom_quantity) * source_qty;
+                    
+//                     // Add to plan_items_detail
+//                     frm.add_child('plan_items_detail', {
+//                         item_code: bom_item.item_code,
+//                         bom: bom_item.bom_name,
+//                         qty: required_qty,
+//                         uom: bom_item.uom,
+//                         source_item: source_item,
+//                         source_qty: source_qty,
+//                         level: level,
+//                         is_final_item: bom_item.has_bom ? 0 : 1
+//                     });
+
+//                     // If this item has its own BOM, process it recursively
+//                     if (bom_item.has_bom && bom_item.child_bom_items) {
+//                         processBomItemsRecursively(
+//                             frm,
+//                             bom_item.child_bom_items,
+//                             required_qty,
+//                             bom_item.bom_quantity,
+//                             bom_item.item_code,
+//                             level + 1
+//                         );
+//                     }
+//                 });
+//             }
+
+//             // ... rest of your dialog code remains the same ...
+//             // Add filters
+//             const filter_html = `
+//                 <div class="row">
+//                     <div class="col-sm-4">
+//                         <div class="form-group">
+//                             <label for="sales_order_filter">Sales Order</label>
+//                             <input type="text" class="form-control" id="sales_order_filter" placeholder="Filter by Sales Order name">
+//                         </div>
+//                     </div>
+//                     <div class="col-sm-4">
+//                         <div class="form-group">
+//                             <label for="customer_filter">Customer</label>
+//                             <input type="text" class="form-control" id="customer_filter" placeholder="Filter by Customer">
+//                         </div>
+//                     </div>
+//                     <div class="col-sm-4">
+//                         <button class="btn btn-primary btn-sm" style="margin-top: 25px;" onclick="filterSalesOrders()">
+//                             ${__('Filter')}
+//                         </button>
+//                         <button class="btn btn-default btn-sm" style="margin-top: 25px; margin-left: 5px;" onclick="clearFilters()">
+//                             ${__('Clear')}
+//                         </button>
+//                     </div>
+//                 </div>
+//             `;
+            
+//             dialog.fields_dict.filter_section.$wrapper.html(filter_html);
+            
+//             // Add results table
+//             let results_html = `
+//                 <div class="results-section" style="margin-top: 20px; max-height: 400px; overflow-y: auto;">
+//                     <table class="table table-bordered">
+//                         <thead>
+//                             <tr>
+//                                 <th><input type="checkbox" id="select-all"></th>
+//                                 <th>Sales Order</th>
+//                                 <th>Date</th>
+//                                 <th>Customer</th>
+//                                 <th>Grand Total</th>
+//                             </tr>
+//                         </thead>
+//                         <tbody>
+//             `;
+            
+//             sales_orders.forEach(order => {
+//                 results_html += `
+//                     <tr>
+//                         <td><input type="checkbox" value="${order.name}" class="sales-order-checkbox"></td>
+//                         <td>${order.name}</td>
+//                         <td>${order.transaction_date || ''}</td>
+//                         <td>${order.customer || ''}</td>
+//                         <td>${format_currency(order.grand_total || 0, order.currency || frappe.defaults.get_default("currency"))}</td>
+//                     </tr>
+//                 `;
+//             });
+            
+//             results_html += `
+//                         </tbody>
+//                     </table>
+//                 </div>
+//             `;
+            
+//             dialog.fields_dict.results_section.$wrapper.html(results_html);
+            
+//             // Add select all functionality
+//             dialog.$wrapper.find('#select-all').on('click', function() {
+//                 const isChecked = $(this).is(':checked');
+//                 dialog.$wrapper.find('.sales-order-checkbox').prop('checked', isChecked);
+//             });
+            
+//             // Add filter function to window scope
+//             window.filterSalesOrders = function() {
+//                 const salesOrderFilter = dialog.$wrapper.find('#sales_order_filter').val().toLowerCase();
+//                 const customerFilter = dialog.$wrapper.find('#customer_filter').val().toLowerCase();
+                
+//                 dialog.$wrapper.find('tbody tr').each(function() {
+//                     const row = $(this);
+//                     const salesOrderName = row.find('td:eq(1)').text().toLowerCase();
+//                     const customerName = row.find('td:eq(3)').text().toLowerCase();
+                    
+//                     const showRow = 
+//                         (salesOrderFilter === '' || salesOrderName.includes(salesOrderFilter)) &&
+//                         (customerFilter === '' || customerName.includes(customerFilter));
+                    
+//                     row.toggle(showRow);
+//                 });
+//             };
+            
+//             // Add clear filters function
+//             window.clearFilters = function() {
+//                 dialog.$wrapper.find('#sales_order_filter').val('');
+//                 dialog.$wrapper.find('#customer_filter').val('');
+//                 dialog.$wrapper.find('tbody tr').show();
+//             };
+            
+//             // Add real-time filtering as user types
+//             dialog.$wrapper.find('#sales_order_filter, #customer_filter').on('keyup', function() {
+//                 window.filterSalesOrders();
+//             });
+            
+//             dialog.show();
+
+//         }
+//     });
+// }
+
+
+
 function show_sales_order_multi_select_dialog(frm) {
     frappe.call({
         method: "textiles_and_garments.textiles_and_garments.doctype.plan_items.plan_items.get_selected_sales_order",
@@ -583,13 +902,10 @@ function show_sales_order_multi_select_dialog(frm) {
                     }
 
                     const selected_sales_orders = sales_orders.filter(r => selected.includes(r.name));
-                    console.log("selected_sales_orders", selected_sales_orders);
                     
                     const existing_sales_orders = (frm.doc.sales_order_item_details || []).map(row => row.sales_order);
-                    console.log("existing_sales_orders", existing_sales_orders);
                     
                     const new_sales_orders = selected_sales_orders.filter(sales_order => !existing_sales_orders.includes(sales_order.name));
-                    console.log("new_sales_orders", new_sales_orders);
 
                     if (new_sales_orders.length === 0) {
                         frappe.msgprint("Selected Sales Orders are already added.");
@@ -605,7 +921,6 @@ function show_sales_order_multi_select_dialog(frm) {
                         },
                         callback: function(items_res) {
                             const sales_order_items = items_res.message || [];
-                            console.log("sales_order_items", sales_order_items);
 
                             // Get unique item codes to find BOMs
                             const item_codes = [...new Set(sales_order_items.map(item => item.item_code))];
@@ -618,13 +933,12 @@ function show_sales_order_multi_select_dialog(frm) {
                                 },
                                 callback: function(boms_res) {
                                     const boms_by_item = boms_res.message || {};
-                                    console.log("boms_by_item", boms_by_item);
 
                                     // Get BOMs that were found
                                     const bom_names = Object.values(boms_by_item)
                                         .filter(bom => bom !== null)
                                         .map(bom => bom.name);
-                                    console.log("bom_names",bom_names);
+                                    
                                     if (bom_names.length === 0) {
                                         frappe.msgprint("No BOMs found for the selected items. Cannot create plan items.");
                                         dialog.hide();
@@ -639,7 +953,6 @@ function show_sales_order_multi_select_dialog(frm) {
                                         },
                                         callback: function(all_bom_items_res) {
                                             const all_bom_items = all_bom_items_res.message || {};
-                                            console.log("all_bom_items", all_bom_items);
 
                                             // Group sales order items by sales order
                                             const items_by_sales_order = {};
@@ -653,57 +966,78 @@ function show_sales_order_multi_select_dialog(frm) {
                                             frm.clear_table('sales_order_item_details');
                                             frm.clear_table('plan_items_detail');
 
-                                            // Add items to both tables
-                                            new_sales_orders.forEach(sales_order => {
-                                                const items = items_by_sales_order[sales_order.name] || [];
-                                                
-                                                if (items.length > 0) {
-                                                    items.forEach(item => {
-                                                        console.log("item",item);
-                                                        const latest_bom = boms_by_item[item.item_code] || null;
-                                                        console.log("latest_bom",latest_bom);
-                                                        
-                                                        // Add to sales_order_item_details
-                                                        frm.add_child('sales_order_item_details', {
-                                                            sales_order: sales_order.name,
-                                                            customer: sales_order.customer,
-                                                            date: sales_order.transaction_date,
-                                                            item_code: item.item_code,
-                                                            qty: item.qty,
-                                                            uom: item.uom,
-                                                            grand_total: sales_order.grand_total,
-                                                            bom: latest_bom ? latest_bom.name : null,
-                                                            color: item.color,
-                                                            commercial_name: item.commercial_name
-                                                        });
-
-                                                        // Add BOM items to plan_items_detail recursively
-                                                        if (latest_bom && all_bom_items[latest_bom.name]) {
-                                                            processBomItemsRecursively(
-                                                                frm, 
-                                                                all_bom_items[latest_bom.name], 
-                                                                item.qty, 
-                                                                latest_bom.quantity, 
-                                                                item.item_code,
-                                                                1 // level 1
-                                                            );
-                                                        }
-                                                    });
-                                                } else {
-                                                    // Add the sales order even if no items found
-                                                    frm.add_child('sales_order_item_details', {
-                                                        sales_order: sales_order.name,
-                                                        customer: sales_order.customer,
-                                                        date: sales_order.transaction_date,
-                                                        grand_total: sales_order.grand_total
-                                                    });
-                                                }
+                                            // First, collect all unique item codes from all BOM levels
+                                            const all_item_codes = new Set();
+                                            Object.values(all_bom_items).forEach(bom_items => {
+                                                extractAllItemCodes(bom_items, all_item_codes);
                                             });
 
-                                            frm.refresh_field('sales_order_item_details');
-                                            frm.refresh_field('plan_items_detail');
-                                            frappe.msgprint(`${new_sales_orders.length} new Sales Order(s) with ${sales_order_items.length} items added. All BOM levels have been processed.`);
-                                            dialog.hide();
+                                            // Fetch latest BOMs for ALL items in the entire BOM hierarchy
+                                            frappe.call({
+                                                method: "textiles_and_garments.textiles_and_garments.doctype.plan_items.plan_items.get_latest_boms_for_items",
+                                                args: {
+                                                    item_codes: Array.from(all_item_codes)
+                                                },
+                                                callback: function(all_boms_res) {
+                                                    const all_boms_by_item = all_boms_res.message || {};
+
+                                                    // Add items to both tables
+                                                    new_sales_orders.forEach(sales_order => {
+                                                        const items = items_by_sales_order[sales_order.name] || [];
+                                                        
+                                                        if (items.length > 0) {
+                                                            items.forEach(item => {
+                                                                const latest_bom = boms_by_item[item.item_code] || null;
+                                                                
+                                                                // Add to sales_order_item_details
+                                                                frm.add_child('sales_order_item_details', {
+                                                                    sales_order: sales_order.name,
+                                                                    customer: sales_order.customer,
+                                                                    date: sales_order.transaction_date,
+                                                                    item_code: item.item_code,
+                                                                    qty: item.qty,
+                                                                    uom: item.uom,
+                                                                    grand_total: sales_order.grand_total,
+                                                                    bom: latest_bom ? latest_bom.name : null,
+                                                                    color: item.color,
+                                                                    commercial_name: item.commercial_name
+                                                                });
+
+                                                                // Add BOM items to plan_items_detail recursively
+                                                                if (latest_bom && all_bom_items[latest_bom.name]) {
+                                                                    processBomItemsRecursively(
+                                                                        frm, 
+                                                                        all_bom_items[latest_bom.name], 
+                                                                        item.qty, 
+                                                                        latest_bom.quantity, 
+                                                                        item.item_code,
+                                                                        1, // level 1
+                                                                        all_boms_by_item // Pass all BOMs mapping
+                                                                    );
+                                                                }
+                                                            });
+                                                        } else {
+                                                            // Add the sales order even if no items found
+                                                            frm.add_child('sales_order_item_details', {
+                                                                sales_order: sales_order.name,
+                                                                customer: sales_order.customer,
+                                                                date: sales_order.transaction_date,
+                                                                grand_total: sales_order.grand_total
+                                                            });
+                                                        }
+                                                    });
+
+                                                    frm.refresh_field('sales_order_item_details');
+                                                    frm.refresh_field('plan_items_detail');
+                                                    frappe.msgprint(`${new_sales_orders.length} new Sales Order(s) with ${sales_order_items.length} items added. All BOM levels have been processed.`);
+                                                    dialog.hide();
+                                                },
+                                                error: function(err) {
+                                                    console.error("Error fetching all BOMs:", err);
+                                                    frappe.msgprint("Error fetching BOM information for all items. Please try again.");
+                                                    dialog.hide();
+                                                }
+                                            });
                                         },
                                         error: function(err) {
                                             console.error("Error fetching recursive BOM items:", err);
@@ -728,16 +1062,30 @@ function show_sales_order_multi_select_dialog(frm) {
                 }
             });
 
-            // Helper function to process BOM items recursively
-            function processBomItemsRecursively(frm, bom_items, source_qty, bom_quantity, source_item, level) {
+            // Helper function to extract all item codes from BOM structure
+            function extractAllItemCodes(bom_items, itemCodesSet) {
+                bom_items.forEach(bom_item => {
+                    itemCodesSet.add(bom_item.item_code);
+                    if (bom_item.has_bom && bom_item.child_bom_items) {
+                        extractAllItemCodes(bom_item.child_bom_items, itemCodesSet);
+                    }
+                });
+            }
+
+            // Helper function to process BOM items recursively - MODIFIED
+            function processBomItemsRecursively(frm, bom_items, source_qty, bom_quantity, source_item, level, all_boms_by_item) {
                 bom_items.forEach(bom_item => {
                     // Calculate required quantity based on BOM ratio
                     const required_qty = (bom_item.qty / bom_quantity) * source_qty;
                     
-                    // Add to plan_items_detail
+                    // Find the latest BOM for this specific item_code
+                    const latest_bom = all_boms_by_item[bom_item.item_code] || null;
+                    const bom_name = latest_bom ? latest_bom.name : bom_item.bom_name;
+                    
+                    // Add to plan_items_detail with the latest BOM
                     frm.add_child('plan_items_detail', {
                         item_code: bom_item.item_code,
-                        bom: bom_item.bom_name,
+                        bom: bom_name, // Use the latest BOM for this item_code
                         qty: required_qty,
                         uom: bom_item.uom,
                         source_item: source_item,
@@ -754,12 +1102,15 @@ function show_sales_order_multi_select_dialog(frm) {
                             required_qty,
                             bom_item.bom_quantity,
                             bom_item.item_code,
-                            level + 1
+                            level + 1,
+                            all_boms_by_item
                         );
                     }
                 });
             }
 
+            // ... rest of your dialog code remains the same ...
+            // [The rest of your dialog HTML and filtering code goes here]
             // ... rest of your dialog code remains the same ...
             // Add filters
             const filter_html = `
@@ -860,14 +1211,12 @@ function show_sales_order_multi_select_dialog(frm) {
             dialog.$wrapper.find('#sales_order_filter, #customer_filter').on('keyup', function() {
                 window.filterSalesOrders();
             });
+
             
             dialog.show();
-
         }
     });
 }
-
-
 
 
 // Trigger this once on form load to make sure summary starts clean
