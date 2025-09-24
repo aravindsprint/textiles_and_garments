@@ -373,7 +373,7 @@ def get_columns(filters):
         },
         {
             "label": _("Amount"),
-            "fieldname": "amount",
+            "fieldname": "original_amount",
             "fieldtype": "Float",
             "width": 90,
         },
@@ -401,9 +401,15 @@ def get_columns(filters):
             "fieldtype": "Data",
             "width": 100,
         },
+        # {
+        #     "label": _("Delivery status"),
+        #     "fieldname": "delivery_status",
+        #     "fieldtype": "Data",
+        #     "width": 70,
+        # },
         {
-            "label": _("Delivery status"),
-            "fieldname": "delivery_status",
+            "label": _("Document status"),
+            "fieldname": "status",
             "fieldtype": "Data",
             "width": 70,
         }
@@ -418,6 +424,7 @@ def get_data(filters):
     return data
 
 def get_sales_order_data(filters):
+	# uncomment below for the local instance
     # query = """
     #     SELECT
     #         soi.item_code AS item_code,
@@ -461,7 +468,8 @@ def get_sales_order_data(filters):
     #         so.name AS name,
     #         so.naming_series AS series,
     #         so.delivery_date AS delivery_date,
-    #         so.delivery_status AS delivery_status
+    #         so.delivery_status AS delivery_status,
+    #         so.status AS status
     #     FROM 
     #         `tabSales Order Item` AS soi
     #     LEFT JOIN 
@@ -474,6 +482,7 @@ def get_sales_order_data(filters):
     #         so.docstatus = 1
     # """
 
+    # uncomment below for the pranera instance
     query = """
         SELECT
             soi.item_code AS item_code,

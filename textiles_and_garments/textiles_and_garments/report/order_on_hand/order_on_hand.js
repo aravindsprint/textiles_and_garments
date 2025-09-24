@@ -20,7 +20,7 @@ frappe.query_reports["Order On Hand"] = {
 		},
 		{
 			fieldname: "parent_sales_person",
-			label: __("Parent Sales Person (Group)"),
+			label: __("Sales Team"),
 			fieldtype: "Link",
 			width: "280",
 			options: "Sales Person",
@@ -79,7 +79,7 @@ frappe.query_reports["Order On Hand"] = {
 			fieldname: "customer",
 			label: __("Customer"),
 			fieldtype: "Link",
-			width: "280",
+			width: "80",
 			options: "Customer",
 		},
 		{
@@ -102,7 +102,7 @@ frappe.query_reports["Order On Hand"] = {
 			fieldname: "delivery_status",
 			label: __("Delivery Status"),
 			fieldtype: "Select",
-			options: ["Not Delivered", "Fully Delivered", "Partly Delivered", "Not Applicable"],
+			options: ["","Not Delivered", "Fully Delivered", "Partly Delivered", "Not Applicable"],
 			width: "80",
 			
 		},
