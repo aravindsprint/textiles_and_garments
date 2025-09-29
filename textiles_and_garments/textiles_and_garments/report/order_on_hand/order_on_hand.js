@@ -98,14 +98,35 @@ frappe.query_reports["Order On Hand"] = {
 			reqd: 1,
 			default: frappe.datetime.get_today(),
 		},
-		{
-			fieldname: "delivery_status",
-			label: __("Delivery Status"),
-			fieldtype: "Select",
-			options: ["","Not Delivered", "Fully Delivered", "Partly Delivered", "Not Applicable"],
-			width: "80",
+		// {
+		// 	fieldname: "delivery_status",
+		// 	label: __("Delivery Status"),
+		// 	fieldtype: "Select",
+		// 	options: ["","Not Delivered", "Fully Delivered", "Partly Delivered", "Not Applicable"],
+		// 	width: "80",
 			
+		// },
+		{
+			fieldname: "status",
+			label: __("Docstatus"),
+			fieldtype: "MultiSelectList",
+			width: "80",
+			get_data: function() {
+				return [
+					{ value: "Draft", description: __("") },
+					{ value: "To Deliver and Bill", description: __("") },
+					{ value: "To Bill", description: __("") },
+					{ value: "To Deliver", description: __("") },
+					{ value: "Completed", description: __("") },
+					{ value: "Cancelled", description: __("") },
+					{ value: "Closed", description: __("") }
+				];
+			}
 		},
 
 	]
 };
+
+
+
+
