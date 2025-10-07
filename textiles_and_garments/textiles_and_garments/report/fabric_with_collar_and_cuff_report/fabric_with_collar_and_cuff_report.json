@@ -2,42 +2,16 @@
  "add_total_row": 1,
  "add_translate_data": 0,
  "columns": [],
- "creation": "2025-10-06 11:06:16.441410",
+ "creation": "2025-10-06 18:04:59.193253",
  "disabled": 0,
  "docstatus": 0,
  "doctype": "Report",
- "filters": [
-        {
-            "fieldname": "fabric_type",
-            "fieldtype": "Select",
-            "label": "Fabric Type",
-            "mandatory": 0,
-            "options": "\nAll\nCotton\nPolyester\nLinen\nSilk",
-            "wildcard_filter": 0,
-            "default": "All"
-        },
-        {
-            "fieldname": "item_code",
-            "fieldtype": "Data",
-            "label": "Item Code",
-            "mandatory": 0,
-            "wildcard_filter": 0
-        },
-        {
-            "fieldname": "color",
-            "fieldtype": "Select",
-            "label": "Color",
-            "mandatory": 0,
-            "options": "\nAll\nWhite\nBlack\nBlue\nRed",
-            "wildcard_filter": 0,
-            "default": "All"
-        }
-    ],
+ "filters": [],
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": "CUSTOM__PSS JV_LOGO",
  "letterhead": null,
- "modified": "2025-10-06 11:06:16.441410",
+ "modified": "2025-10-06 18:04:59.193253",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Fabric With Collar and Cuff Report",
