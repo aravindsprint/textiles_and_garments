@@ -107,13 +107,35 @@ def get_data(filters):
     return data
 
 def get_work_order_data(filters):
+    # query = """
+    #     SELECT 
+    #         mri.parent as material_request,
+    #         wo.name as work_order,
+    #         wo.production_item as item_code,
+    #         wo.custom_commercial_name as commercial_name, 
+    #         wo.custom_color as color, 
+    #         mri.qty as material_request_qty,
+    #         wo.qty, 
+    #         wo.stock_uom as uom,
+    #         wo.material_transferred_for_manufacturing,
+    #         wo.produced_qty,
+    #         (mri.qty - wo.qty) as mr_pending_qty,
+    #         (wo.qty - wo.produced_qty) as wo_pending_qty,
+    #         item.item_name,
+    #         wo.docstatus
+    #     FROM `tabWork Order` AS wo
+    #     JOIN `tabItem` AS item ON item.item_code = wo.production_item
+    #     JOIN `tabMaterial Request Item` AS mri ON mri.parent = wo.material_request
+    #     WHERE wo.docstatus = 1
+    # """
+
     query = """
         SELECT 
             mri.parent as material_request,
             wo.name as work_order,
             wo.production_item as item_code,
-            wo.custom_commercial_name as commercial_name, 
-            wo.custom_color as color, 
+            wo.commercial_name as commercial_name, 
+            wo.color as color, 
             mri.qty as material_request_qty,
             wo.qty, 
             wo.stock_uom as uom,
@@ -132,12 +154,21 @@ def get_work_order_data(filters):
     conditions = []
 
     
+    # if filters.get("item_code"):
+    #     conditions.append("wo.production_item = %(item_code)s")
+    # if filters.get("commercial_name"):
+    #     conditions.append("wo.custom_commercial_name = %(commercial_name)s")
+    # if filters.get("color"):
+    #     conditions.append("wo.custom_color = %(color)s")
+    # if filters.get("docstatus") is not None:
+    #     conditions.append("wo.docstatus = %(docstatus)s")
+
     if filters.get("item_code"):
         conditions.append("wo.production_item = %(item_code)s")
     if filters.get("commercial_name"):
-        conditions.append("wo.custom_commercial_name = %(commercial_name)s")
+        conditions.append("wo.commercial_name = %(commercial_name)s")
     if filters.get("color"):
-        conditions.append("wo.custom_color = %(color)s")
+        conditions.append("wo.color = %(color)s")
     if filters.get("docstatus") is not None:
         conditions.append("wo.docstatus = %(docstatus)s")
 
