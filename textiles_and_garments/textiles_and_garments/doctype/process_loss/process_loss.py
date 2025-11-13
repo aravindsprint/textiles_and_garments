@@ -2711,12 +2711,21 @@ def get_stock_entries_for_sco(sco_names, purpose):
     print(f"\nsco_tuple for stock entries ({purpose}):\n", sco_tuple)
     
     # Get all Stock Entries linked to these Subcontracting Orders with specific purpose
+    # stock_entry_list = frappe.db.sql(f"""
+    #     SELECT name, subcontracting_order, purpose, posting_date
+    #     FROM `tabStock Entry`
+    #     WHERE subcontracting_order IN %s AND docstatus = 1 AND purpose = %s
+    #     ORDER BY posting_date
+    # """, (sco_tuple, purpose), as_dict=True)
+
     stock_entry_list = frappe.db.sql(f"""
         SELECT name, subcontracting_order, purpose, posting_date
         FROM `tabStock Entry`
-        WHERE subcontracting_order IN %s AND docstatus = 1 AND purpose = %s
+        WHERE subcontracting_order IN %s 
+            AND docstatus = 1 
+            AND (name LIKE 'ST%' OR name LIKE 'YEI%')
         ORDER BY posting_date
-    """, (sco_tuple, purpose), as_dict=True)
+    """, (sco_tuple,), as_dict=True)
     
     print(f"\n\nStock Entries found ({purpose}):\n", stock_entry_list)
     
