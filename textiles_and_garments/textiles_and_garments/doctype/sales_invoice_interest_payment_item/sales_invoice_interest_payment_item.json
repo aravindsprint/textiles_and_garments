@@ -1,0 +1,112 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-11-14 11:30:31.681782",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sales_invoice",
+  "posting_date",
+  "due_date",
+  "customer",
+  "grand_total",
+  "interest_amount",
+  "total_amount",
+  "rate_of_interest",
+  "latest_payment_date",
+  "latest_payment_entry_date",
+  "total_allocation",
+  "days_overdue",
+  "total_payment_entries"
+ ],
+ "fields": [
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Posting date"
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Due Date"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Data",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Grand Total"
+  },
+  {
+   "fieldname": "interest_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Interest Amount"
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Amount"
+  },
+  {
+   "default": "18",
+   "fieldname": "rate_of_interest",
+   "fieldtype": "Data",
+   "label": "Rate of Interest"
+  },
+  {
+   "fieldname": "latest_payment_date",
+   "fieldtype": "Data",
+   "label": "Latest Payment Date"
+  },
+  {
+   "fieldname": "latest_payment_entry_date",
+   "fieldtype": "Data",
+   "label": "Latest Payment Entry Date"
+  },
+  {
+   "fieldname": "total_allocation",
+   "fieldtype": "Currency",
+   "label": "Total Allocation"
+  },
+  {
+   "fieldname": "days_overdue",
+   "fieldtype": "Data",
+   "label": "Days Overdue"
+  },
+  {
+   "fieldname": "total_payment_entries",
+   "fieldtype": "Data",
+   "label": "Total Payment Entries"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-11-14 15:40:55.912849",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Sales Invoice Interest Payment Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
