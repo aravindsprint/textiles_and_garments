@@ -57,6 +57,7 @@
    "label": "ReportRoll"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "greige_roll_no",
    "fieldtype": "Data",
    "label": "Greige Roll No"
@@ -220,15 +221,18 @@
    "options": "-\nMild\nHeavy"
   }
  ],
+ "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-05-13 16:21:52.779834",
+ "modified": "2025-11-17 12:08:49.930801",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Details",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
