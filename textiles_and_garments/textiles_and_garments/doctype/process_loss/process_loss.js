@@ -14,7 +14,7 @@ frappe.ui.form.on("Process Loss", {
             callback: function (response) {
                 if (response.message && Array.isArray(response.message)) {
                     console.log("Filtered stock items:", response.message);
-                    // Reload the form to show the updated sent_details table
+                    // Reload the form to show the updated sent_details tables
                     frm.reload_doc();
                     // frappe.show_alert({
                     //     message: __("Sent details updated successfully"),

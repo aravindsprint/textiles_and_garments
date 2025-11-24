@@ -1083,7 +1083,7 @@ def get_returned_items_details(purchase_order_list):
 #     return stock_entry_list
 
 def get_stock_entries_for_sco(sco_names, purpose, po_tuple):
-    """Get stock entries for specific purpose custom_po_no"""
+    """Get stock entries for specific purpose custom_po_no """
     if not sco_names:
         return []
     
