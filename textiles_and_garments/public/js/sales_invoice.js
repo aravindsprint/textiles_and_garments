@@ -80,6 +80,8 @@ frappe.ui.form.on('Sales Invoice', {
 
 
 
+
+
 frappe.ui.form.on('Sales Invoice Item', {
     custom_view_history_btn: function(frm, cdt, cdn) {
         let item_row = frappe.get_doc(cdt, cdn);

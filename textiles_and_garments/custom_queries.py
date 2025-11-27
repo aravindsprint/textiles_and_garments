@@ -8,17 +8,24 @@ def item_query_with_stock(doctype, txt, searchfield, start, page_len, filters):
     warehouse = filters.get('warehouse', '')
     company = filters.get('company')
     
-    # First get the items
-    items = frappe.db.sql("""
-        SELECT name, item_group, description, item_name, stock_uom
-        FROM `tabItem` 
-        WHERE (name like %s or item_name like %s) 
-        AND is_sales_item = 1 
-        AND disabled = 0
-        ORDER BY name
-        LIMIT %s, %s
-    """, ['%' + txt + '%', '%' + txt + '%', start, page_len], as_dict=True)
-    print("\n\nitems\n\n",items)
+    # Build the base query
+    query = """
+        SELECT item.name, item.item_name, item.item_group, item.description, item.stock_uom
+        FROM `tabItem` as item
+        WHERE (item.name like %(txt)s or item.item_name like %(txt)s) 
+        AND item.is_sales_item = 1 
+        AND item.disabled = 0
+    """
+    
+    params = {
+        'txt': '%' + txt + '%',
+        'start': start,
+        'page_len': page_len
+    }
+    
+    query += " ORDER BY item.name LIMIT %(start)s, %(page_len)s"
+    
+    items = frappe.db.sql(query, params, as_dict=True)
     
     result = []
     for item in items:
@@ -29,12 +36,13 @@ def item_query_with_stock(doctype, txt, searchfield, start, page_len, filters):
             
         stock_qty = frappe.db.get_value('Bin', stock_filters, 'sum(actual_qty)') or 0
         
-        description = f"{item.name} - {item.item_group} (Stock: {stock_qty} - {item.stock_uom})"
+        # Proper format for link query: [value, description]
+        description = f"{item.item_name} - {item.item_group} (Stock: {stock_qty} {item.stock_uom})"
         
-        result.append([description])
+        # The FIRST element must be the item code (value), SECOND is description
+        result.append([item.name, description])
     
     return result
-
 
 
 
