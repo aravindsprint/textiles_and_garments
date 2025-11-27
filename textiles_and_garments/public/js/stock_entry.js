@@ -25,6 +25,40 @@ frappe.ui.form.on('Stock Entry', {
     refresh(frm) {
         console.log("Stock Entry", frm);
 
+        // // Add custom button only for submitted Stock Entries that aren't cancelled and are 'Send to Subcontractor' type
+        // if (frm.doc.docstatus === 1 && frm.doc.stock_entry_type === "Send to Subcontractor") {
+        //     // Check if there's a subcontracting order reference
+        //     let has_subcontracting_order = frm.doc.subcontracting_order ? true : false;
+            
+        //     if (has_subcontracting_order) {
+        //         frm.add_custom_button(__('🔗 Remove Links & Cancel'), function() {
+        //             remove_links_and_cancel_stock_entry(frm);
+        //         }).addClass('btn-warning');
+        //     }
+            
+        //     // Also keep the regular cancel button
+        //     frm.add_custom_button(__('Cancel'), function() {
+        //         frm.cancel();
+        //     });
+        // }
+        // Add custom button only for submitted Stock Entries that aren't cancelled and are supported types
+        if (frm.doc.docstatus === 1) {
+            let supported_types = ["Material Transfer for Manufacture", "Manufacture", "Send to Subcontractor"];
+            let is_supported_type = supported_types.includes(frm.doc.stock_entry_type);
+            
+            if (is_supported_type) {
+                frm.add_custom_button(__('🔗 Remove Links & Cancel'), function() {
+                    remove_links_and_cancel_stock_entry(frm);
+                }).addClass('btn-warning');
+            }
+            
+            // Also keep the regular cancel button
+            frm.add_custom_button(__('Cancel'), function() {
+                frm.cancel();
+            });
+        }
+
+
         if (frm.doc.items && frm.doc.stock_entry_type == "Send to Subcontractor") {
             frappe.model.with_doc("Subcontracting Order", frm.doc.subcontracting_order, function() {
                 let po_doc = frappe.model.get_doc("Subcontracting Order", frm.doc.subcontracting_order);
@@ -274,6 +308,100 @@ frappe.ui.form.on("Stock Entry", {
     }
 });
 
+function remove_links_and_cancel_stock_entry(frm) {
+    let confirm_message = '';
+    let args = {
+        stock_entry_name: frm.doc.name
+    };
+    
+    // Set confirmation message and arguments based on stock entry type
+    if (frm.doc.stock_entry_type === "Send to Subcontractor") {
+        confirm_message = `This Stock Entry (Material Transfer to Subcontractor) is linked to Subcontracting Order: <strong>${frm.doc.subcontracting_order}</strong><br><br>`;
+        confirm_message += `All milestone links will be removed before cancellation. Continue?`;
+        args.subcontracting_order = frm.doc.subcontracting_order;
+    } 
+    else if (frm.doc.stock_entry_type === "Material Transfer for Manufacture") {
+        confirm_message = `This Stock Entry (Material Transfer for Manufacture) is linked to Work Order: <strong>${frm.doc.work_order}</strong><br><br>`;
+        confirm_message += `All milestone links will be removed before cancellation. Continue?`;
+        args.work_order = frm.doc.work_order;
+    }
+    else if (frm.doc.stock_entry_type === "Manufacture") {
+        confirm_message = `This Stock Entry (Manufacture) is linked to Work Order: <strong>${frm.doc.work_order}</strong><br><br>`;
+        confirm_message += `All milestone links will be removed before cancellation. Continue?`;
+        args.work_order = frm.doc.work_order;
+    }
+    
+    frappe.confirm(
+        confirm_message,
+        function() {
+            frappe.call({
+                method: 'textiles_and_garments.time_and_action_milestones.remove_stock_entry_links_before_cancel',
+                args: args,
+                callback: function(r) {
+                    if (r.message && r.message.success) {
+                        frappe.msgprint({
+                            title: __('Success'),
+                            indicator: 'green',
+                            message: __('Removed {0} links from {1} plan(s). Cancelling Stock Entry...', 
+                                [r.message.milestone_name, r.message.removed_count])
+                        });
+                        
+                        // Cancel the Stock Entry after a brief delay to show the message
+                        setTimeout(() => {
+                            frm.cancel();
+                        }, 1500);
+                    } else {
+                        frappe.msgprint({
+                            title: __('Error'),
+                            indicator: 'red',
+                            message: __('Failed to remove links: {0}', [r.message.error || 'Unknown error'])
+                        });
+                    }
+                }
+            });
+        }
+    );
+}
+
+
+// function remove_links_and_cancel_stock_entry(frm) {
+//     let confirm_message = `This Stock Entry (Material Transfer to Subcontractor) is linked to Subcontracting Order: <strong>${frm.doc.subcontracting_order}</strong><br><br>`;
+//     confirm_message += `All milestone links will be removed before cancellation. Continue?`;
+    
+//     frappe.confirm(
+//         confirm_message,
+//         function() {
+//             frappe.call({
+//                 method: 'textiles_and_garments.time_and_action_milestones.remove_stock_entry_links_before_cancel',
+//                 args: {
+//                     stock_entry_name: frm.doc.name,
+//                     subcontracting_order: frm.doc.subcontracting_order
+//                 },
+//                 callback: function(r) {
+//                     if (r.message && r.message.success) {
+//                         frappe.msgprint({
+//                             title: __('Success'),
+//                             indicator: 'green',
+//                             message: __('Removed Material Transfer links from {0} plan(s). Cancelling Stock Entry...', [r.message.removed_count])
+//                         });
+                        
+//                         // Cancel the Stock Entry after a brief delay to show the message
+//                         setTimeout(() => {
+//                             frm.cancel();
+//                         }, 1500);
+//                     } else {
+//                         frappe.msgprint({
+//                             title: __('Error'),
+//                             indicator: 'red',
+//                             message: __('Failed to remove links: {0}', [r.message.error || 'Unknown error'])
+//                         });
+//                     }
+//                 }
+//             });
+//         }
+//     );
+// }
+
 
 
 // frappe.ui.form.on("Stock Entry", {
@@ -397,6 +525,183 @@ frappe.ui.form.on("Stock Entry", {
 // });
 
 
+// frappe.ui.form.on("Stock Entry Detail", {
+//     custom_create_batch(frm, cdt, cdn) {
+//         console.log("frm Stock Entry Detail", frm);
+//         var child = locals[cdt][cdn];
+//         var work_order;
+//         var project;
+//         var batchNo;
+//         var item;
+
+//         if (frm.doc.work_order) {
+//             // Additional logic if needed
+//              work_order = frm.doc.work_order;
+//              project = frm.doc.project;
+//         }
+
+//         item = child.item_code;
+//         console.log("item",item);
+//         if (child.commercial_name && (child.commercial_name.includes("POLO") 
+//             || child.commercial_name.includes("MARS")) &&
+//             child.stock_uom == "Kgs" && item.includes("WOC")) {
+//         // if(child){    
+//             // Your logic here
+//             batchNo = project +'/'+ work_order +'/'+ 'WOC'; // Replace with the desired batch number or logic to generate it
+//             child.batch_no = batchNo;
+//         }else if(child.commercial_name && (child.commercial_name.includes("POLO") 
+//             || child.commercial_name.includes("MARS")) &&
+//             child.stock_uom == "Kgs" && item.includes("WC")){
+//             batchNo = project +'/'+ work_order +'/'+ 'WC'; 
+//             child.batch_no = batchNo;
+//         }else if(child.commercial_name && (child.commercial_name.includes("COLLAR")) &&
+//             child.stock_uom == "Pcs"){
+//             batchNo = project +'/'+ work_order +'/'+ 'C'; 
+//             child.batch_no = batchNo;
+//         }else if(child.commercial_name && (child.commercial_name.includes("CUFF")) &&
+//             child.stock_uom == "Pcs"){
+//             batchNo = project +'/'+ work_order +'/'+ 'U'; 
+//             child.batch_no = batchNo;
+//         }else{
+//             batchNo = project +'/'+ work_order; 
+//             child.batch_no = batchNo;
+//         }    
+
+//         // let batchNo = "BATCH-001"; // Replace with the desired batch number or logic to generate it
+//         // child.batch_no = batchNo;
+
+//         // Call server-side method to create the Batch document
+//         frappe.call({
+//             method: "frappe.client.insert",
+//             args: {
+//                 doc: {
+//                     doctype: "Batch",
+//                     batch_id: batchNo,
+//                     item: item,
+//                     manufacturing_date: frappe.datetime.now_date(), // Example: Set the manufacturing date
+//                     // expiry_date: frappe.datetime.add_days(frappe.datetime.now_date(), 365), // Example: Set expiry date
+//                 },
+//             },
+//             callback: function(response) {
+//                 if (response.message) {
+//                     frappe.msgprint(`Batch ${batchNo} created successfully for Item ${item}`);
+//                     console.log("Batch created:", response.message);
+//                 } else {
+//                     frappe.msgprint(`Failed to create Batch for Item ${item}`);
+//                 }
+//             },
+//             error: function(err) {
+//                 console.error("Error creating Batch:", err);
+//             }
+//         });
+
+//         // Refresh the field to reflect changes in the UI
+//         frm.refresh_field("items");
+//     },
+// });
+
+
+// frappe.ui.form.on("Stock Entry Detail", {
+//     custom_create_batch(frm, cdt, cdn) {
+//         console.log("frm Stock Entry Detail", frm);
+//         var child = locals[cdt][cdn];
+//         var work_order;
+//         var project;
+//         var batchNo;
+//         var item;
+
+//         // FIX 1: Properly handle work_order and project assignment
+//         if (frm.doc.work_order && !frm.doc.custom_reprocess_work_order_reference) {
+//             work_order = frm.doc.work_order;
+//             project = frm.doc.project;
+//         } else if (frm.doc.custom_reprocess_work_order_reference) {
+//             work_order = frm.doc.custom_reprocess_work_order_reference + '/' + frm.doc.work_order;
+//             project = frm.doc.project;
+//         } else {
+//             // FIX 2: Provide fallback values to avoid undefined in batchNo
+//             work_order = frm.doc.work_order || 'NO_WO';
+//             project = frm.doc.project || 'NO_PROJECT';
+//         }
+
+//         item = child.item_code;
+//         console.log("item", item);
+        
+//         // FIX 3: Add null checks for commercial_name to prevent errors
+//         const commercial_name = child.commercial_name || '';
+        
+//         if (commercial_name && (commercial_name.includes("POLO") || commercial_name.includes("MARS")) &&
+//             child.stock_uom == "Kgs" && item.includes("WOC")) {
+//             batchNo = project + '/' + work_order + '/' + 'WOC';
+//             child.batch_no = batchNo;
+//         } else if (commercial_name && (commercial_name.includes("POLO") || commercial_name.includes("MARS")) &&
+//             child.stock_uom == "Kgs" && item.includes("WC")) {
+//             batchNo = project + '/' + work_order + '/' + 'WC';
+//             child.batch_no = batchNo;
+//         } else if (commercial_name && commercial_name.includes("COLLAR") &&
+//             child.stock_uom == "Pcs") {
+//             batchNo = project + '/' + work_order + '/' + 'C';
+//             child.batch_no = batchNo;
+//         } else if (commercial_name && commercial_name.includes("CUFF") &&
+//             child.stock_uom == "Pcs") {
+//             batchNo = project + '/' + work_order + '/' + 'U';
+//             child.batch_no = batchNo;
+//         } else {
+//             batchNo = project + '/' + work_order;
+//             child.batch_no = batchNo;
+//         }
+
+//         console.log("Creating batch:", batchNo, "for item:", item);
+
+//         // FIX 4: Check if batch already exists before creating
+//         frappe.call({
+//             method: "frappe.client.get_value",
+//             args: {
+//                 doctype: "Batch",
+//                 filters: { batch_id: batchNo },
+//                 fieldname: ["name"]
+//             },
+//             callback: function(response) {
+//                 if (response.message && response.message.name) {
+//                     // Batch already exists, just assign it
+//                     frappe.msgprint(__("Batch {0} already exists, assigned to item {1}", [batchNo, item]));
+//                     child.batch_no = batchNo;
+//                     frm.refresh_field("items");
+//                 } else {
+//                     // Create new batch
+//                     frappe.call({
+//                         method: "frappe.client.insert",
+//                         args: {
+//                             doc: {
+//                                 doctype: "Batch",
+//                                 batch_id: batchNo,
+//                                 item: item,
+//                                 manufacturing_date: frappe.datetime.now_date(),
+//                             },
+//                         },
+//                         callback: function(response) {
+//                             if (response.message) {
+//                                 frappe.msgprint(__("Batch {0} created successfully for Item {1}", [batchNo, item]));
+//                                 console.log("Batch created:", response.message);
+//                                 child.batch_no = batchNo;
+//                                 frm.refresh_field("items");
+//                             } else {
+//                                 frappe.msgprint(__("Failed to create Batch for Item {0}", [item]));
+//                             }
+//                         },
+//                         error: function(err) {
+//                             console.error("Error creating Batch:", err);
+//                             frappe.msgprint(__("Error creating batch. Please try again."));
+//                         }
+//                     });
+//                 }
+//             },
+//             error: function(err) {
+//                 console.error("Error checking batch existence:", err);
+//             }
+//         });
+//     },
+// });
+
 frappe.ui.form.on("Stock Entry Detail", {
     custom_create_batch(frm, cdt, cdn) {
         console.log("frm Stock Entry Detail", frm);
@@ -406,68 +711,114 @@ frappe.ui.form.on("Stock Entry Detail", {
         var batchNo;
         var item;
 
-        if (frm.doc.work_order) {
-            // Additional logic if needed
-             work_order = frm.doc.work_order;
-             project = frm.doc.project;
-        }
-
-        item = child.item_code;
-        console.log("item",item);
-        if (child.commercial_name && (child.commercial_name.includes("POLO") 
-            || child.commercial_name.includes("MARS")) &&
-            child.stock_uom == "Kgs" && item.includes("WOC")) {
-        // if(child){    
-            // Your logic here
-            batchNo = project +'/'+ work_order +'/'+ 'WOC'; // Replace with the desired batch number or logic to generate it
-            child.batch_no = batchNo;
-        }else if(child.commercial_name && (child.commercial_name.includes("POLO") 
-            || child.commercial_name.includes("MARS")) &&
-            child.stock_uom == "Kgs" && item.includes("WC")){
-            batchNo = project +'/'+ work_order +'/'+ 'WC'; 
-            child.batch_no = batchNo;
-        }else if(child.commercial_name && (child.commercial_name.includes("COLLAR")) &&
-            child.stock_uom == "Pcs"){
-            batchNo = project +'/'+ work_order +'/'+ 'C'; 
-            child.batch_no = batchNo;
-        }else if(child.commercial_name && (child.commercial_name.includes("CUFF")) &&
-            child.stock_uom == "Pcs"){
-            batchNo = project +'/'+ work_order +'/'+ 'U'; 
-            child.batch_no = batchNo;
-        }else{
-            batchNo = project +'/'+ work_order; 
-            child.batch_no = batchNo;
-        }    
-
-        // let batchNo = "BATCH-001"; // Replace with the desired batch number or logic to generate it
-        // child.batch_no = batchNo;
-
-        // Call server-side method to create the Batch document
+        // First, get the work_order document to fetch custom_reprocess_work_order_reference
         frappe.call({
-            method: "frappe.client.insert",
+            method: "frappe.client.get",
             args: {
-                doc: {
-                    doctype: "Batch",
-                    batch_id: batchNo,
-                    item: item,
-                    manufacturing_date: frappe.datetime.now_date(), // Example: Set the manufacturing date
-                    // expiry_date: frappe.datetime.add_days(frappe.datetime.now_date(), 365), // Example: Set expiry date
-                },
+                doctype: "Work Order",
+                name: frm.doc.work_order
             },
             callback: function(response) {
                 if (response.message) {
-                    frappe.msgprint(`Batch ${batchNo} created successfully for Item ${item}`);
-                    console.log("Batch created:", response.message);
+                    var work_order_doc = response.message;
+                    var reprocess_reference = work_order_doc.custom_reprocess_work_order_reference;
+                    
+                    // Now determine work_order and project based on the reprocess reference
+                    if (frm.doc.work_order && !reprocess_reference) {
+                        work_order = frm.doc.work_order;
+                        project = frm.doc.project;
+                    } else if (reprocess_reference) {
+                        work_order = reprocess_reference + '/' + frm.doc.work_order;
+                        project = frm.doc.project;
+                    } else {
+                        work_order = frm.doc.work_order || 'NO_WO';
+                        project = frm.doc.project || 'NO_PROJECT';
+                    }
+
+                    item = child.item_code;
+                    console.log("item", item);
+                    
+                    // Add null checks for commercial_name to prevent errors
+                    const commercial_name = child.commercial_name || '';
+                    
+                    if (commercial_name && (commercial_name.includes("POLO") || commercial_name.includes("MARS")) &&
+                        child.stock_uom == "Kgs" && item.includes("WOC")) {
+                        batchNo = project + '/' + work_order + '/' + 'WOC';
+                        child.batch_no = batchNo;
+                    } else if (commercial_name && (commercial_name.includes("POLO") || commercial_name.includes("MARS")) &&
+                        child.stock_uom == "Kgs" && item.includes("WC")) {
+                        batchNo = project + '/' + work_order + '/' + 'WC';
+                        child.batch_no = batchNo;
+                    } else if (commercial_name && commercial_name.includes("COLLAR") &&
+                        child.stock_uom == "Pcs") {
+                        batchNo = project + '/' + work_order + '/' + 'C';
+                        child.batch_no = batchNo;
+                    } else if (commercial_name && commercial_name.includes("CUFF") &&
+                        child.stock_uom == "Pcs") {
+                        batchNo = project + '/' + work_order + '/' + 'U';
+                        child.batch_no = batchNo;
+                    } else {
+                        batchNo = project + '/' + work_order;
+                        child.batch_no = batchNo;
+                    }
+
+                    console.log("Creating batch:", batchNo, "for item:", item);
+
+                    // Check if batch already exists before creating
+                    frappe.call({
+                        method: "frappe.client.get_value",
+                        args: {
+                            doctype: "Batch",
+                            filters: { batch_id: batchNo },
+                            fieldname: ["name"]
+                        },
+                        callback: function(response) {
+                            if (response.message && response.message.name) {
+                                // Batch already exists, just assign it
+                                frappe.msgprint(__("Batch {0} already exists, assigned to item {1}", [batchNo, item]));
+                                child.batch_no = batchNo;
+                                frm.refresh_field("items");
+                            } else {
+                                // Create new batch
+                                frappe.call({
+                                    method: "frappe.client.insert",
+                                    args: {
+                                        doc: {
+                                            doctype: "Batch",
+                                            batch_id: batchNo,
+                                            item: item,
+                                            manufacturing_date: frappe.datetime.now_date(),
+                                        },
+                                    },
+                                    callback: function(response) {
+                                        if (response.message) {
+                                            frappe.msgprint(__("Batch {0} created successfully for Item {1}", [batchNo, item]));
+                                            console.log("Batch created:", response.message);
+                                            child.batch_no = batchNo;
+                                            frm.refresh_field("items");
+                                        } else {
+                                            frappe.msgprint(__("Failed to create Batch for Item {0}", [item]));
+                                        }
+                                    },
+                                    error: function(err) {
+                                        console.error("Error creating Batch:", err);
+                                        frappe.msgprint(__("Error creating batch. Please try again."));
+                                    }
+                                });
+                            }
+                        },
+                        error: function(err) {
+                            console.error("Error checking batch existence:", err);
+                        }
+                    });
                 } else {
-                    frappe.msgprint(`Failed to create Batch for Item ${item}`);
+                    frappe.msgprint(__("Work Order {0} not found", [frm.doc.work_order]));
                 }
             },
             error: function(err) {
-                console.error("Error creating Batch:", err);
+                console.error("Error fetching Work Order:", err);
+                frappe.msgprint(__("Error fetching Work Order details. Please try again."));
             }
         });
-
-        // Refresh the field to reflect changes in the UI
-        frm.refresh_field("items");
     },
 });
