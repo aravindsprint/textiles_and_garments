@@ -852,6 +852,102 @@ def update_return_details(docname, return_details_data):
 #     print("\n\nFinal sent_details:\n", sent_details)
 #     return sent_details
 
+# @frappe.whitelist()
+# def get_subcontracting_order_details(purchase_order_list):
+#     print("\n\nget_subcontracting_order_details\n\n", purchase_order_list)
+    
+#     if not purchase_order_list:
+#         return []
+    
+#     # Convert to tuple for SQL query
+#     po_tuple = tuple(purchase_order_list)
+#     print("\npo_tuple\n", po_tuple)
+    
+#     # Get all Subcontracting Orders linked to these Purchase Orders
+#     sco_list = frappe.db.sql("""
+#         SELECT name, purchase_order, supplier_warehouse
+#         FROM `tabSubcontracting Order`
+#         WHERE purchase_order IN %s AND docstatus = 1
+#     """, (po_tuple,), as_dict=True)
+    
+#     print("\n\nSubcontracting Orders found:\n", sco_list)
+    
+#     if not sco_list:
+#         return []
+    
+#     # Get SCO names
+#     sco_names = [sco['name'] for sco in sco_list]
+    
+#     # Get Subcontracting Order Supplied Items (raw materials)
+#     sco_supplied_items = frappe.db.sql("""
+#         SELECT 
+#             parent as subcontracting_order,
+#             rm_item_code as item_code,
+#             main_item_code,
+#             name,
+#             required_qty as po_qty
+#         FROM `tabSubcontracting Order Supplied Item`
+#         WHERE parent IN %s and docstatus = 1
+#     """, (tuple(sco_names),), as_dict=True)
+    
+#     print("\n\nSubcontracting Order Supplied Items found:\n", sco_supplied_items)
+    
+#     # Get UOM for each item from Item master
+#     item_codes = list(set([item['item_code'] for item in sco_supplied_items if item['item_code']]))
+#     item_uom_map = {}
+    
+#     if item_codes:
+#         item_tuple = tuple(item_codes)
+#         item_data = frappe.db.sql("""
+#             SELECT item_code, stock_uom
+#             FROM `tabItem`
+#             WHERE item_code IN %s
+#         """, (item_tuple,), as_dict=True)
+        
+#         item_uom_map = {item['item_code']: item['stock_uom'] for item in item_data}
+    
+#     print("\n\nItem UOM Map:\n", item_uom_map)
+    
+#     # Get all Stock Entries linked to these Subcontracting Orders for sent items
+#     # Now passing po_tuple as the third parameter
+#     stock_entries_data = get_stock_entries_for_sco(sco_names, 'Send to Subcontractor', po_tuple)
+#     print("\n\nstock_entries_data\n\n",stock_entries_data)
+    
+#     # Combine data for sent_details
+#     sent_details = []
+    
+#     for sco in sco_list:
+#         # Find supplied items for this SCO
+#         sco_items_filtered = [item for item in sco_supplied_items if item['subcontracting_order'] == sco['name']]
+        
+#         # Find matching stock entries for this SCO
+#         matching_entries = [
+#             entry for entry in stock_entries_data 
+#             if entry['subcontracting_order'] == sco['name']
+#         ]
+        
+#         for sco_item in sco_items_filtered:
+#             uom = item_uom_map.get(sco_item['item_code'], '')
+            
+#             for entry in matching_entries:
+#                 # Find matching items in the stock entry
+#                 for stock_item in entry.get('items', []):
+#                     # sco_rm_detail == name
+#                     if stock_item.get('sco_rm_detail') == sco_item['name']:
+#                         sent_details.append({
+#                             'purchase_order': sco['purchase_order'],
+#                             'subcontracting_order': sco['name'],
+#                             'item_code': sco_item['item_code'],
+#                             'main_item_code': sco_item.get('main_item_code', ''),
+#                             'po_qty': sco_item['po_qty'],
+#                             'sent_qty': stock_item.get('qty', 0),
+#                             'stock_entry': entry['name'],
+#                             'uom': uom
+#                         })
+    
+#     print("\n\nFinal sent_details:\n", sent_details)
+#     return sent_details
+
 @frappe.whitelist()
 def get_subcontracting_order_details(purchase_order_list):
     print("\n\nget_subcontracting_order_details\n\n", purchase_order_list)
@@ -885,9 +981,11 @@ def get_subcontracting_order_details(purchase_order_list):
             rm_item_code as item_code,
             main_item_code,
             name,
-            required_qty as po_qty
+            required_qty as po_qty,
+            idx
         FROM `tabSubcontracting Order Supplied Item`
         WHERE parent IN %s and docstatus = 1
+        ORDER BY parent, idx
     """, (tuple(sco_names),), as_dict=True)
     
     print("\n\nSubcontracting Order Supplied Items found:\n", sco_supplied_items)
@@ -909,16 +1007,18 @@ def get_subcontracting_order_details(purchase_order_list):
     print("\n\nItem UOM Map:\n", item_uom_map)
     
     # Get all Stock Entries linked to these Subcontracting Orders for sent items
-    # Now passing po_tuple as the third parameter
     stock_entries_data = get_stock_entries_for_sco(sco_names, 'Send to Subcontractor', po_tuple)
-    print("\n\nstock_entries_data\n\n",stock_entries_data)
+    print("\n\nstock_entries_data\n\n", stock_entries_data)
     
     # Combine data for sent_details
     sent_details = []
     
     for sco in sco_list:
-        # Find supplied items for this SCO
-        sco_items_filtered = [item for item in sco_supplied_items if item['subcontracting_order'] == sco['name']]
+        # Find supplied items for this SCO - sorted by idx to maintain order
+        sco_items_filtered = sorted(
+            [item for item in sco_supplied_items if item['subcontracting_order'] == sco['name']],
+            key=lambda x: x.get('idx', 0)
+        )
         
         # Find matching stock entries for this SCO
         matching_entries = [
@@ -926,27 +1026,76 @@ def get_subcontracting_order_details(purchase_order_list):
             if entry['subcontracting_order'] == sco['name']
         ]
         
-        for sco_item in sco_items_filtered:
-            uom = item_uom_map.get(sco_item['item_code'], '')
+        # Track only stock items that have been matched (not sco_items)
+        # A single sco_item can match multiple stock entries
+        matched_stock_items = set()  # (entry_name, stock_idx)
+        
+        for entry in matching_entries:
+            # Track which sco_items have been matched in THIS stock entry
+            # This resets for each stock entry
+            entry_matched_sco_items = set()
             
-            for entry in matching_entries:
-                # Find matching items in the stock entry
-                for stock_item in entry.get('items', []):
-                    # sco_rm_detail == name
-                    if stock_item.get('sco_rm_detail') == sco_item['name']:
-                        sent_details.append({
-                            'purchase_order': sco['purchase_order'],
-                            'subcontracting_order': sco['name'],
-                            'item_code': sco_item['item_code'],
-                            'main_item_code': sco_item.get('main_item_code', ''),
-                            'po_qty': sco_item['po_qty'],
-                            'sent_qty': stock_item.get('qty', 0),
-                            'stock_entry': entry['name'],
-                            'uom': uom
-                        })
+            for stock_idx, stock_item in enumerate(entry.get('items', [])):
+                sco_rm_detail = stock_item.get('sco_rm_detail')
+                stock_item_code = stock_item.get('item_code')
+                stock_qty = stock_item.get('qty', 0)
+                
+                stock_key = (entry['name'], stock_idx)
+                
+                # Skip if this specific stock item is already matched
+                if stock_key in matched_stock_items:
+                    continue
+                
+                matched_sco_item = None
+                
+                # Priority 1: Match by sco_rm_detail (most accurate)
+                if sco_rm_detail:
+                    for sco_item in sco_items_filtered:
+                        if sco_rm_detail == sco_item['name']:
+                            matched_sco_item = sco_item
+                            break
+                else:
+                    # Priority 2: Match by item_code AND qty
+                    # Find unmatched sco_items in THIS entry with matching item_code and qty
+                    candidates = [
+                        sco_item for sco_item in sco_items_filtered
+                        if (sco_item['name'] not in entry_matched_sco_items and
+                            sco_item['item_code'] == stock_item_code and
+                            sco_item['po_qty'] == stock_qty)
+                    ]
+                    
+                    if candidates:
+                        # Take the first unmatched candidate (maintains idx order)
+                        matched_sco_item = candidates[0]
+                    else:
+                        # Priority 3: Match by item_code only (fallback)
+                        candidates = [
+                            sco_item for sco_item in sco_items_filtered
+                            if (sco_item['name'] not in entry_matched_sco_items and
+                                sco_item['item_code'] == stock_item_code)
+                        ]
+                        if candidates:
+                            matched_sco_item = candidates[0]
+                
+                # If we found a match, add it to sent_details
+                if matched_sco_item:
+                    uom = item_uom_map.get(matched_sco_item['item_code'], '')
+                    sent_details.append({
+                        'purchase_order': sco['purchase_order'],
+                        'subcontracting_order': sco['name'],
+                        'item_code': matched_sco_item['item_code'],
+                        'main_item_code': matched_sco_item.get('main_item_code', ''),
+                        'po_qty': matched_sco_item['po_qty'],
+                        'sent_qty': stock_qty,
+                        'stock_entry': entry['name'],
+                        'uom': uom
+                    })
+                    matched_stock_items.add(stock_key)
+                    entry_matched_sco_items.add(matched_sco_item['name'])
     
     print("\n\nFinal sent_details:\n", sent_details)
     return sent_details
+    
 
 def get_returned_items_details(purchase_order_list):
     """Get returned items data for return_details table"""
@@ -1093,15 +1242,27 @@ def get_stock_entries_for_sco(sco_names, purpose, po_tuple):
     print(f"\npo_tuple for stock entries ({purpose}):\n", po_tuple)
     
     # Updated query to use both sco_tuple and po_tuple
+    # stock_entry_list = frappe.db.sql("""
+    #     SELECT name, subcontracting_order, purpose, posting_date
+    #     FROM `tabStock Entry`
+    #     WHERE subcontracting_order IN %s 
+    #         AND docstatus = 1 
+    #         AND (name LIKE 'ST%%' OR name LIKE 'YEI%%')
+    #         OR custom_po_no IN %s  -- Added condition for purchase orders
+    #     ORDER BY posting_date
+    # """, (sco_tuple, po_tuple), as_dict=True)  # Pass both tuples as parameters
+
     stock_entry_list = frappe.db.sql("""
-        SELECT name, subcontracting_order, purpose, posting_date
+    SELECT name, subcontracting_order, purpose, posting_date
         FROM `tabStock Entry`
-        WHERE subcontracting_order IN %s 
-            AND docstatus = 1 
-            AND (name LIKE 'ST%%' OR name LIKE 'YEI%%')
-            OR custom_po_no IN %s  -- Added condition for purchase orders
+        WHERE (
+            subcontracting_order IN %s 
+            OR custom_po_no IN %s
+        )
+        AND docstatus = 1 
+        AND (name LIKE 'MAT-ST%%' OR name LIKE 'YEI%%')
         ORDER BY posting_date
-    """, (sco_tuple, po_tuple), as_dict=True)  # Pass both tuples as parameters
+    """, (sco_tuple, po_tuple), as_dict=True)
     
     print(f"\n\nStock Entries found ({purpose}):\n", stock_entry_list)
     
