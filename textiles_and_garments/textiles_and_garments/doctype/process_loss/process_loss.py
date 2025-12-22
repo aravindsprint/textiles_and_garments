@@ -1095,7 +1095,9 @@ def get_subcontracting_order_details(purchase_order_list):
     
     print("\n\nFinal sent_details:\n", sent_details)
     return sent_details
-    
+
+
+
 
 def get_returned_items_details(purchase_order_list):
     """Get returned items data for return_details table"""
@@ -1260,7 +1262,7 @@ def get_stock_entries_for_sco(sco_names, purpose, po_tuple):
             OR custom_po_no IN %s
         )
         AND docstatus = 1 
-        AND (name LIKE 'MAT-ST%%' OR name LIKE 'YEI%%')
+        AND (name LIKE 'ST%%' OR name LIKE 'YEI%%')
         ORDER BY posting_date
     """, (sco_tuple, po_tuple), as_dict=True)
     
