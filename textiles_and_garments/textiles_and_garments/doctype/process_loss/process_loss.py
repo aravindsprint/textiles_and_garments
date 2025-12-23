@@ -1262,7 +1262,7 @@ def get_stock_entries_for_sco(sco_names, purpose, po_tuple):
             OR custom_po_no IN %s
         )
         AND docstatus = 1 
-        AND (name LIKE 'ST%%' OR name LIKE 'YEI%%')
+        AND (name LIKE 'ST%%' OR name LIKE 'YEI%%' OR name LIKE 'DTS%%')
         ORDER BY posting_date
     """, (sco_tuple, po_tuple), as_dict=True)
     
