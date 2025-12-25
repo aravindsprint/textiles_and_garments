@@ -274,6 +274,8 @@ def calculate_summary(doc):
     Shows RAW ITEMS in the summary table instead of finished items
     Formula: Process Loss Qty = (Sent Qty - Return Qty) - (Received Qty converted to raw material equivalent)
     Process Loss % = (Process Loss Qty / (Sent Qty - Return Qty)) * 100
+    
+    For GKF work orders: Uses consumed_qty from Work Order's required_items table as received_qty
     """
     if isinstance(doc, str):
         doc = frappe.get_doc(json.loads(doc))
@@ -287,6 +289,13 @@ def calculate_summary(doc):
     if not work_order_list:
         frappe.msgprint(_("No Work Orders found"))
         return doc
+    
+    # Check if this is a GKF work order
+    is_gkf_work_order = False
+    if doc.work_orders and len(doc.work_orders) > 0:
+        first_wo = doc.work_orders[0].work_order
+        if first_wo and first_wo.startswith("GKF "):
+            is_gkf_work_order = True
     
     # Get item mapping from Work Order's required_items table
     wo_item_mapping = get_work_order_item_mapping(work_order_list)
@@ -379,50 +388,88 @@ def calculate_summary(doc):
         summary_data[key]['return_qty'] += flt(ret.return_qty)
         print(f"Added return_qty {flt(ret.return_qty)} for raw item {raw_item_code}")
 
-    # Process Received Details - Convert finished goods to raw material equivalent
-    # and distribute proportionally to all raw materials for that work order
-    for received in doc.work_order_received_details:
-        work_order = received.work_order
-        finished_item_code = received.item_code
-        received_qty = flt(received.received_qty)
+    # Process Received Details
+    if is_gkf_work_order:
+        # NEW CODE: For GKF work orders, use consumed_qty from Work Order's required_items
+        print("Processing GKF Work Order - Using consumed_qty from required_items")
         
-        # Skip if item_code is None
-        if not finished_item_code:
-            print(f"Skipping received item - no item_code")
-            continue
-        
-        # Get the raw items for this work order
-        if work_order not in finished_to_raw:
-            print(f"Work Order {work_order} not found in finished_to_raw mapping")
-            continue
-        
-        raw_items = finished_to_raw[work_order]['raw_items']
-        
-        if not raw_items:
-            print(f"No raw items found for Work Order {work_order}")
-            continue
-        
-        # Calculate total sent qty for proportional distribution
-        total_sent_qty = 0
-        raw_item_sent_map = {}
-        
-        for raw_item in raw_items:
-            key = (work_order, raw_item)
-            if key in summary_data:
-                sent_qty = summary_data[key]['sent_qty']
-                raw_item_sent_map[raw_item] = sent_qty
-                total_sent_qty += sent_qty
-        
-        # Distribute received qty proportionally to raw materials based on sent qty
-        if total_sent_qty > 0:
-            for raw_item, sent_qty in raw_item_sent_map.items():
+        for work_order in work_order_list:
+            # Fetch consumed_qty from Work Order Item table (required_items)
+            consumed_items = frappe.db.sql("""
+                SELECT 
+                    item_code,
+                    consumed_qty
+                FROM 
+                    `tabWork Order Item`
+                WHERE 
+                    parent = %s
+                    AND consumed_qty > 0
+            """, (work_order,), as_dict=1)
+            
+            for item in consumed_items:
+                raw_item_code = item['item_code']
+                consumed_qty = flt(item['consumed_qty'])
+                
+                # Skip DYES% and CHEM% items
+                if raw_item_code and (raw_item_code.startswith("DYES") or raw_item_code.startswith("CHEM")):
+                    print(f"Skipping consumed item: {raw_item_code} (DYES/CHEM item)")
+                    continue
+                
+                key = (work_order, raw_item_code)
+                
+                if key in summary_data:
+                    summary_data[key]['received_qty'] += consumed_qty
+                    print(f"Added consumed_qty {consumed_qty} as received_qty for raw item {raw_item_code}")
+                else:
+                    # If the item wasn't in sent/return, we might still want to track it
+                    print(f"Warning: consumed_qty found for {raw_item_code} but no sent/return data exists")
+    
+    else:
+        # OLD CODE: For non-GKF work orders, use Stock Entry data
+        # Process Received Details - Convert finished goods to raw material equivalent
+        # and distribute proportionally to all raw materials for that work order
+        for received in doc.work_order_received_details:
+            work_order = received.work_order
+            finished_item_code = received.item_code
+            received_qty = flt(received.received_qty)
+            
+            # Skip if item_code is None
+            if not finished_item_code:
+                print(f"Skipping received item - no item_code")
+                continue
+            
+            # Get the raw items for this work order
+            if work_order not in finished_to_raw:
+                print(f"Work Order {work_order} not found in finished_to_raw mapping")
+                continue
+            
+            raw_items = finished_to_raw[work_order]['raw_items']
+            
+            if not raw_items:
+                print(f"No raw items found for Work Order {work_order}")
+                continue
+            
+            # Calculate total sent qty for proportional distribution
+            total_sent_qty = 0
+            raw_item_sent_map = {}
+            
+            for raw_item in raw_items:
                 key = (work_order, raw_item)
                 if key in summary_data:
-                    # Proportional distribution
-                    proportion = sent_qty / total_sent_qty
-                    proportional_received_qty = received_qty * proportion
-                    summary_data[key]['received_qty'] += proportional_received_qty
-                    print(f"Added received_qty {proportional_received_qty} to raw item {raw_item} (proportion: {proportion:.2%})")
+                    sent_qty = summary_data[key]['sent_qty']
+                    raw_item_sent_map[raw_item] = sent_qty
+                    total_sent_qty += sent_qty
+            
+            # Distribute received qty proportionally to raw materials based on sent qty
+            if total_sent_qty > 0:
+                for raw_item, sent_qty in raw_item_sent_map.items():
+                    key = (work_order, raw_item)
+                    if key in summary_data:
+                        # Proportional distribution
+                        proportion = sent_qty / total_sent_qty
+                        proportional_received_qty = received_qty * proportion
+                        summary_data[key]['received_qty'] += proportional_received_qty
+                        print(f"Added received_qty {proportional_received_qty} to raw item {raw_item} (proportion: {proportion:.2%})")
 
     # Calculate Process Loss for each raw item
     for key, data in summary_data.items():
