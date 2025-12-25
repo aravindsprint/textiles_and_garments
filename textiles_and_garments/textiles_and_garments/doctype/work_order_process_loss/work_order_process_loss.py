@@ -116,12 +116,9 @@ def fetch_return_details(doc, work_orders):
         WHERE 
             se.docstatus = 1
             AND se.work_order IN %(work_orders)s
-            AND se.purpose = 'Material Transfer'
-            AND se.naming_series LIKE 'YRET%%'
+            AND (se.naming_series LIKE 'YRET%%' OR se.naming_series LIKE 'M%%')
             AND sed.s_warehouse IS NOT NULL
             AND sed.t_warehouse IS NOT NULL
-            AND sed.is_finished_item = 0
-            AND sed.is_scrap_item = 0
             AND sed.s_warehouse = wo.wip_warehouse
         GROUP BY
             se.work_order,
