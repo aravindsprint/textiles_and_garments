@@ -69,8 +69,8 @@ def fetch_sent_details(doc, work_orders):
                 OR se.purpose = 'Material Transfer'
             )
             AND (
-                se.naming_series = 'YEI%'
-                OR se.naming_series = 'MTM%'
+                se.naming_series = 'YEI%%'
+                OR se.naming_series = 'MTM%%'
             )
             AND sed.s_warehouse IS NOT NULL
             AND sed.t_warehouse IS NOT NULL
@@ -117,7 +117,7 @@ def fetch_return_details(doc, work_orders):
             se.docstatus = 1
             AND se.work_order IN %(work_orders)s
             AND se.purpose = 'Material Transfer'
-            AND se.naming_series LIKE 'YRET%'
+            AND se.naming_series LIKE 'YRET%%'
             AND sed.s_warehouse IS NOT NULL
             AND sed.t_warehouse IS NOT NULL
             AND sed.is_finished_item = 0
