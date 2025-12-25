@@ -292,11 +292,31 @@ def calculate_summary(doc):
     
     # Check if this is a GKF work order (check first work order)
     is_gkf_work_order = False
+    gkf_production_item = None
+    gkf_stock_uom = None
+    
     if doc.work_orders and len(doc.work_orders) > 0:
-        first_wo = doc.work_orders[0].work_order
-        if first_wo and first_wo.startswith("GKF "):
-            is_gkf_work_order = True
-            print(f"GKF Work Order detected: {first_wo}")
+        first_wo_name = doc.work_orders[0].work_order
+        if first_wo_name:
+            # Fetch production_item and stock_uom from database
+            production_item, stock_uom = frappe.db.get_value(
+                "Work Order", 
+                first_wo_name, 
+                ["production_item", "stock_uom"]
+            )
+            print("stock_uom",stock_uom)
+            
+            if production_item:
+                print(f"Production Item: {production_item}")
+                print(f"Stock UOM: {stock_uom}")
+                # Check if production_item starts with "GKF"
+                if production_item.startswith("GKF") and stock_uom == "Pcs":
+                    is_gkf_work_order = True
+                    gkf_production_item = production_item
+                    gkf_stock_uom = stock_uom
+                    print(f"GKF Work Order detected: {first_wo_name}")
+                    print(f"GKF Production Item: {gkf_production_item}")
+                    print(f"GKF Stock UOM: {gkf_stock_uom}")
     
     # Get item mapping from Work Order's required_items table
     wo_item_mapping = get_work_order_item_mapping(work_order_list)
@@ -392,40 +412,66 @@ def calculate_summary(doc):
     # Process Received Details
     if is_gkf_work_order:
         # NEW CODE FOR GKF WORK ORDERS
-        # Use consumed_qty from required_items table for items with stock_uom = "Pcs"
+        # Use consumed_qty from required_items table for items matching the work order's stock_uom
         print("\n=== Processing GKF Work Order - Using consumed_qty from required_items ===")
+        print(f"GKF Production Item: {gkf_production_item}")
+        print(f"GKF Stock UOM Filter: {gkf_stock_uom}")
         
         for work_order in work_order_list:
             # Fetch required_items with consumed_qty for this work order
+            # Filter by the work order's stock_uom
             required_items = frappe.db.sql("""
                 SELECT 
                     item_code,
+                    required_qty,
                     consumed_qty,
                     stock_uom
                 FROM 
                     `tabWork Order Item`
                 WHERE 
                     parent = %s
-                    AND stock_uom = 'Pcs'
-                    AND consumed_qty > 0
-            """, (work_order,), as_dict=1)
+            """, (work_order), as_dict=1)
+            
+            print(f"Found {len(required_items)} items with UOM='{gkf_stock_uom}' for {work_order}")
             
             for item in required_items:
                 raw_item_code = item['item_code']
+                required_qty = flt(item['required_qty'])
                 consumed_qty = flt(item['consumed_qty'])
+                stock_uom = item['stock_uom']
                 
                 # Skip DYES% and CHEM% items
                 if raw_item_code and (raw_item_code.startswith("DYES") or raw_item_code.startswith("CHEM")):
-                    print(f"Skipping GKF consumed item: {raw_item_code} (DYES/CHEM item)")
+                    print(f"Skipping GKF item: {raw_item_code} (DYES/CHEM item)")
                     continue
                 
                 key = (work_order, raw_item_code)
                 
                 if key in summary_data:
+                    # Update wo_qty with required_qty
+                    summary_data[key]['wo_qty'] = required_qty
+                    # Set received_qty as consumed_qty
                     summary_data[key]['received_qty'] = consumed_qty
-                    print(f"GKF: Set received_qty = {consumed_qty} for raw item {raw_item_code} (from consumed_qty)")
+                    print(f"GKF: Set wo_qty = {required_qty}, received_qty = {consumed_qty}, uom = {stock_uom} for raw item {raw_item_code}")
                 else:
-                    print(f"GKF: Key {key} not found in summary_data for consumed item {raw_item_code}")
+                    # If key doesn't exist in summary_data, it means this item wasn't sent
+                    # But we still need to show it in the summary
+                    print(f"GKF: Creating new entry for {raw_item_code} (not in sent items)")
+                    # Get finished item code from mapping
+                    if work_order in wo_item_mapping:
+                        finished_item_code = wo_item_mapping[work_order]['finished_item']
+                        
+                        summary_data[key] = {
+                            'work_order': work_order,
+                            'item_code': raw_item_code,
+                            'finished_item_code': finished_item_code,
+                            'wo_qty': required_qty,
+                            'uom': stock_uom,
+                            'sent_qty': 0,
+                            'return_qty': 0,
+                            'received_qty': consumed_qty
+                        }
+                        print(f"GKF: Created entry - wo_qty = {required_qty}, received_qty = {consumed_qty}, uom = {stock_uom}")
     
     else:
         # OLD CODE FOR NON-GKF WORK ORDERS
