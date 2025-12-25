@@ -275,7 +275,7 @@ def calculate_summary(doc):
     Formula: Process Loss Qty = (Sent Qty - Return Qty) - (Received Qty converted to raw material equivalent)
     Process Loss % = (Process Loss Qty / (Sent Qty - Return Qty)) * 100
     
-    For GKF work orders: Uses consumed_qty from Work Order's required_items table as received_qty
+    Special handling for GKF work orders: Uses consumed_qty from required_items table
     """
     if isinstance(doc, str):
         doc = frappe.get_doc(json.loads(doc))
@@ -290,12 +290,13 @@ def calculate_summary(doc):
         frappe.msgprint(_("No Work Orders found"))
         return doc
     
-    # Check if this is a GKF work order
+    # Check if this is a GKF work order (check first work order)
     is_gkf_work_order = False
     if doc.work_orders and len(doc.work_orders) > 0:
         first_wo = doc.work_orders[0].work_order
         if first_wo and first_wo.startswith("GKF "):
             is_gkf_work_order = True
+            print(f"GKF Work Order detected: {first_wo}")
     
     # Get item mapping from Work Order's required_items table
     wo_item_mapping = get_work_order_item_mapping(work_order_list)
@@ -390,44 +391,47 @@ def calculate_summary(doc):
 
     # Process Received Details
     if is_gkf_work_order:
-        # NEW CODE: For GKF work orders, use consumed_qty from Work Order's required_items
-        print("Processing GKF Work Order - Using consumed_qty from required_items")
+        # NEW CODE FOR GKF WORK ORDERS
+        # Use consumed_qty from required_items table for items with stock_uom = "Pcs"
+        print("\n=== Processing GKF Work Order - Using consumed_qty from required_items ===")
         
         for work_order in work_order_list:
-            # Fetch consumed_qty from Work Order Item table (required_items)
-            consumed_items = frappe.db.sql("""
+            # Fetch required_items with consumed_qty for this work order
+            required_items = frappe.db.sql("""
                 SELECT 
                     item_code,
-                    consumed_qty
+                    consumed_qty,
+                    stock_uom
                 FROM 
                     `tabWork Order Item`
                 WHERE 
                     parent = %s
+                    AND stock_uom = 'Pcs'
                     AND consumed_qty > 0
             """, (work_order,), as_dict=1)
             
-            for item in consumed_items:
+            for item in required_items:
                 raw_item_code = item['item_code']
                 consumed_qty = flt(item['consumed_qty'])
                 
                 # Skip DYES% and CHEM% items
                 if raw_item_code and (raw_item_code.startswith("DYES") or raw_item_code.startswith("CHEM")):
-                    print(f"Skipping consumed item: {raw_item_code} (DYES/CHEM item)")
+                    print(f"Skipping GKF consumed item: {raw_item_code} (DYES/CHEM item)")
                     continue
                 
                 key = (work_order, raw_item_code)
                 
                 if key in summary_data:
-                    summary_data[key]['received_qty'] += consumed_qty
-                    print(f"Added consumed_qty {consumed_qty} as received_qty for raw item {raw_item_code}")
+                    summary_data[key]['received_qty'] = consumed_qty
+                    print(f"GKF: Set received_qty = {consumed_qty} for raw item {raw_item_code} (from consumed_qty)")
                 else:
-                    # If the item wasn't in sent/return, we might still want to track it
-                    print(f"Warning: consumed_qty found for {raw_item_code} but no sent/return data exists")
+                    print(f"GKF: Key {key} not found in summary_data for consumed item {raw_item_code}")
     
     else:
-        # OLD CODE: For non-GKF work orders, use Stock Entry data
-        # Process Received Details - Convert finished goods to raw material equivalent
-        # and distribute proportionally to all raw materials for that work order
+        # OLD CODE FOR NON-GKF WORK ORDERS
+        # Convert finished goods to raw material equivalent and distribute proportionally
+        print("\n=== Processing Non-GKF Work Order - Using Manufacture entries ===")
+        
         for received in doc.work_order_received_details:
             work_order = received.work_order
             finished_item_code = received.item_code
