@@ -15,6 +15,7 @@
   "transaction_type",
   "roll_packing_list_item_section",
   "roll_packing_list_item",
+  "total_roll_weight",
   "amended_from"
  ],
  "fields": [
@@ -85,13 +86,18 @@
    "fieldtype": "Table",
    "label": "Roll Packing List Item",
    "options": "Roll Packing List Item"
+  },
+  {
+   "fieldname": "total_roll_weight",
+   "fieldtype": "Float",
+   "label": "Total Roll Weight"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-29 17:31:16.551522",
+ "modified": "2025-12-28 15:39:28.087117",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Packing List",
