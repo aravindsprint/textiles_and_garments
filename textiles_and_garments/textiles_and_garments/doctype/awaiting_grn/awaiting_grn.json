@@ -130,7 +130,7 @@
   },
   {
    "fieldname": "supplier_invoicedc_date",
-   "fieldtype": "Date",
+   "fieldtype": "Data",
    "label": "Supplier Invoice/DC Date"
   },
   {
@@ -148,7 +148,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-01-08 12:23:15.097330",
+ "modified": "2026-01-08 15:57:09.718358",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Awaiting GRN",
