@@ -9,7 +9,7 @@ app_license = "mit"
 from frappe.utils.logger import get_logger
 # Create a custom logger for your report
 logger = get_logger(module="Production Stock Report", with_more_info=False)
-logger.setLevel("DEBUG")  # Capture all levels
+logger.setLevel("DEBUG")  # Capture all level
 
 # Includes in <head>
 # ------------------
@@ -40,6 +40,7 @@ doctype_js = {
     "Job Card": "public/js/job_card.js",
     "Quotation": "public/js/quotation.js",
     "Work Order": "public/js/work_order.js",
+    "Material Request": "public/js/material_request.js",
     "Purchase Order": "public/js/purchase_order.js",
     "Purchase Receipt": "public/js/purchase_receipt.js",
     "Subcontracting Order": "public/js/subcontracting_order.js",
@@ -152,70 +153,78 @@ doctype_js = {
 # 	}
 # }
 
+
 doc_events = {
-    # "Stock Entry": {
-    #     "validate": [
-    #         # "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
-    #         "textiles_and_garments.stock_entry.validate_stock_entry_before_submit",
-    #         "textiles_and_garments.stock_entry.validate_return_stock_entry",
-    #         # "textiles_and_garments.stock_entry.validate_stock_entry1"
-    #     ],
-    #     "on_submit": [
-    #         "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
-    #         "textiles_and_garments.stock_entry.update_psr_on_submit",
-    #         "textiles_and_garments.stock_entry.update_psr_on_return_submit",
-    #         "textiles_and_garments.time_and_action_milestones.stock_entry_on_submit"
-    #         # "textiles_and_garments.stock_entry.validate_stock_entry1"
-    #     ],
-    #     "on_update_after_submit":[
-    #         # "textiles_and_garments.stock_entry.update_psr_on_submit",
-    #     ],
-    #     "on_cancel": [
-    #     "textiles_and_garments.plan_stock_reservation.reset_psr_on_return_cancel", 
-    #     "textiles_and_garments.plan_stock_reservation.on_stock_entry_cancel_reservation"
-    #     ],
-    #     # "on_cancel": "textiles_and_garments.plan_stock_reservation.on_stock_entry_cancel_reservation",
-    #     # "after_insert": "textiles_and_garments.stock_entry.update_psr_on_return_submit"
-    # },
-    # "Purchase Receipt": {
-    #     "on_submit": [
-    #         "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
-    #         "textiles_and_garments.time_and_action_milestones.purchase_receipt_on_submit"
-    #     ],
-    #     "before_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_cancel_reservation"
-    # },
-    # "Subcontracting Receipt": {
-    #     "on_submit": [
-    #         "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
-    #         "textiles_and_garments.time_and_action_milestones.subcontracting_receipt_on_submit",
-    #     ],
-    #     "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_cancel_reservation"
-    # },
-    # # "Purchase Order": {
-    # #     "validate": "textiles_and_garments.plan_stock_reservation.validate_purchase_order_qty",
-    # #     "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_po",
-    # #     "on_submit": "textiles_and_garments.time_and_action_milestones.purchase_order",
-    # # },
-    # "Purchase Order": {
-    #     "validate": "textiles_and_garments.plan_stock_reservation.validate_purchase_order_qty",
-    #     "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_po",
-    #     "on_submit": "textiles_and_garments.time_and_action_milestones.purchase_order",
-    #     # "before_cancel": "textiles_and_garments.time_and_action_milestones.on_cancel_remove_links_for_po_in_plans"
-    # },
-    # "Subcontracting Order": {
-    #     "on_submit": "textiles_and_garments.time_and_action_milestones.subcontracting_order",
-    # },
-    # "Work Order": {
-    #     "before_submit": "textiles_and_garments.plan_stock_reservation.validate_work_order_qty",
-    #     # "on_submit_wo": "textiles_and_garments.plan_stock_reservation.on_submit_wo",
-    #     "on_submit": [
-    #         "textiles_and_garments.time_and_action_milestones.work_order_on_submit",
-    #         "textiles_and_garments.plan_stock_reservation.on_submit_wo",
-    #     ],
-    #     "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_wo",
-    #     "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_wo"
-    # }
+    "Material Request": {
+        "on_submit": "textiles_and_garments.create_work_orders.on_submit"
+    }
 }
+
+# doc_events = {
+#     # "Stock Entry": {
+#     #     "validate": [
+#     #         # "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
+#     #         "textiles_and_garments.stock_entry.validate_stock_entry_before_submit",
+#     #         "textiles_and_garments.stock_entry.validate_return_stock_entry",
+#     #         # "textiles_and_garments.stock_entry.validate_stock_entry1"
+#     #     ],
+#     #     "on_submit": [
+#     #         "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
+#     #         "textiles_and_garments.stock_entry.update_psr_on_submit",
+#     #         "textiles_and_garments.stock_entry.update_psr_on_return_submit",
+#     #         "textiles_and_garments.time_and_action_milestones.stock_entry_on_submit"
+#     #         # "textiles_and_garments.stock_entry.validate_stock_entry1"
+#     #     ],
+#     #     "on_update_after_submit":[
+#     #         # "textiles_and_garments.stock_entry.update_psr_on_submit",
+#     #     ],
+#     #     "on_cancel": [
+#     #     "textiles_and_garments.plan_stock_reservation.reset_psr_on_return_cancel", 
+#     #     "textiles_and_garments.plan_stock_reservation.on_stock_entry_cancel_reservation"
+#     #     ],
+#     #     # "on_cancel": "textiles_and_garments.plan_stock_reservation.on_stock_entry_cancel_reservation",
+#     #     # "after_insert": "textiles_and_garments.stock_entry.update_psr_on_return_submit"
+#     # },
+#     # "Purchase Receipt": {
+#     #     "on_submit": [
+#     #         "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
+#     #         "textiles_and_garments.time_and_action_milestones.purchase_receipt_on_submit"
+#     #     ],
+#     #     "before_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_cancel_reservation"
+#     # },
+#     # "Subcontracting Receipt": {
+#     #     "on_submit": [
+#     #         "textiles_and_garments.plan_stock_reservation.on_submit_create_reservation",
+#     #         "textiles_and_garments.time_and_action_milestones.subcontracting_receipt_on_submit",
+#     #     ],
+#     #     "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_cancel_reservation"
+#     # },
+#     # # "Purchase Order": {
+#     # #     "validate": "textiles_and_garments.plan_stock_reservation.validate_purchase_order_qty",
+#     # #     "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_po",
+#     # #     "on_submit": "textiles_and_garments.time_and_action_milestones.purchase_order",
+#     # # },
+#     # "Purchase Order": {
+#     #     "validate": "textiles_and_garments.plan_stock_reservation.validate_purchase_order_qty",
+#     #     "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_po",
+#     #     "on_submit": "textiles_and_garments.time_and_action_milestones.purchase_order",
+#     #     # "before_cancel": "textiles_and_garments.time_and_action_milestones.on_cancel_remove_links_for_po_in_plans"
+#     # },
+#     # "Subcontracting Order": {
+#     #     "on_submit": "textiles_and_garments.time_and_action_milestones.subcontracting_order",
+#     # },
+#     "Work Order": {
+#         # "before_submit": "textiles_and_garments.plan_stock_reservation.validate_work_order_qty",
+#         # "on_submit_wo": "textiles_and_garments.plan_stock_reservation.on_submit_wo",
+#         "on_submit": [
+#             # "textiles_and_garments.time_and_action_milestones.work_order_on_submit",
+#             # "textiles_and_garments.plan_stock_reservation.on_submit_wo",
+#             "textiles_and_garments.create_work_orders.on_submit",
+#         ],
+#         # "on_update_after_submit": "textiles_and_garments.plan_stock_reservation.on_update_after_submit_wo",
+#         # "on_cancel": "textiles_and_garments.plan_stock_reservation.on_cancel_wo"
+#     }
+# }
 
 
 # Scheduled Tasks
