@@ -157,6 +157,10 @@ doctype_js = {
 doc_events = {
     "Material Request": {
         "on_submit": "textiles_and_garments.create_work_orders.on_submit"
+    },
+    "Purchase Receipt": {
+        "on_submit": "textiles_and_garments.purchase_receipt.update_awaiting_grn_on_submit",
+        "on_cancel": "textiles_and_garments.purchase_receipt.clear_awaiting_grn_on_cancel"
     }
 }
 

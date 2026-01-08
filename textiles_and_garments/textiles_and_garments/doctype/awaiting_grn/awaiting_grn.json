@@ -1,0 +1,214 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-01-08 11:21:05.274482",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "items_section",
+  "naming_series",
+  "title",
+  "posting_date",
+  "supplier",
+  "purchase_order",
+  "posting_time",
+  "set_posting_time",
+  "inward_register_sno",
+  "supplier_invoicedc_no",
+  "supplier_invoicedc_date",
+  "column_break_bgcx",
+  "indent",
+  "lot",
+  "purchase_receipt",
+  "stock_entry",
+  "received_by",
+  "bin",
+  "section_break_disx",
+  "awaitingrnitem",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Series",
+   "options": "\nMAT-STE-.YYYY.-",
+   "reqd": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": " Amended From",
+   "options": "Awaiting GRN"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": " Supplier",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "purchase_order",
+   "fieldtype": "Link",
+   "label": " Purchase Order",
+   "options": "Purchase Order"
+  },
+  {
+   "fieldname": "posting_time",
+   "fieldtype": "Time",
+   "label": " Posting Time"
+  },
+  {
+   "default": "0",
+   "fieldname": "set_posting_time",
+   "fieldtype": "Check",
+   "label": "Edit Posting Date and Time"
+  },
+  {
+   "fieldname": "inward_register_sno",
+   "fieldtype": "Data",
+   "label": "Inward Register S.no"
+  },
+  {
+   "fieldname": "supplier_invoicedc_no",
+   "fieldtype": "Data",
+   "label": "Supplier Invoice DC No"
+  },
+  {
+   "fieldname": "indent",
+   "fieldtype": "Data",
+   "label": " Indent"
+  },
+  {
+   "fieldname": "lot",
+   "fieldtype": "Data",
+   "label": " Lot"
+  },
+  {
+   "fieldname": "purchase_receipt",
+   "fieldtype": "Link",
+   "label": "Purchase Receipt",
+   "options": "Purchase Receipt"
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "options": "Stock Entry"
+  },
+  {
+   "fieldname": "received_by",
+   "fieldtype": "Data",
+   "label": "Received By"
+  },
+  {
+   "fieldname": "column_break_bgcx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bin",
+   "fieldtype": "Link",
+   "label": "Bin",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "supplier_invoicedc_date",
+   "fieldtype": "Date",
+   "label": "Supplier Invoice/DC Date"
+  },
+  {
+   "fieldname": "section_break_disx",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "awaitingrnitem",
+   "fieldtype": "Table",
+   "label": "Awaiting GRN Item",
+   "options": "AwaitingGRNItem"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-01-08 12:23:15.097330",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Awaiting GRN",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}
