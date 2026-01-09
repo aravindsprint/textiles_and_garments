@@ -16,6 +16,7 @@
   "roll_packing_list_item_section",
   "roll_packing_list_item",
   "total_roll_weight",
+  "total_pcs_qty",
   "amended_from"
  ],
  "fields": [
@@ -91,13 +92,18 @@
    "fieldname": "total_roll_weight",
    "fieldtype": "Float",
    "label": "Total Roll Weight"
+  },
+  {
+   "fieldname": "total_pcs_qty",
+   "fieldtype": "Int",
+   "label": "Total Pcs Qty"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-12-28 15:39:28.087117",
+ "modified": "2026-01-09 07:34:32.815540",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Packing List",
