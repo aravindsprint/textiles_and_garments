@@ -17,6 +17,9 @@ logger.setLevel("DEBUG")  # Capture all level
 # include js, css files in header of desk.html
 # app_include_css = "/assets/textiles_and_garments/css/textiles_and_garments.css"
 # app_include_js = "/assets/textiles_and_garments/js/textiles_and_garments.js"
+app_include_js = [
+    "/assets/textiles_and_garments/js/general_ledger_override.js"
+]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/textiles_and_garments/css/textiles_and_garments.css"
@@ -93,6 +96,9 @@ doctype_js = {
 # before_install = "textiles_and_garments.install.before_install"
 # after_install = "textiles_and_garments.install.after_install"
 
+after_install = "textiles_and_garments.overrides.general_ledger"
+
+
 # Uninstallation
 # ------------
 
@@ -154,15 +160,25 @@ doctype_js = {
 # }
 
 
+doc_events = {
+    "Material Request": {
+        "on_submit": "textiles_and_garments.create_work_orders.on_submit"
+    }
+    # "Purchase Receipt": {
+    #     "on_submit": "textiles_and_garments.purchase_receipt.update_awaiting_grn_on_submit",
+    #     "on_cancel": "textiles_and_garments.purchase_receipt.clear_awaiting_grn_on_cancel"
+    # }
+}
+
+
 # doc_events = {
-#     # "Material Request": {
-#     #     "on_submit": "textiles_and_garments.create_work_orders.on_submit"
-#     # },
-#     # "Purchase Receipt": {
-#     #     "on_submit": "textiles_and_garments.purchase_receipt.update_awaiting_grn_on_submit",
-#     #     "on_cancel": "textiles_and_garments.purchase_receipt.clear_awaiting_grn_on_cancel"
-#     # }
+#     "GL Entry": {
+#         "before_insert": "textiles_and_garments.textiles_and_garments.validation.gl_entry_validation.validate_gl_entry",
+#         "before_save": "textiles_and_garments.textiles_and_garments.validation.gl_entry_validation.validate_gl_entry"
+#     }
 # }
+
+
 
 # doc_events = {
 #     # "Stock Entry": {
@@ -360,3 +376,44 @@ scheduler_events = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+# =============================================================================
+# MONKEY PATCHING - General Ledger Override
+# =============================================================================
+
+def apply_general_ledger_patches():
+    """Apply monkey patches for General Ledger report"""
+    import frappe
+    
+    try:
+        from erpnext.accounts.report.general_ledger import general_ledger
+        
+        # Import custom functions
+        from textiles_and_garments.overrides.general_ledger import (
+            custom_execute, 
+            custom_get_conditions
+        )
+        
+        # Apply patches
+        general_ledger.execute = custom_execute
+        general_ledger.get_conditions = custom_get_conditions
+        
+        print("\n" + "="*60)
+        print("✓ General Ledger Monkey Patches Applied Successfully")
+        print("="*60 + "\n")
+        
+        # Log to Frappe
+        frappe.log_error(
+            "General Ledger monkey patches applied successfully",
+            "Monkey Patch Success"
+        )
+        
+    except ImportError as e:
+        print(f"\n✗ Import Error in General Ledger patch: {str(e)}\n")
+        frappe.log_error(str(e), "General Ledger Patch Import Error")
+        
+    except Exception as e:
+        print(f"\n✗ Error applying General Ledger patches: {str(e)}\n")
+        frappe.log_error(str(e), "General Ledger Patch Error")
+
+# Apply patches after migration
+after_migrate = "textiles_and_garments.hooks.apply_general_ledger_patches"
