@@ -60,24 +60,44 @@ frappe.query_reports["Employee Checkin"] = {
                 return;
             }
             
+            // Filter out any total rows if they exist
+            let filtered_data = data.filter(row => {
+                return row.employee && 
+                       !row.is_total_row && 
+                       row.employee !== "Total" &&
+                       row.employee !== "Grand Total";
+            });
+            
+            if (filtered_data.length === 0) {
+                frappe.msgprint(__("No valid data rows found"));
+                return;
+            }
+            
             // Calculate summary statistics
-            let total_employees = data.length;
-            let on_time = data.filter(row => row.status === 'On Time').length;
-            let grace_period = data.filter(row => row.status === 'Grace Period').length;
-            let late = data.filter(row => row.status === 'Late').length;
+            let total_employees = filtered_data.length;
+            let on_time = filtered_data.filter(row => row.status === 'On Time').length;
+            let grace_period = filtered_data.filter(row => row.status === 'Grace Period').length;
+            let late = filtered_data.filter(row => row.status === 'Late').length;
             
-            let unique_departments = [...new Set(data.map(row => row.department).filter(Boolean))].length;
-            let unique_shifts = [...new Set(data.map(row => row.shift).filter(Boolean))].length;
+            let unique_departments = [...new Set(filtered_data.map(row => row.department).filter(Boolean))].length;
+            let unique_shifts = [...new Set(filtered_data.map(row => row.shift).filter(Boolean))].length;
             
-            // Calculate average late time for late employees
-            let late_employees = data.filter(row => row.time_difference > 0);
+            // Calculate average late time for employees who were late
+            let late_employees = filtered_data.filter(row => row.time_difference > 0);
             let avg_late_time = late_employees.length > 0 
                 ? late_employees.reduce((sum, row) => sum + (parseFloat(row.time_difference) || 0), 0) / late_employees.length 
+                : 0;
+            
+            // Calculate early employees average
+            let early_employees = filtered_data.filter(row => row.time_difference < 0);
+            let avg_early_time = early_employees.length > 0
+                ? Math.abs(early_employees.reduce((sum, row) => sum + (parseFloat(row.time_difference) || 0), 0) / early_employees.length)
                 : 0;
             
             // Calculate percentage
             let on_time_percent = total_employees > 0 ? ((on_time / total_employees) * 100).toFixed(1) : 0;
             let late_percent = total_employees > 0 ? ((late / total_employees) * 100).toFixed(1) : 0;
+            let grace_percent = total_employees > 0 ? ((grace_period / total_employees) * 100).toFixed(1) : 0;
             
             // Show summary dialog
             frappe.msgprint({
@@ -108,58 +128,5 @@ frappe.query_reports["Employee Checkin"] = {
                             </tr>
                             <tr style="border-bottom: 1px solid #e5e7eb;">
                                 <td style="padding: 8px 0;"><strong>Grace Period:</strong></td>
-                                <td style="text-align: right; padding: 8px 0; color: #ea580c;">${grace_period}</td>
+                                <td style="text-align: right; padding: 8px 0; color: #ea580c;">${grace_period} (${grace_percent}%)</td>
                             </tr>
-                            <tr style="border-bottom: 1px solid #e5e7eb;">
-                                <td style="padding: 8px 0;"><strong>Late:</strong></td>
-                                <td style="text-align: right; padding: 8px 0; color: #dc2626; font-weight: 700;">${late} (${late_percent}%)</td>
-                            </tr>
-                        </table>
-                        
-                        <h4 style="margin: 20px 0 15px 0; color: #ea580c;">📈 Performance Metrics</h4>
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr style="border-bottom: 1px solid #e5e7eb;">
-                                <td style="padding: 8px 0;"><strong>Average Late Time:</strong></td>
-                                <td style="text-align: right; padding: 8px 0;">${avg_late_time.toFixed(1)} Minutes</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #e5e7eb;">
-                                <td style="padding: 8px 0;"><strong>Punctuality Rate:</strong></td>
-                                <td style="text-align: right; padding: 8px 0; color: ${on_time_percent >= 90 ? '#16a34a' : '#dc2626'}; font-weight: 700;">${on_time_percent}%</td>
-                            </tr>
-                        </table>
-                    </div>
-                `,
-                indicator: "blue",
-                wide: true
-            });
-        });
-    },
-    
-    "formatter": function(value, row, column, data, default_formatter) {
-        value = default_formatter(value, row, column, data);
-        
-        // Color code the status column
-        if (column.fieldname === "status") {
-            if (data.status === "On Time") {
-                value = `<span style="color: #16a34a; font-weight: 600;">${data.status}</span>`;
-            } else if (data.status === "Grace Period") {
-                value = `<span style="color: #ea580c; font-weight: 600;">${data.status}</span>`;
-            } else if (data.status === "Late") {
-                value = `<span style="color: #dc2626; font-weight: 600;">${data.status}</span>`;
-            }
-        }
-        
-        // Color code time difference
-        if (column.fieldname === "time_difference" && data.time_difference !== null) {
-            if (data.time_difference <= 0) {
-                value = `<span style="color: #16a34a;">${data.time_difference}</span>`;
-            } else if (data.time_difference <= 15) {
-                value = `<span style="color: #ea580c;">${data.time_difference}</span>`;
-            } else {
-                value = `<span style="color: #dc2626; font-weight: 600;">${data.time_difference}</span>`;
-            }
-        }
-        
-        return value;
-    }
-};
