@@ -1,8 +1,6 @@
 // Copyright (c) 2026, Aravind and contributors
 // For license information, please see license.txt
 
-
-
 // employee_first_checkin.js
 
 frappe.query_reports["Employee Checkin"] = {
@@ -78,8 +76,8 @@ frappe.query_reports["Employee Checkin"] = {
                 : 0;
             
             // Calculate percentage
-            let on_time_percent = ((on_time / total_employees) * 100).toFixed(1);
-            let late_percent = ((late / total_employees) * 100).toFixed(1);
+            let on_time_percent = total_employees > 0 ? ((on_time / total_employees) * 100).toFixed(1) : 0;
+            let late_percent = total_employees > 0 ? ((late / total_employees) * 100).toFixed(1) : 0;
             
             // Show summary dialog
             frappe.msgprint({
@@ -135,11 +133,6 @@ frappe.query_reports["Employee Checkin"] = {
                 wide: true
             });
         });
-        
-        // Add color indicators
-        report.page.add_inner_button(__("Refresh"), function() {
-            report.refresh();
-        });
     },
     
     "formatter": function(value, row, column, data, default_formatter) {
@@ -157,7 +150,7 @@ frappe.query_reports["Employee Checkin"] = {
         }
         
         // Color code time difference
-        if (column.fieldname === "time_difference" && data.time_difference) {
+        if (column.fieldname === "time_difference" && data.time_difference !== null) {
             if (data.time_difference <= 0) {
                 value = `<span style="color: #16a34a;">${data.time_difference}</span>`;
             } else if (data.time_difference <= 15) {

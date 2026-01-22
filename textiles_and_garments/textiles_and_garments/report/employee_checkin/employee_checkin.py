@@ -5,7 +5,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import getdate, today
+from frappe.utils import getdate, today, get_datetime
 
 def execute(filters=None):
     columns = get_columns()
@@ -26,51 +26,51 @@ def get_columns():
             "fieldname": "employee_name",
             "label": _("Employee Name"),
             "fieldtype": "Data",
-            "width": 180
+            "width": 200
         },
         {
             "fieldname": "department",
             "label": _("Department"),
             "fieldtype": "Link",
             "options": "Department",
-            "width": 150
+            "width": 180
         },
         {
             "fieldname": "designation",
             "label": _("Designation"),
             "fieldtype": "Data",
-            "width": 130
+            "width": 150
         },
         {
             "fieldname": "checkin_time",
             "label": _("Check-in Time"),
             "fieldtype": "Datetime",
-            "width": 150
+            "width": 160
         },
         {
             "fieldname": "shift",
             "label": _("Shift"),
             "fieldtype": "Link",
             "options": "Shift Type",
-            "width": 150
+            "width": 180
         },
         {
             "fieldname": "shift_start",
             "label": _("Shift Start Time"),
             "fieldtype": "Datetime",
-            "width": 150
+            "width": 160
         },
         {
             "fieldname": "shift_end",
             "label": _("Shift End Time"),
             "fieldtype": "Datetime",
-            "width": 150
+            "width": 160
         },
         {
             "fieldname": "time_difference",
             "label": _("Early/Late (Minutes)"),
             "fieldtype": "Int",
-            "width": 120
+            "width": 130
         },
         {
             "fieldname": "status",
@@ -91,39 +91,44 @@ def get_data(filters):
         SELECT 
             ec.employee,
             ec.employee_name,
-            emp.department,
-            emp.designation,
-            ec.time as checkin_time,
+            ec.department,
+            ec.designation,
+            ec.checkin_time,
             ec.shift,
             ec.shift_start,
             ec.shift_end,
-            TIMESTAMPDIFF(MINUTE, ec.shift_start, ec.time) as time_difference,
-            CASE 
-                WHEN TIMESTAMPDIFF(MINUTE, ec.shift_start, ec.time) <= 0 THEN 'On Time'
-                WHEN TIMESTAMPDIFF(MINUTE, ec.shift_start, ec.time) <= 15 THEN 'Grace Period'
-                ELSE 'Late'
-            END as status
+            ec.time_difference,
+            ec.status
         FROM (
             SELECT 
-                employee,
-                employee_name,
-                shift,
-                MIN(time) as time,
-                DATE(time) as checkin_date,
-                shift_start,
-                shift_end
+                checkin.employee as employee,
+                checkin.employee_name as employee_name,
+                emp.department as department,
+                emp.designation as designation,
+                MIN(checkin.time) as checkin_time,
+                checkin.shift as shift,
+                checkin.shift_start as shift_start,
+                checkin.shift_end as shift_end,
+                TIMESTAMPDIFF(MINUTE, checkin.shift_start, MIN(checkin.time)) as time_difference,
+                CASE 
+                    WHEN TIMESTAMPDIFF(MINUTE, checkin.shift_start, MIN(checkin.time)) <= 0 THEN 'On Time'
+                    WHEN TIMESTAMPDIFF(MINUTE, checkin.shift_start, MIN(checkin.time)) <= 15 THEN 'Grace Period'
+                    ELSE 'Late'
+                END as status,
+                DATE(checkin.time) as checkin_date
             FROM 
-                `tabEmployee Checkin`
+                `tabEmployee Checkin` checkin
+            LEFT JOIN 
+                `tabEmployee` emp ON emp.name = checkin.employee
             WHERE 
                 1=1
                 {conditions}
             GROUP BY 
-                employee, DATE(time)
+                checkin.employee, DATE(checkin.time), checkin.shift, checkin.shift_start, 
+                checkin.shift_end, emp.department, emp.designation, checkin.employee_name
         ) ec
-        LEFT JOIN 
-            `tabEmployee` emp ON emp.name = ec.employee
         ORDER BY 
-            ec.checkin_date DESC, ec.time ASC
+            ec.checkin_date DESC, ec.checkin_time ASC
     """, filters, as_dict=1)
     
     return data
@@ -133,26 +138,24 @@ def get_conditions(filters):
     conditions = ""
     
     if filters.get("from_date"):
-        conditions += " AND DATE(time) >= %(from_date)s"
+        conditions += " AND DATE(checkin.time) >= %(from_date)s"
     else:
         # Default to today if no date filter
-        conditions += f" AND DATE(time) = '{today()}'"
+        conditions += f" AND DATE(checkin.time) = '{today()}'"
     
     if filters.get("to_date"):
-        conditions += " AND DATE(time) <= %(to_date)s"
+        conditions += " AND DATE(checkin.time) <= %(to_date)s"
     
     if filters.get("employee"):
-        conditions += " AND employee = %(employee)s"
+        conditions += " AND checkin.employee = %(employee)s"
     
     if filters.get("department"):
-        conditions += " AND employee IN (SELECT name FROM `tabEmployee` WHERE department = %(department)s)"
+        conditions += " AND emp.department = %(department)s"
     
     if filters.get("shift"):
-        conditions += " AND shift = %(shift)s"
+        conditions += " AND checkin.shift = %(shift)s"
     
     if filters.get("company"):
-        conditions += " AND employee IN (SELECT name FROM `tabEmployee` WHERE company = %(company)s)"
+        conditions += " AND emp.company = %(company)s"
     
     return conditions
-
-    
