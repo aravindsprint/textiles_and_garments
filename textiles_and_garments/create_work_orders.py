@@ -32,6 +32,8 @@ def on_submit(doc, method=None):
                 "stock_uom": item.stock_uom,
                 "company": doc.company,
                 "fg_warehouse": item.warehouse,
+                "project": item.project,
+                "date": frappe.utils.today(),
                 "use_multi_level_bom": 1,
                 "material_request": doc.name,
                 "custom_location": doc.custom_location,
