@@ -1,0 +1,32 @@
+{
+ "add_total_row": 1,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2026-01-22 12:33:59.554663",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "CUSTOM__PSS JV_LOGO",
+ "letterhead": null,
+ "modified": "2026-01-22 12:33:59.554663",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Employee Checkins",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Employee Checkin",
+ "report_name": "Employee Checkins",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "HR Manager"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "timeout": 0
+}
