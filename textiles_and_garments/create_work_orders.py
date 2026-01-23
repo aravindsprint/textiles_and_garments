@@ -36,7 +36,7 @@ def on_submit(doc, method=None):
                 "date": frappe.utils.today(),
                 "use_multi_level_bom": 1,
                 "material_request": doc.name,
-                "custom_location": doc.custom_location,
+                "custom_location": item.custom_location,
                 "material_request_item": item.name,
                 "planned_start_date": doc.schedule_date or doc.transaction_date,
                 "expected_delivery_date": item.schedule_date,
