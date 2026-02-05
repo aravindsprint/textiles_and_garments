@@ -10,7 +10,7 @@ def on_submit(doc, method=None):
             "Stock Entry",
             filters={
                 # "work_order": doc.name,
-                "custom_work_order": doc.name,
+                "work_order": doc.name,
                 "docstatus": ["in", [0, 1]],  # Draft or Submitted
                 "stock_entry_type": ["in", ["Material Transfer"]]
             },
@@ -85,7 +85,7 @@ def create_material_transfer_copy(doc, method=None):
             "Stock Entry",
             filters={
                 # "work_order": doc.name,
-                "custom_work_order": doc.name,
+                "work_order": doc.name,
                 "docstatus": 1,  # Only submitted ones
                 "purpose": ["in", ["Material Transfer"]]
             },
@@ -102,7 +102,7 @@ def create_material_transfer_copy(doc, method=None):
         # Check if duplicate already exists
         existing_copy = frappe.db.exists("Stock Entry", {
             # "work_order": doc.name,
-            "custom_work_order": doc.name,
+            "work_order": doc.name,
             "custom_roll_wise_pick_list": source_doc.get("custom_roll_wise_pick_list"),
             "purpose": "Material Transfer",
             "docstatus": ["!=", 2],
@@ -116,8 +116,19 @@ def create_material_transfer_copy(doc, method=None):
             )
             return
         
-        # ✅ Define the static In Transit warehouse
-        in_transit_warehouse = "IN TRANSIT - PRANERA DYEING - PSS"
+        # ✅ Determine In Transit warehouse based on custom_location field
+        custom_location = doc.get("custom_location", "").strip()
+        
+        if custom_location in ["Pranera Dyeing 2 (Sathya Process)", "Pranera Dyeing (Sathya Process)"]:
+            in_transit_warehouse = "IN TRANSIT  - PRANERA DYEING (SATHIYA) - PSS"
+        elif custom_location == "OM SHAKTHI":
+            in_transit_warehouse = "IN TRANSIT  - PRANERA DYEING - PSS"
+        else:
+            frappe.throw(
+                _("Invalid custom location '{0}' in Work Order {1}. Cannot determine In Transit warehouse.").format(
+                    custom_location, doc.name
+                )
+            )
         
         # Validate that In Transit warehouse exists
         if not frappe.db.exists("Warehouse", in_transit_warehouse):
@@ -135,7 +146,7 @@ def create_material_transfer_copy(doc, method=None):
             "posting_date": frappe.utils.today(),
             "posting_time": frappe.utils.nowtime(),
             "set_posting_time": 0,
-            "custom_work_order": doc.name,
+            "work_order": doc.name,
             # "work_order": doc.name,
             "project": source_doc.project,
             "custom_roll_wise_pick_list": source_doc.get("custom_roll_wise_pick_list"),
@@ -148,7 +159,7 @@ def create_material_transfer_copy(doc, method=None):
         for item in source_doc.items:
             new_se.append("items", {
                 "s_warehouse": item.t_warehouse,  # ✅ Source = Previous Target
-                "t_warehouse": in_transit_warehouse,  # ✅ Target = In transit
+                "t_warehouse": in_transit_warehouse,  # ✅ Target = In transit (dynamic)
                 "item_code": item.item_code,
                 "qty": item.qty,
                 "transfer_qty": item.transfer_qty,
