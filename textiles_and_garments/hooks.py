@@ -160,6 +160,9 @@ after_install = "textiles_and_garments.overrides.general_ledger"
 # }
 
 
+
+
+
 doc_events = {
     "Material Request": {
         "on_submit": "textiles_and_garments.create_work_orders.on_submit"
@@ -382,44 +385,93 @@ scheduler_events = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+
+
+
 # =============================================================================
 # MONKEY PATCHING - General Ledger Override
 # =============================================================================
 
-def apply_general_ledger_patches():
-    """Apply monkey patches for General Ledger report"""
-    import frappe
+# def apply_general_ledger_patches():
+#     """Apply monkey patches for General Ledger report"""
+#     import frappe
     
-    try:
-        from erpnext.accounts.report.general_ledger import general_ledger
+#     try:
+#         from erpnext.accounts.report.general_ledger import general_ledger
         
-        # Import custom functions
-        from textiles_and_garments.overrides.general_ledger import (
-            custom_execute, 
-            custom_get_conditions
-        )
+#         # Import custom functions
+#         from textiles_and_garments.overrides.general_ledger import (
+#             custom_execute, 
+#             custom_get_conditions
+#         )
         
-        # Apply patches
-        general_ledger.execute = custom_execute
-        general_ledger.get_conditions = custom_get_conditions
+#         # Apply patches
+#         general_ledger.execute = custom_execute
+#         general_ledger.get_conditions = custom_get_conditions
         
-        print("\n" + "="*60)
-        print("✓ General Ledger Monkey Patches Applied Successfully")
-        print("="*60 + "\n")
+#         print("\n" + "="*60)
+#         print("✓ General Ledger Monkey Patches Applied Successfully")
+#         print("="*60 + "\n")
         
-        # Log to Frappe
-        frappe.log_error(
-            "General Ledger monkey patches applied successfully",
-            "Monkey Patch Success"
-        )
+#         # Log to Frappe
+#         frappe.log_error(
+#             "General Ledger monkey patches applied successfully",
+#             "Monkey Patch Success"
+#         )
         
-    except ImportError as e:
-        print(f"\n✗ Import Error in General Ledger patch: {str(e)}\n")
-        frappe.log_error(str(e), "General Ledger Patch Import Error")
+#     except ImportError as e:
+#         print(f"\n✗ Import Error in General Ledger patch: {str(e)}\n")
+#         frappe.log_error(str(e), "General Ledger Patch Import Error")
         
-    except Exception as e:
-        print(f"\n✗ Error applying General Ledger patches: {str(e)}\n")
-        frappe.log_error(str(e), "General Ledger Patch Error")
+#     except Exception as e:
+#         print(f"\n✗ Error applying General Ledger patches: {str(e)}\n")
+#         frappe.log_error(str(e), "General Ledger Patch Error")
 
-# Apply patches after migration
-after_migrate = "textiles_and_garments.hooks.apply_general_ledger_patches"
+# def apply_batch_report_patches():
+#     """Apply monkey patches for Batch-Wise Balance History report"""
+#     import frappe
+    
+#     try:
+#         from erpnext.stock.report.batch_wise_balance_history import batch_wise_balance_history
+        
+#         # Import custom function
+#         from textiles_and_garments.overrides.batch_wise_balance_history import (
+#             custom_execute
+#         )
+        
+#         # Apply patch
+#         batch_wise_balance_history.execute = custom_execute
+        
+#         print("\n" + "="*60)
+#         print("✓ Batch-Wise Balance History Monkey Patch Applied Successfully")
+#         print(f"  User: {frappe.session.user if frappe.session else 'N/A'}")
+#         print("="*60 + "\n")
+        
+#         # Log to Frappe (only log once to avoid spam)
+#         if frappe.db:
+#             frappe.log_error(
+#                 f"Batch-Wise Balance History monkey patch applied successfully for user: {frappe.session.user if frappe.session else 'System'}",
+#                 "Monkey Patch Success"
+#             )
+        
+#     except ImportError as e:
+#         print(f"\n✗ Import Error in Batch Report patch: {str(e)}\n")
+#         if frappe.db:
+#             frappe.log_error(str(e), "Batch Report Patch Import Error")
+        
+#     except Exception as e:
+#         print(f"\n✗ Error applying Batch Report patches: {str(e)}\n")
+#         if frappe.db:
+#             frappe.log_error(str(e), "Batch Report Patch Error")
+
+
+
+# Also apply after migration
+# after_migrate = [
+#     "textiles_and_garments.hooks.apply_general_ledger_patches",
+#     # "textiles_and_garments.hooks.apply_batch_report_patches"
+# ]    
+
+# # Apply patches after migration
+# after_migrate = "textiles_and_garments.hooks.apply_general_ledger_patches"
+
