@@ -398,7 +398,7 @@ function set_document_filters(frm) {
             return {
                 filters: {
                     'docstatus': 1,
-                    'status': ['not in', ['Completed', 'Stopped', 'Cancelled']],
+                    'status': ['not in', ['Draft', 'Stopped', 'Cancelled']],
                     'company': frm.doc.company
                 }
             };
@@ -409,7 +409,7 @@ function set_document_filters(frm) {
             return {
                 filters: {
                     'docstatus': 1,
-                    'status': ['not in', ['Completed', 'Stopped', 'Cancelled']],
+                    'status': ['not in', ['Draft', 'Stopped', 'Cancelled']],
                     'company': frm.doc.company
                 }
             };
@@ -421,7 +421,7 @@ function set_document_filters(frm) {
             return {
                 filters: {
                     'docstatus': 1,
-                    'status': ['not in', ['Completed', 'Closed', 'Cancelled']],
+                    'status': ['not in', ['Draft', 'Closed', 'Cancelled']],
                     'company': frm.doc.company
                 }
             };
@@ -433,7 +433,7 @@ function set_document_filters(frm) {
             return {
                 filters: {
                     'docstatus': 1,
-                    'status': ['not in', ['Completed', 'Closed', 'Cancelled']],
+                    'status': ['not in', ['Draft', 'Closed', 'Cancelled']],
                     'company': frm.doc.company
                 }
             };
@@ -444,7 +444,7 @@ function set_document_filters(frm) {
             return {
                 filters: {
                     'docstatus': 1,
-                    'status': ['not in', ['Completed', 'Closed', 'Cancelled']],
+                    'status': ['not in', ['Draft', 'Closed', 'Cancelled']],
                     'company': frm.doc.company
                 }
             };
@@ -514,7 +514,7 @@ function complete_picking(frm) {
         __('Are you sure you want to mark this picking as completed? This will create a Stock Entry.'),
         function() {
             frappe.call({
-                method: 'your_app.api.complete_roll_picking',
+                method: 'textiles_and_garments.api.complete_roll_picking',
                 args: {
                     'pick_order': frm.doc.name
                 },
@@ -541,7 +541,7 @@ function complete_picking(frm) {
 
 function create_stock_entry(frm) {
     frappe.call({
-        method: 'your_app.api.create_stock_entry_from_pick_order',
+        method: 'textiles_and_garments.api.create_stock_entry_from_pick_order',
         args: {
             'pick_order': frm.doc.name
         },
