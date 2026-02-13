@@ -1,0 +1,317 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-02-13 10:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "posting_date",
+  "status",
+  "column_break_1",
+  "company",
+  "assigned_to",
+  "section_break_order_details",
+  "pick_type",
+  "document_type",
+  "document_name",
+  "column_break_2",
+  "project",
+  "from_work_order",
+  "from_subcontracting_order",
+  "section_break_warehouse",
+  "source_warehouse",
+  "column_break_3",
+  "target_warehouse",
+  "section_break_batch",
+  "batch",
+  "section_break_required_items",
+  "required_items",
+  "section_break_roll_selection",
+  "roll_wise_pick_item",
+  "section_break_batch_selection",
+  "batch_wise_pick_item",
+  "section_break_totals",
+  "total_qty",
+  "column_break_4",
+  "total_rolls",
+  "section_break_other",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "PICK-ORD-.####\nPICK-ORD-.YYYY.-",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nPending\nIn Progress\nCompleted\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "description": "Warehouse worker assigned to pick these items",
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "User"
+  },
+  {
+   "fieldname": "section_break_order_details",
+   "fieldtype": "Section Break",
+   "label": "Order Details"
+  },
+  {
+   "fieldname": "pick_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Pick Type",
+   "options": "\nFrom Work Order\nTo Work Order\nFrom Purchase Order\nTo Subcontracting Order\nFrom Subcontracting Order\nFrom Stock Entry\nFrom Batch\nManual Roll Pick",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:!['Manual Roll Pick', 'From Batch'].includes(doc.pick_type)",
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "label": "Document Type",
+   "options": "DocType"
+  },
+  {
+   "depends_on": "eval:!['Manual Roll Pick', 'From Batch'].includes(doc.pick_type)",
+   "description": "Work Order / Purchase Order / Subcontracting Order / Stock Entry",
+   "fieldname": "document_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Document Name",
+   "options": "document_type"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.pick_type=='To Subcontracting Order'",
+   "fieldname": "from_work_order",
+   "fieldtype": "Link",
+   "label": "From Work Order",
+   "options": "Work Order"
+  },
+  {
+   "depends_on": "eval:doc.pick_type=='To Subcontracting Order'",
+   "fieldname": "from_subcontracting_order",
+   "fieldtype": "Link",
+   "label": "From Subcontracting Order",
+   "options": "Subcontracting Order"
+  },
+  {
+   "fieldname": "section_break_warehouse",
+   "fieldtype": "Section Break",
+   "label": "Warehouse Details"
+  },
+  {
+   "fieldname": "source_warehouse",
+   "fieldtype": "Link",
+   "label": "Source Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_warehouse",
+   "fieldtype": "Link",
+   "label": "Target Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_batch",
+   "fieldtype": "Section Break",
+   "label": "Batch Selection"
+  },
+  {
+   "description": "Filter rolls by batch",
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "label": "Batch",
+   "options": "Batch"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_required_items",
+   "fieldtype": "Section Break",
+   "label": "Required Items (Reference)"
+  },
+  {
+   "description": "Auto-populated from source document",
+   "fieldname": "required_items",
+   "fieldtype": "Table",
+   "label": "Required Items",
+   "options": "Roll Wise Pick Order Required Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_roll_selection",
+   "fieldtype": "Section Break",
+   "label": "Roll Wise Picking"
+  },
+  {
+   "fieldname": "roll_wise_pick_item",
+   "fieldtype": "Table",
+   "label": "Roll Wise Pick Item",
+   "options": "Roll Wise Pick Item"
+  },
+  {
+   "fieldname": "section_break_batch_selection",
+   "fieldtype": "Section Break",
+   "label": "Batch Wise Picking (for GKF Items)"
+  },
+  {
+   "fieldname": "batch_wise_pick_item",
+   "fieldtype": "Table",
+   "label": "Batch Wise Pick Item",
+   "options": "Batch Wise Pick Item"
+  },
+  {
+   "fieldname": "section_break_totals",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "label": "Total Quantity",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_rolls",
+   "fieldtype": "Int",
+   "label": "Total Rolls/Batches",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_other",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Roll Wise Pick Order",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-02-13 12:50:08.553849",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Roll Wise Pick Order",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
