@@ -116,88 +116,93 @@ def create_manufacture_entry_from_roll_packing(doc):
         
         work_order = frappe.get_doc("Work Order", work_order_name)
         
-        # ✅ Get WIP Warehouse from Work Order
-        wip_warehouse = work_order.wip_warehouse
-        
-        if not wip_warehouse:
-            frappe.throw(_("WIP Warehouse not set in Work Order {0}").format(work_order_name))
-        
-        # Get all submitted Stock Entries for this work order
-        submitted_stock_entries = frappe.get_all(
+        # ✅ STEP 1: Get Material Transfer for Manufacture Stock Entries
+        material_transfer_entries = frappe.get_all(
             "Stock Entry",
             filters={
                 "work_order": work_order_name,
-                "docstatus": 1
+                "purpose": "Material Transfer for Manufacture",
+                "docstatus": 1  # Only submitted entries
             },
-            pluck="name"
+            fields=["name", "posting_date", "posting_time"],
+            order_by="posting_date DESC, posting_time DESC"
         )
         
-        # Get cancelled MTM Stock Entries to exclude
-        cancelled_mtm_entries = frappe.get_all(
-            "Stock Entry",
-            filters={
-                "work_order": work_order_name,
-                "docstatus": 2,
-                "name": ["like", "MTM%"]
-            },
-            pluck="name"
-        )
+        if not material_transfer_entries:
+            frappe.throw(_("No Material Transfer for Manufacture entries found for Work Order {0}").format(
+                frappe.bold(work_order_name)
+            ))
         
-        # Filter out cancelled MTM entries
-        valid_stock_entries = [
-            entry for entry in submitted_stock_entries 
-            if entry not in cancelled_mtm_entries
-        ]
+        material_transfer_names = [entry.name for entry in material_transfer_entries]
         
-        if not valid_stock_entries:
-            frappe.throw(_("No valid material transfer entries found for Work Order {0}").format(work_order_name))
+        frappe.logger().info(f"Found {len(material_transfer_names)} Material Transfer entries for {work_order_name}")
         
-        # Get Stock Entry Details from valid stock entries
+        # ✅ STEP 2: Get Stock Entry Details with BATCH information from Material Transfer entries
         material_transfer_items = frappe.get_all(
             "Stock Entry Detail",
             filters={
-                "parent": ["in", valid_stock_entries],
-                "docstatus": 1
+                "parent": ["in", material_transfer_names],
+                "docstatus": 1,
+                "is_finished_item": 0,  # Only raw materials, not finished goods
+                "is_scrap_item": 0      # Exclude scrap items
             },
-            fields=["item_code", "qty", "t_warehouse", "stock_uom", "batch_no", "parent"],
-            order_by="idx DESC"
+            fields=[
+                "item_code", 
+                "qty", 
+                "t_warehouse",  # Target warehouse (WIP warehouse)
+                "s_warehouse",  # Source warehouse
+                "stock_uom", 
+                "batch_no",     # ✅ CRITICAL: Batch used in material transfer
+                "parent",
+                "uom",
+                "conversion_factor",
+                "transfer_qty"
+            ],
+            order_by="parent DESC, idx ASC"
         )
         
         if not material_transfer_items:
-            frappe.throw(_("No material transfer items found for Work Order {0}").format(work_order_name))
+            frappe.throw(_("No material transfer items found for Work Order {0}").format(
+                frappe.bold(work_order_name)
+            ))
         
-        # Calculate total ok_qty from material transfers
-        total_ok_qty = sum([flt(item.qty, 2) for item in material_transfer_items])
+        # ✅ STEP 3: Group materials by item_code and batch_no for proper tracking
+        material_batch_summary = {}
+        total_transferred_qty = 0
         
-        if total_ok_qty <= 0:
-            frappe.throw(_("Total material quantity is zero or negative for Work Order {0}").format(work_order_name))
+        for mt_item in material_transfer_items:
+            key = f"{mt_item.item_code}||{mt_item.batch_no or 'NO_BATCH'}"
+            
+            if key not in material_batch_summary:
+                material_batch_summary[key] = {
+                    "item_code": mt_item.item_code,
+                    "batch_no": mt_item.batch_no,
+                    "warehouse": mt_item.t_warehouse,  # WIP warehouse where material was transferred
+                    "stock_uom": mt_item.stock_uom,
+                    "total_qty": 0,
+                    "uom": mt_item.uom,
+                    "conversion_factor": mt_item.conversion_factor or 1.0,
+                    "source_entries": []
+                }
+            
+            material_batch_summary[key]["total_qty"] += flt(mt_item.qty, 2)
+            material_batch_summary[key]["source_entries"].append(mt_item.parent)
+            total_transferred_qty += flt(mt_item.qty, 2)
+        
+        if total_transferred_qty <= 0:
+            frappe.throw(_("Total transferred material quantity is zero or negative for Work Order {0}").format(
+                frappe.bold(work_order_name)
+            ))
+        
+        frappe.logger().info(f"Total transferred quantity: {total_transferred_qty}")
+        frappe.logger().info(f"Material batch summary: {len(material_batch_summary)} unique item-batch combinations")
         
         # Get stock UOM from first batch summary
         batch_summaries_list = list(batch_summary.values())
         stock_uom = batch_summaries_list[0]["uom"] if batch_summaries_list else "Kg"
         qty = total_roll_weight
         
-        # ✅ FIXED: Determine FG Warehouse based on Stock UOM
-        if stock_uom in ["Kgs", "Kg"]:
-            fg_warehouse = "NAP_E1/FF/A01 - PSS"
-        elif stock_uom == "Pcs":
-            fg_warehouse = "NAP_E1/FF/A02 - PSS"
-        else:
-            # Default to A01 for other UOMs
-            fg_warehouse = "NAP_E1/FF/A01 - PSS"
-        
-        # Validate FG warehouse exists
-        if not frappe.db.exists("Warehouse", fg_warehouse):
-            frappe.throw(_("Finished Goods Warehouse {0} does not exist").format(fg_warehouse))
-        
-        # ✅ VALIDATION: Ensure WIP and FG warehouses are different
-        if wip_warehouse == fg_warehouse:
-            frappe.throw(_(
-                "WIP Warehouse ({0}) and FG Warehouse ({1}) cannot be the same. "
-                "Please update the WIP Warehouse in Work Order {2}"
-            ).format(wip_warehouse, fg_warehouse, work_order_name))
-        
-        # Create Stock Entry document
+        # ✅ STEP 4: Create Stock Entry document
         stock_entry = frappe.new_doc("Stock Entry")
         stock_entry.stock_entry_type = "Manufacture"
         stock_entry.purpose = "Manufacture"
@@ -210,60 +215,72 @@ def create_manufacture_entry_from_roll_packing(doc):
         stock_entry.fg_completed_qty = qty
         stock_entry.from_bom = 1
         
-        # ✅ Add source items (materials consumed from WIP warehouse)
-        for idx, mt_item in enumerate(material_transfer_items, start=1):
-            # Calculate proportional qty based on stock UOM
-            if stock_uom == "Kgs" or stock_uom == "Kg":
-                proportional_qty = (flt(mt_item.qty) / total_ok_qty * qty) if total_ok_qty > 0 else 0
+        # ✅ STEP 5: Add source items (materials consumed) - PRESERVE BATCH from Material Transfer
+        for idx, (key, mat_data) in enumerate(material_batch_summary.items(), start=1):
+            # Calculate proportional qty based on finished goods quantity
+            if stock_uom in ["Kgs", "Kg"]:
+                proportional_qty = (mat_data["total_qty"] / total_transferred_qty * qty) if total_transferred_qty > 0 else 0
             else:
-                proportional_qty = (flt(mt_item.qty) / total_ok_qty * total_roll_weight) if total_ok_qty > 0 else 0
+                proportional_qty = (mat_data["total_qty"] / total_transferred_qty * total_roll_weight) if total_transferred_qty > 0 else 0
             
             proportional_qty = round_to_decimals(proportional_qty)
             
             # Skip items with zero quantity
             if proportional_qty <= 0:
+                frappe.logger().warning(f"Skipping {mat_data['item_code']} batch {mat_data['batch_no']}: zero quantity")
                 continue
             
-            # ✅ FIXED: Use WIP warehouse as source (not mt_item.t_warehouse)
-            # Materials are consumed FROM the WIP warehouse
-            source_warehouse = wip_warehouse
+            frappe.logger().info(
+                f"Adding source item {idx}: {mat_data['item_code']} "
+                f"Batch: {mat_data['batch_no'] or 'None'} "
+                f"Qty: {proportional_qty} "
+                f"From: {mat_data['warehouse']}"
+            )
             
+            # ✅ CRITICAL: Use the SAME batch that was used in Material Transfer
             stock_entry.append("items", {
-                "s_warehouse": source_warehouse,
-                "item_code": mt_item.item_code,
+                "s_warehouse": mat_data["warehouse"],  # WIP warehouse
+                "item_code": mat_data["item_code"],
                 "qty": proportional_qty,
-                "uom": mt_item.stock_uom,
-                "stock_uom": mt_item.stock_uom,
-                "conversion_factor": 1.0,
-                "transfer_qty": proportional_qty,
-                "batch_no": mt_item.batch_no,
+                "uom": mat_data["uom"],
+                "stock_uom": mat_data["stock_uom"],
+                "conversion_factor": mat_data["conversion_factor"],
+                "transfer_qty": proportional_qty * mat_data["conversion_factor"],
+                "batch_no": mat_data["batch_no"],  # ✅ PRESERVE batch from Material Transfer
                 "is_finished_item": 0,
                 "is_scrap_item": 0,
-                "use_serial_batch_fields": 1 if mt_item.batch_no else 0
+                "use_serial_batch_fields": 1 if mat_data["batch_no"] else 0
             })
         
-        # ✅ Add finished product items to FG warehouse (different from WIP)
+        # ✅ STEP 6: Add finished product item(s) - one per batch from Roll Packing List
         for batch_data in batch_summaries_list:
             finished_qty = round_to_decimals(batch_data["total_roll_weight"])
             
             if finished_qty <= 0:
+                frappe.logger().warning(f"Skipping finished item batch {batch_data['batch']}: zero quantity")
                 continue
             
+            frappe.logger().info(
+                f"Adding finished item: {batch_data['item_code']} "
+                f"Batch: {batch_data['batch']} "
+                f"Qty: {finished_qty}"
+            )
+            
             stock_entry.append("items", {
-                "t_warehouse": fg_warehouse,  # FG warehouse based on UOM
+                "t_warehouse": work_order.fg_warehouse or "NAP_E1/FF/A01 - PSS",
                 "item_code": batch_data["item_code"],
                 "qty": finished_qty,
                 "uom": batch_data["uom"],
                 "stock_uom": batch_data["uom"],
                 "conversion_factor": 1.0,
                 "transfer_qty": finished_qty,
-                "batch_no": batch_data["batch"],
+                "batch_no": batch_data["batch"],  # New batch for finished goods
                 "is_finished_item": 1,
                 "is_scrap_item": 0,
-                "use_serial_batch_fields": 0
+                "use_serial_batch_fields": 1  # Use batch for finished item
             })
         
-        # Validate that we have both source and target items
+        # ✅ STEP 7: Validate that we have both source and target items
         if not stock_entry.items:
             frappe.throw(_("No items to transfer. Please check material transfer entries."))
         
@@ -276,12 +293,26 @@ def create_manufacture_entry_from_roll_packing(doc):
         if not finished_items:
             frappe.throw(_("No finished items found for manufacture."))
         
-        # ✅ Final validation: Check for same warehouse in any row
-        for idx, item in enumerate(stock_entry.items, start=1):
-            if item.s_warehouse and item.t_warehouse and item.s_warehouse == item.t_warehouse:
-                frappe.throw(_(
-                    "Row {0}: Source warehouse ({1}) and target warehouse ({2}) cannot be the same"
-                ).format(idx, item.s_warehouse, item.t_warehouse))
+        frappe.logger().info(f"Stock Entry has {len(source_items)} source items and {len(finished_items)} finished items")
+        
+        # ✅ STEP 8: Log batch information for debugging
+        frappe.logger().info("=" * 80)
+        frappe.logger().info("BATCH TRACKING SUMMARY:")
+        frappe.logger().info("=" * 80)
+        frappe.logger().info("RAW MATERIALS (from Material Transfer):")
+        for item in source_items:
+            frappe.logger().info(
+                f"  - {item.item_code}: {item.qty} {item.uom} "
+                f"(Batch: {item.batch_no or 'None'}) from {item.s_warehouse}"
+            )
+        frappe.logger().info("-" * 80)
+        frappe.logger().info("FINISHED GOODS (from Roll Packing List):")
+        for item in finished_items:
+            frappe.logger().info(
+                f"  - {item.item_code}: {item.qty} {item.uom} "
+                f"(Batch: {item.batch_no}) to {item.t_warehouse}"
+            )
+        frappe.logger().info("=" * 80)
         
         # Save and submit the Stock Entry
         stock_entry.insert()
@@ -292,7 +323,7 @@ def create_manufacture_entry_from_roll_packing(doc):
         frappe.db.commit()
         
         frappe.msgprint(
-            _("Manufacture Stock Entry {0} created successfully").format(
+            _("Manufacture Stock Entry {0} created successfully with batch tracking").format(
                 frappe.bold(stock_entry.name)
             ),
             indicator="green",
@@ -307,6 +338,7 @@ def create_manufacture_entry_from_roll_packing(doc):
             title="Error creating Manufacture Entry for Roll Packing List"
         )
         frappe.throw(_("Failed to create Manufacture Stock Entry: {0}").format(str(e)))
+        
 
 # import frappe
 # from frappe import _
