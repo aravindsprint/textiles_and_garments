@@ -36,9 +36,9 @@ def create_manufacture_entry_from_roll_packing(doc):
             frappe.throw(_("Roll Packing List must be submitted before creating Manufacture Entry"))
         
         # Check if stock entry already exists
-        if hasattr(doc, 'custom_stock_entry') and doc.custom_stock_entry:
+        if hasattr(doc, 'stock_entry') and doc.stock_entry:
             frappe.throw(_("Manufacture Stock Entry {0} already exists for this Roll Packing List").format(
-                frappe.bold(doc.custom_stock_entry)
+                frappe.bold(doc.stock_entry)
             ))
         
         # Validate document
@@ -319,7 +319,7 @@ def create_manufacture_entry_from_roll_packing(doc):
         stock_entry.submit()
         
         # Add reference to Roll Packing List
-        frappe.db.set_value("Roll Packing List", doc.name, "custom_stock_entry", stock_entry.name)
+        frappe.db.set_value("Roll Packing List", doc.name, "stock_entry", stock_entry.name)
         frappe.db.commit()
         
         frappe.msgprint(
@@ -378,9 +378,9 @@ def create_manufacture_entry_from_roll_packing(doc):
 #             frappe.throw(_("Roll Packing List must be submitted before creating Manufacture Entry"))
         
 #         # Check if stock entry already exists
-#         if hasattr(doc, 'custom_stock_entry') and doc.custom_stock_entry:
+#         if hasattr(doc, 'stock_entry') and doc.stock_entry:
 #             frappe.throw(_("Manufacture Stock Entry {0} already exists for this Roll Packing List").format(
-#                 frappe.bold(doc.custom_stock_entry)
+#                 frappe.bold(doc.stock_entry)
 #             ))
         
 #         # Validate document
@@ -594,7 +594,7 @@ def create_manufacture_entry_from_roll_packing(doc):
 #         stock_entry.submit()
         
 #         # Add reference to Roll Packing List
-#         frappe.db.set_value("Roll Packing List", doc.name, "custom_stock_entry", stock_entry.name)
+#         frappe.db.set_value("Roll Packing List", doc.name, "stock_entry", stock_entry.name)
 #         frappe.db.commit()
         
 #         frappe.msgprint(

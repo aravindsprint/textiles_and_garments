@@ -12,6 +12,7 @@
   "section_break_e7mc",
   "document_type",
   "document_name",
+  "stock_entry",
   "transaction_type",
   "roll_packing_list_item_section",
   "roll_packing_list_item",
@@ -97,13 +98,19 @@
    "fieldname": "total_pcs_qty",
    "fieldtype": "Int",
    "label": "Total Pcs Qty"
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "options": "Stock Entry"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-01-09 07:34:32.815540",
+ "modified": "2026-02-14 16:33:06.789466",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Packing List",
