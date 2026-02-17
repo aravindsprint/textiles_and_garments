@@ -1,0 +1,81 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-17 11:53:13.321195",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "style_reference",
+  "consumption_wt_in_kgs_per_garment",
+  "no_of_garments_required",
+  "no_of_tags_required",
+  "qty",
+  "garments_image",
+  "provided_garments_sample"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Fabric Weight in Kgs"
+  },
+  {
+   "columns": 1,
+   "fieldname": "consumption_wt_in_kgs_per_garment",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Consumption Per Pc"
+  },
+  {
+   "columns": 1,
+   "fieldname": "no_of_tags_required",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "No of Tags Required"
+  },
+  {
+   "columns": 2,
+   "fieldname": "garments_image",
+   "fieldtype": "Image",
+   "label": "Garments Image"
+  },
+  {
+   "columns": 1,
+   "fieldname": "provided_garments_sample",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Provided Garments Sample",
+   "options": "\nYes\nNo"
+  },
+  {
+   "columns": 2,
+   "fieldname": "style_reference",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Style Reference"
+  },
+  {
+   "fieldname": "no_of_garments_required",
+   "fieldtype": "Int",
+   "label": "No of Garments in Pc"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-02-17 12:40:25.597164",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Hang Tag Garments Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

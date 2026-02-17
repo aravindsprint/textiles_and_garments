@@ -1,0 +1,152 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:naming_series",
+ "creation": "2025-06-19 10:11:49.320835",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_c7es",
+  "naming_series",
+  "types_of_tag",
+  "validity_of_the_year",
+  "institutional_supplier_name",
+  "column_break_orhn",
+  "sales_invoice",
+  "customer",
+  "section_break_nscu",
+  "hang_tag_request_item",
+  "hang_tag_garments_item",
+  "section_break_adcw",
+  "total_weight",
+  "column_break_ps4n",
+  "total_no_of_tags_required",
+  "amended_from",
+  "qr_code"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_c7es",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Hang Tag Request",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "HTR/.####"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "section_break_nscu",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "hang_tag_request_item",
+   "fieldtype": "Table",
+   "label": "Hang Tag Request Item",
+   "options": "Hang Tag Request Item"
+  },
+  {
+   "fetch_from": "sales_invoice.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "types_of_tag",
+   "fieldtype": "Link",
+   "label": "Types of Tag",
+   "options": "Tags"
+  },
+  {
+   "fieldname": "total_no_of_tags_required",
+   "fieldtype": "Int",
+   "label": "Total No of Tags Required"
+  },
+  {
+   "fieldname": "column_break_orhn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "validity_of_the_year",
+   "fieldtype": "Date",
+   "label": "Validity of the Year"
+  },
+  {
+   "fieldname": "institutional_supplier_name",
+   "fieldtype": "Data",
+   "label": "Institutional"
+  },
+  {
+   "fieldname": "hang_tag_garments_item",
+   "fieldtype": "Table",
+   "label": "Hang Tag Garments Item",
+   "options": "Hang Tag Garments Item"
+  },
+  {
+   "fieldname": "column_break_ps4n",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_weight",
+   "fieldtype": "Float",
+   "label": "Total Fabric Weight",
+   "precision": "3"
+  },
+  {
+   "fieldname": "section_break_adcw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "qr_code",
+   "fieldtype": "Image",
+   "label": "QR Code"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-02-17 14:59:23.519444",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Hang Tag Request",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
