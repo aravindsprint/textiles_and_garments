@@ -206,6 +206,7 @@ def create_manufacture_entry_from_roll_packing(doc):
         stock_entry = frappe.new_doc("Stock Entry")
         stock_entry.stock_entry_type = "Manufacture"
         stock_entry.purpose = "Manufacture"
+        stock_entry.naming_series = "MF/25/"
         stock_entry.work_order = work_order_name
         stock_entry.custom_job_card = doc.document_name
         stock_entry.project = work_order.project
@@ -338,7 +339,7 @@ def create_manufacture_entry_from_roll_packing(doc):
             title="Error creating Manufacture Entry for Roll Packing List"
         )
         frappe.throw(_("Failed to create Manufacture Stock Entry: {0}").format(str(e)))
-        
+
 
 # import frappe
 # from frappe import _
