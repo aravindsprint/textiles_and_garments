@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, now_datetime, get_datetime
+from frappe.utils import flt, cint, now_datetime, get_datetime
 import json
 
 
