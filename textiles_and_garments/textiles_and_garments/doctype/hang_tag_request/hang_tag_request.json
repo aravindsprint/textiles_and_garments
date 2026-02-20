@@ -22,7 +22,8 @@
   "column_break_ps4n",
   "total_no_of_tags_required",
   "amended_from",
-  "qr_code"
+  "qr_code",
+  "r2_certificate_url"
  ],
  "fields": [
   {
@@ -116,14 +117,19 @@
   {
    "allow_on_submit": 1,
    "fieldname": "qr_code",
-   "fieldtype": "Image",
+   "fieldtype": "Attach Image",
    "label": "QR Code"
+  },
+  {
+   "fieldname": "r2_certificate_url",
+   "fieldtype": "Data",
+   "label": "R2 Certificate URL"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-02-17 16:04:10.894755",
+ "modified": "2026-02-20 12:29:24.097805",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Hang Tag Request",

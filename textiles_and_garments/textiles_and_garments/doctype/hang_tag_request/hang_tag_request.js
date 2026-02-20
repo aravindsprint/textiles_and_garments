@@ -22,6 +22,7 @@ frappe.ui.form.on("Hang Tag Request", {
 
 frappe.ui.form.on('Hang Tag Request', {
     refresh: function(frm) {
+        console.log("frm",frm);
         if(frm.doc.docstatus == 0){
             calculate_total_tags(frm);
         }
