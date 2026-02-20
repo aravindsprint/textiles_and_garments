@@ -85,7 +85,7 @@ class HangTagRequest(Document):
             })
             file_doc.save(ignore_permissions=True)
 
-            qr_file_url = file_doc.file_url  # e.g. /files/qr_HTR-0001.png
+            qr_file_url = file_doc.file_url  # e.g./files/qr_HTR-0001.png
 
             # ── 6. Update document fields ─────────────────────
             frappe.db.set_value("Hang Tag Request", self.name, {
