@@ -475,3 +475,5 @@ scheduler_events = {
 # # Apply patches after migration
 # after_migrate = "textiles_and_garments.hooks.apply_general_ledger_patches"
 
+after_migrate = ["textiles_and_garments.install.after_migrate"]
+
