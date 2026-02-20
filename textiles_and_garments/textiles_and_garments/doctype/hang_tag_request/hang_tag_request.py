@@ -29,8 +29,8 @@ class HangTagRequest(Document):
 
             # ── 2. R2 Credentials ─────────────────────────────
             R2_ACCOUNT_ID  = "80f14c0d1e3dfd1585dc66327614f067"
-            R2_ACCESS_KEY  = frappe.conf.get("r2_access_key")
-            R2_SECRET_KEY  = frappe.conf.get("r2_secret_key")
+            R2_ACCESS_KEY  = "bca0d1c95fe99c19d446e04ffc2d5123"
+            R2_SECRET_KEY  = "abb563fc99b50e7a1986099590f96cc3f30727134cbc071eb5761c8bb83b2b5e"
             R2_BUCKET_NAME = "certificates"
             R2_ENDPOINT    = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
@@ -85,7 +85,7 @@ class HangTagRequest(Document):
             })
             file_doc.save(ignore_permissions=True)
 
-            qr_file_url = file_doc.file_url  # e.g./files/qr_HTR-0001.png
+            qr_file_url = file_doc.file_url  # e.g. /files/qr_HTR-0001.png
 
             # ── 6. Update document fields ─────────────────────
             frappe.db.set_value("Hang Tag Request", self.name, {
@@ -95,7 +95,7 @@ class HangTagRequest(Document):
             frappe.db.commit()
 
             frappe.msgprint(
-                f"Certificate uploaded & QR Code generated successfully!",
+                "Certificate uploaded & QR Code generated successfully!",
                 alert=True
             )
 
