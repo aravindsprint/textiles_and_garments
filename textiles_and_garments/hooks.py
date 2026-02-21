@@ -168,10 +168,10 @@ doc_events = {
         "on_submit": "textiles_and_garments.create_work_orders.on_submit"
     },
     "Work Order": {
-        "on_submit": [
-        "textiles_and_garments.create_material_transfer_copy.on_submit",
-        "textiles_and_garments.create_material_transfer_copy.create_material_transfer_copy"
-        ]
+        # "on_submit": [
+        # "textiles_and_garments.create_material_transfer_copy.on_submit",
+        # "textiles_and_garments.create_material_transfer_copy.create_material_transfer_copy"
+        # ]
     }
     # "Purchase Receipt": {
     #     "on_submit": "textiles_and_garments.purchase_receipt.update_awaiting_grn_on_submit",
