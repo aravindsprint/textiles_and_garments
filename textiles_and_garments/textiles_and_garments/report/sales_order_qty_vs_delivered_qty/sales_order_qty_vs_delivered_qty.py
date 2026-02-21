@@ -469,13 +469,13 @@ def get_columns(filters):
             "label": _("Commercial Name"),
             "fieldname": "commercial_name",
             "fieldtype": "Data",
-            "width": 100,
+            "width": 150,
         },
         {
             "label": _("Color"),
             "fieldname": "color",
             "fieldtype": "Data",
-            "width": 200,
+            "width": 150,
         },
         {
             "label": _("Width"),
@@ -502,16 +502,28 @@ def get_columns(filters):
             "width": 90,
         },
         {
+            "label": _("Rate"),
+            "fieldname": "rate",
+            "fieldtype": "Currency",
+            "width": 100,
+        },
+        {
             "label": _("Amount"),
             "fieldname": "amount",
-            "fieldtype": "Float",
-            "width": 90,
+            "fieldtype": "Currency",
+            "width": 110,
+        },
+        {
+            "label": _("Pending Amount"),
+            "fieldname": "pending_amount",
+            "fieldtype": "Currency",
+            "width": 120,
         },
         {
             "label": _("Item Status"),
             "fieldname": "custom_item_status",
             "fieldtype": "Data",
-            "width": 70,
+            "width": 130,
         },
         {
             "label": _("UOM"),
@@ -523,19 +535,19 @@ def get_columns(filters):
             "label": _("Customer"),
             "fieldname": "customer",
             "fieldtype": "Data",
-            "width": 100,
+            "width": 150,
         },
         {
             "label": _("Sales Person"),
             "fieldname": "sales_person",
             "fieldtype": "Data",
-            "width": 100,
+            "width": 120,
         },
         {
-            "label": _("Delivery status"),
+            "label": _("Delivery Status"),
             "fieldname": "delivery_status",
             "fieldtype": "Data",
-            "width": 70,
+            "width": 110,
         }
     ]
 
@@ -554,7 +566,9 @@ def get_sales_order_data(filters):
             soi.qty AS qty,
             COALESCE(soi.delivered_qty, 0) AS delivered_qty,
             (soi.qty - COALESCE(soi.delivered_qty, 0)) AS pending_qty,
+            soi.rate AS rate,
             soi.amount AS amount,
+            (soi.qty - COALESCE(soi.delivered_qty, 0)) * soi.rate AS pending_amount,
             soi.stock_uom AS stock_uom,
             soi.delivery_date AS delivery_date,
             soi.commercial_name AS commercial_name,
@@ -573,7 +587,7 @@ def get_sales_order_data(filters):
             `tabSales Order` AS so
         ON 
             so.name = soi.parent
-        LEFT JOIN `tabSales Team` st on st.parent = so.customer     
+        LEFT JOIN `tabSales Team` st ON st.parent = so.customer     
         WHERE 
             so.docstatus = 1 
     """
@@ -593,11 +607,9 @@ def get_sales_order_data(filters):
         conditions.append("soi.color = %s")
         params.append(filters.get("color"))
 
-    # Handle multiple selection for custom_item_status
     if filters.get("custom_item_status"):
         custom_item_status = filters.get("custom_item_status")
         
-        # Check if it's a string with comma-separated values
         if isinstance(custom_item_status, str) and ',' in custom_item_status:
             custom_item_status_list = [status.strip() for status in custom_item_status.split(',') if status.strip()]
             if custom_item_status_list:
@@ -629,3 +641,4 @@ def get_sales_order_data(filters):
 
     return frappe.db.sql(query, tuple(params), as_dict=1)
 
+    
