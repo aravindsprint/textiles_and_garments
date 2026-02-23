@@ -125,7 +125,7 @@ class RollWisePickList(Document):
 #     if filters.get("item_codes"):
 #         query = query.where(table.item_code.isin(filters.item_codes))
 
-#     # ✅ Apply warehouse filter if present
+#     # Apply warehouse filter if present
 #     if filters.get("warehouse"):
 #         query = query.where(ch_table.warehouse == filters.warehouse)
 
@@ -286,6 +286,13 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
     return batchwise_data    
 
 
+@frappe.whitelist()
+def get_sales_invoice_items(sales_invoice):
+    return frappe.get_all("Sales Invoice Item",
+        filters={"parent": sales_invoice},
+        fields=["item_code", "item_name", "qty", "rate", "amount", "warehouse"]
+    )
+
 # @frappe.whitelist()
 # def get_filtered_rolls(warehouse, parent_warehouse):
 #     print("\n\nwarehouse\n\n", warehouse)
@@ -297,6 +304,7 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
 #         "warehouse": warehouse,
 #         "parent_warehouse": parent_warehouse
 #     })
+
 
 #     batchwise_data = get_batchwise_data_from_stock_ledger(filters)
 #     batchwise_data = get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters)
