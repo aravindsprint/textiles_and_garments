@@ -1,5 +1,7 @@
 # Copyright (c) 2025, Aravind and contributors
 # For license information, please see license.txt
+# Copyright (c) 2025, Aravind and contributors
+# For license information, please see license.txt
 import frappe
 from frappe.model.document import Document
 from frappe.query_builder.functions import Sum
@@ -14,224 +16,298 @@ class HangTagRequest(Document):
     def on_submit(self):
         self.upload_certificate_to_r2()
 
-    def get_image_as_base64(self, src):
-        """Convert image src to base64 data URI."""
+    def get_image_as_base64(self, src, flatten_bg=None):
+        """Convert image src to base64 data URI.
+        flatten_bg: tuple (R,G,B) to use as background when flattening transparency.
+                    Use (0,169,143) for green background, (255,255,255) for white.
+                    None = keep transparency as-is.
+        """
         site_path = frappe.get_site_path()
+        image_data = None
 
+        # Try local file first
         files_match = re.search(r'(/files/.+)$', src)
         if files_match:
             relative_path = files_match.group(1)
             file_path = os.path.join(site_path, "public", relative_path.lstrip("/"))
             if os.path.exists(file_path):
                 with open(file_path, "rb") as f:
-                    file_data = f.read()
-                ext = os.path.splitext(file_path)[1].lower()
-                mime_map = {
-                    ".png": "image/png",
-                    ".jpg": "image/jpeg",
-                    ".jpeg": "image/jpeg",
-                    ".gif": "image/gif",
-                    ".svg": "image/svg+xml",
-                    ".webp": "image/webp",
-                }
-                mime_type = mime_map.get(ext, "image/png")
-                b64 = base64.b64encode(file_data).decode("utf-8")
-                return f"data:{mime_type};base64,{b64}"
+                    image_data = f.read()
 
-        if src.startswith("http"):
+        # Fallback: download via HTTP
+        if not image_data and src.startswith("http"):
             try:
                 import requests
                 response = requests.get(src, timeout=10, verify=False)
                 if response.status_code == 200:
-                    content_type = response.headers.get("content-type", "image/png")
-                    b64 = base64.b64encode(response.content).decode("utf-8")
-                    return f"data:{content_type};base64,{b64}"
+                    image_data = response.content
             except Exception:
                 pass
 
-        return src
+        if not image_data:
+            return src
+
+        try:
+            from PIL import Image
+            import io as pil_io
+
+            img = Image.open(pil_io.BytesIO(image_data))
+
+            # Flatten transparency onto specified background color
+            if flatten_bg and img.mode in ('RGBA', 'LA', 'PA'):
+                background = Image.new('RGB', img.size, flatten_bg)
+                background.paste(img, mask=img.split()[-1])
+                img = background
+            elif img.mode == 'RGBA':
+                # Default: flatten onto white
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                background.paste(img, mask=img.split()[-1])
+                img = background
+
+            # Convert CMYK or other modes to RGB
+            if img.mode not in ('RGB', 'L'):
+                img = img.convert('RGB')
+
+            # Save as high-quality PNG
+            buffer = pil_io.BytesIO()
+            img.save(buffer, format="PNG", optimize=False)
+            buffer.seek(0)
+            b64 = base64.b64encode(buffer.read()).decode("utf-8")
+            return f"data:image/png;base64,{b64}"
+
+        except ImportError:
+            b64 = base64.b64encode(image_data).decode("utf-8")
+            ext = os.path.splitext(src)[1].lower()
+            mime_map = {
+                ".png": "image/png",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+            }
+            mime_type = mime_map.get(ext, "image/png")
+            return f"data:{mime_type};base64,{b64}"
 
     def generate_certificate_html(self):
         """Generate certificate HTML directly without Frappe's print wrapper."""
 
-        logo_b64 = self.get_image_as_base64("https://erp.pranera.in/files/1508232.png")
-        seal_b64 = self.get_image_as_base64("https://erp.pranera.in/files/20b6a52.png")
+        
+
+        seal_b63 = self.get_image_as_base64(
+            "https://erp.pranera.in/files/1508232.png",
+            flatten_bg=(0, 169, 143)  # Match #00A98F green
+        )
+
+        # Seal image - flatten onto green so it blends perfectly
+        seal_b64 = self.get_image_as_base64(
+            "https://erp.pranera.in/files/20b6a52.png",
+            flatten_bg=(0, 169, 143)  # Match #00A98F green
+        )
 
         brand_name = getattr(self, 'brand_name', None) or self.customer
         year = str(self.validity_of_the_year)[:4]
         cert_number = self.name
 
         html = f"""<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
-  @page {{
-    size: A4 portrait;
-    margin: 0;
-  }}
+            <html>
+            <head>
+            <meta charset="UTF-8">
+            <style>
+            @page {{
+              size: A4 portrait;
+              margin: 0;
+            }}
 
-  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 
-  html, body {{
-    width: 210mm;
-    height: 297mm;
-    margin: 0;
-    padding: 0;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: #fff;
-  }}
+            html, body {{
+              width: 210mm;
+              height: 270mm;
+              margin: 0;
+              padding: 0;
+              font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+              background: #fff;
+            }}
 
-  .page {{
-    width: 210mm;
-    height: 270mm;
-    padding: 8mm;
-    background: #fff;
-  }}
+            .page {{
+              width: 210mm;
+              height: 270mm;
+              padding: 8mm;
+              background: #fff;
+            }}
 
-  .certificate {{
-    width: 100%;
-    height: 100%;
-    background-color: #00A98F;
-    border-radius: 6px;
-    position: relative;
-    text-align: center;
-    padding: 28px 40px 28px;
-  }}
+            .certificate {{
+              width: 100%;
+              height: 100%;
+              background-color: #00A98F;
+              border-radius: 6px;
+              position: relative;
+              text-align: center;
+              padding: 0 40px 28px;
+              overflow: hidden;
+            }}
 
-  .corner {{
-    position: absolute;
-    width: 36px;
-    height: 36px;
-    border: 3px solid rgba(255,255,255,0.5);
-  }}
-  .corner-tl {{ top: 10px; left: 10px; border-right: none; border-bottom: none; border-radius: 5px 0 0 0; }}
-  .corner-tr {{ top: 10px; right: 10px; border-left: none; border-bottom: none; border-radius: 0 5px 0 0; }}
-  .corner-bl {{ bottom: 10px; left: 10px; border-right: none; border-top: none; border-radius: 0 0 0 5px; }}
-  .corner-br {{ bottom: 10px; right: 10px; border-left: none; border-top: none; border-radius: 0 0 5px 0; }}
 
-  .logo {{
-    display: block;
-    width: 260px;
-    margin: 10px auto 8px;
-  }}
+            .content {{
+              position: relative;
+              z-index: 1;
+              padding-top: 20px;
+            }}
 
-  .seal {{
-    display: block;
-    width: 180px;
-    margin: 0 auto 12px;
-  }}
+            .corner {{
+              position: absolute;
+              width: 36px;
+              height: 36px;
+              border: 3px solid rgba(255,255,255,0.5);
+              z-index: 2;
+            }}
+            .corner-tl {{ top: 10px; left: 10px; border-right: none; border-bottom: none; border-radius: 5px 0 0 0; }}
+            .corner-tr {{ top: 10px; right: 10px; border-left: none; border-bottom: none; border-radius: 0 5px 0 0; }}
+            .corner-bl {{ bottom: 10px; left: 10px; border-right: none; border-top: none; border-radius: 0 0 0 5px; }}
+            .corner-br {{ bottom: 10px; right: 10px; border-left: none; border-top: none; border-radius: 0 0 5px 0; }}
 
-  .tagline {{
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    color: #fff;
-    text-transform: uppercase;
-    text-align: center;
-    margin: 0 auto 18px;
-    border-top: 1px solid rgba(255,255,255,0.4);
-    border-bottom: 1px solid rgba(255,255,255,0.4);
-    padding: 8px 0;
-    width: 80%;
-  }}
+            .flextra-text {{
+              font-size: 36px;
+              font-weight: 800;
+              color: #fff;
+              letter-spacing: 8px;
+              text-transform: uppercase;
+              margin-bottom: 2px;
+              font-style: italic;
+            }}
 
-  .body-text {{
-    font-size: 13px;
-    color: #fff;
-    text-align: center;
-    line-height: 1.7;
-    margin-bottom: 18px;
-  }}
+            .flextra-sub {{
+              font-size: 8px;
+              font-weight: 600;
+              color: #fff;
+              letter-spacing: 4px;
+              text-transform: uppercase;
+              margin-bottom: 14px;
+            }}
 
-  .brand-name {{
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    border-bottom: 2px solid #fff;
-    padding-bottom: 1px;
-  }}
+            .seal {{
+              display: block;
+              width: 180px;
+              margin: 0 auto 12px;
+            }}
 
-  .section-title {{
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: #fff;
-    text-transform: uppercase;
-    text-align: center;
-    margin-bottom: 8px;
-  }}
+            .tagline {{
+              font-size: 10px;
+              font-weight: 700;
+              color: #fff;
+              text-transform: uppercase;
+              text-align: center;
+              margin: 0 auto 16px;
+              border-top: 1px solid rgba(255,255,255,0.4);
+              border-bottom: 1px solid rgba(255,255,255,0.4);
+              padding: 8px 0;
+              width: 80%;
+            }}
 
-  .auth-text {{
-    font-size: 13px;
-    color: #fff;
-    text-align: center;
-    line-height: 1.7;
-    margin-bottom: 22px;
-  }}
+            .body-text {{
+              font-size: 13px;
+              color: #fff;
+              text-align: center;
+              line-height: 1.7;
+              margin-bottom: 16px;
+            }}
 
-  .validity-label {{
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: #fff;
-    text-transform: uppercase;
-    text-align: center;
-    margin-bottom: 2px;
-  }}
+            .brand-name {{
+              font-weight: 700;
+              text-transform: uppercase;
+              border-bottom: 2px solid #fff;
+              padding-bottom: 1px;
+            }}
 
-  .validity-year {{
-    font-size: 48px;
-    font-weight: 800;
-    color: #fff;
-    text-align: center;
-    line-height: 1;
-    margin-bottom: 10px;
-  }}
+            .section-title {{
+              font-size: 10px;
+              font-weight: 700;
+              color: #fff;
+              text-transform: uppercase;
+              text-align: center;
+              margin-bottom: 8px;
+            }}
 
-  .cert-number {{
-    font-size: 11px;
-    color: rgba(255,255,255,0.85);
-    letter-spacing: 1px;
-    text-align: center;
-    font-style: italic;
-  }}
-</style>
-</head>
-<body>
-  <div class="page">
-    <div class="certificate">
-      <div class="corner corner-tl"></div>
-      <div class="corner corner-tr"></div>
-      <div class="corner corner-bl"></div>
-      <div class="corner corner-br"></div>
+            .auth-text {{
+              font-size: 13px;
+              color: #fff;
+              text-align: center;
+              line-height: 1.7;
+              margin-bottom: 20px;
+            }}
 
-      <img class="logo" src="{logo_b64}" alt="Flextra Logo">
-      <img class="seal" src="{seal_b64}" alt="Certificate of Authenticity">
+            .validity-label {{
+              font-size: 10px;
+              font-weight: 700;
+              color: #fff;
+              text-transform: uppercase;
+              text-align: center;
+              margin-bottom: 2px;
+            }}
 
-      <div class="tagline">Trusted Fabrics for Institutional Excellence</div>
+            .validity-year {{
+              font-size: 48px;
+              font-weight: 800;
+              color: #fff;
+              text-align: center;
+              line-height: 1;
+              margin-bottom: 8px;
+            }}
 
-      <div class="body-text">
-        This is to certify that garments manufactured under the<br>
-        brand <span class="brand-name">{brand_name}</span> use authentic Flextra fabric.<br><br>
-        The fabric is produced, tested, and supplied by Flextra and<br>
-        meets our established quality standards.
-      </div>
+            .cert-number {{
+              font-size: 11px;
+              color: rgba(255,255,255,0.85);
+              text-align: center;
+              font-style: italic;
+            }}
+            </style>
+            </head>
+            <body>
+            <div class="page">
+              <div class="certificate">
+                <div class="corner corner-tl"></div>
+                <div class="corner corner-tr"></div>
+                <div class="corner corner-bl"></div>
+                <div class="corner corner-br"></div>
 
-      <div class="section-title">Authenticity &amp; Traceability</div>
-      <div class="auth-text">
-        All Flextra fabrics supplied to <strong>{brand_name}</strong>
-        are genuine and fully traceable.
-      </div>
+                <!-- Background image at top (faded) -->
+                
 
-      <div class="validity-label">This Certificate is Valid for the Year</div>
-      <div class="validity-year">{year}</div>
+                <!-- All content -->
+                <div class="content">
+                  <!-- Flextra Logo as text (always crisp) -->
+                  <div class="flextra-text">&nbsp;</div>
+                  <div class="flextra-sub"></div>
 
-      <div class="cert-number">{cert_number}</div>
-    </div>
-  </div>
-</body>
-</html>"""
+                  
+
+                  <img class="seal" src="{seal_b63}" alt="Certificate of Authenticity">
+                  <br><br>
+                  <!-- Certificate of Authenticity Seal -->
+                  <img class="seal" src="{seal_b64}" alt="Certificate of Authenticity">
+
+                  <div class="tagline">Trusted Fabrics for Institutional Excellence</div>
+
+                  <div class="body-text"><br><br>
+                    This is to certify that garments manufactured under the<br>
+                    brand <span class="brand-name">{brand_name}</span> use authentic Flextra fabric.<br><br>
+                    The fabric is produced, tested, and supplied by Flextra and<br>
+                    meets our established quality standards.
+                  </div>
+                  <br><br>
+                  <div class="section-title">Authenticity &amp; Traceability</div>
+                  <div class="auth-text">
+                    All Flextra fabrics supplied to <strong>{brand_name}</strong>
+                    are genuine and fully traceable.
+                  </div>
+                  <br><br>
+                  <div class="validity-label">This Certificate is Valid for the Year</div>
+                  <div class="validity-year">{year}</div>
+
+                  <div class="cert-number">{cert_number}</div>
+                </div>
+              </div>
+            </div>
+            </body>
+            </html>"""
 
         return html
 
@@ -256,6 +332,9 @@ class HangTagRequest(Document):
                 "no-outline": None,
                 "print-media-type": None,
                 "disable-smart-shrinking": None,
+                "image-quality": "100",
+                "image-dpi": "600",
+                "dpi": "600",
             }
             pdf_content = get_pdf(html, options=pdf_options)
 
