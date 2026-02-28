@@ -796,3 +796,8 @@ def get_conversations(limit=100, offset=0):
         "offset": offset,
         "has_more": (offset + limit) < total
     }
+
+@frappe.whitelist()
+def get_session_id():
+    """Return current user's session id for socket authentication."""
+    return frappe.session.sid    
