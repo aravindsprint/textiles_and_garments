@@ -743,7 +743,15 @@ def get_conversations(limit=100, offset=0):
             w1.status,
             w1.`to`,
             w1.`from`,
-            w1.profile_name,
+            COALESCE(
+                (SELECT profile_name FROM `tabWhatsApp Message` 
+                 WHERE reference_name = w1.reference_name 
+                 AND profile_name IS NOT NULL 
+                 AND profile_name != ''
+                 ORDER BY creation ASC
+                 LIMIT 1),
+                w1.profile_name
+            ) as profile_name,
             w1.message,
             w1.message_type,
             w1.content_type,
@@ -775,7 +783,6 @@ def get_conversations(limit=100, offset=0):
         LIMIT %(limit)s OFFSET %(offset)s
     """, {"limit": limit, "offset": offset}, as_dict=True)
     
-    # Get total count
     total = frappe.db.sql("""
         SELECT COUNT(DISTINCT reference_name) as total
         FROM `tabWhatsApp Message`
