@@ -2,7 +2,7 @@ import frappe
 
 
 def on_whatsapp_message_insert(doc, method):
-    """Triggered after any WhatsApp Message is inserted — publish realtime event."""
+    """Triggered after any WhatsApp Message is inserted."""
     frappe.publish_realtime(
         "whatsapp_new_message",
         {
@@ -22,7 +22,9 @@ def on_whatsapp_message_insert(doc, method):
             "template_parameters": doc.template_parameters or "",
             "creation": str(doc.creation),
             "modified": str(doc.modified),
-        }
+        },
+        user="all",          # broadcast to ALL logged-in users
+        after_commit=False,  # fire immediately, don't wait for DB commit
     )
 
 
@@ -34,5 +36,7 @@ def on_whatsapp_message_update(doc, method):
             "name": doc.name,
             "status": doc.status or "",
             "reference_name": doc.reference_name or "",
-        }
+        },
+        user="all",
+        after_commit=False,
     )
