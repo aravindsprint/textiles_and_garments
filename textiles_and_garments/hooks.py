@@ -172,6 +172,10 @@ doc_events = {
         # "textiles_and_garments.create_material_transfer_copy.on_submit",
         # "textiles_and_garments.create_material_transfer_copy.create_material_transfer_copy"
         # ]
+    },
+    "WhatsApp Message": {
+        "after_insert": "textiles_and_garments.utils.webhook.on_whatsapp_message_insert",
+        "on_update": "textiles_and_garments.utils.webhook.on_whatsapp_message_update",
     }
     # "Purchase Receipt": {
     #     "on_submit": "textiles_and_garments.purchase_receipt.update_awaiting_grn_on_submit",
