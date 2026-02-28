@@ -732,7 +732,7 @@ def get_available_batches(warehouse=None, item_code=None, project=None):
 
 @frappe.whitelist()
 def get_conversations():
-    """Get latest message per unique contact for conversation list"""
+    """Get latest message per unique contact for the conversation list"""
     messages = frappe.db.sql("""
         SELECT 
             w1.name,
