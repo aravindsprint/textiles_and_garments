@@ -731,8 +731,11 @@ def get_available_batches(warehouse=None, item_code=None, project=None):
 
 
 @frappe.whitelist()
-def get_conversations():
-    """Get latest message per unique contact for the conversation list"""
+def get_conversations(limit=100, offset=0):
+    """Get latest message per unique contact for conversation list with pagination"""
+    limit = int(limit)
+    offset = int(offset)
+    
     messages = frappe.db.sql("""
         SELECT 
             w1.name,
@@ -769,8 +772,20 @@ def get_conversations():
         ON w1.reference_name = latest.reference_name 
         AND w1.modified = latest.max_modified
         ORDER BY w1.modified DESC
-    """, as_dict=True)
+        LIMIT %(limit)s OFFSET %(offset)s
+    """, {"limit": limit, "offset": offset}, as_dict=True)
     
-    return messages
-
-        
+    # Get total count
+    total = frappe.db.sql("""
+        SELECT COUNT(DISTINCT reference_name) as total
+        FROM `tabWhatsApp Message`
+        WHERE reference_name IS NOT NULL AND reference_name != ''
+    """, as_dict=True)[0].total
+    
+    return {
+        "data": messages,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "has_more": (offset + limit) < total
+    }
