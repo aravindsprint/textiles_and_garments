@@ -1,118 +1,166 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2025, Your Company and contributors
 # For license information, please see license.txt
 
 import frappe
 from frappe import _
-from frappe.utils import flt, today, nowdate
+from frappe.utils import flt, today, nowdate, cint
 import json
+
+# ==================== SECURITY HELPER FUNCTIONS ====================
+
+def check_role_permission(roles):
+    """Check if user has any of the required roles"""
+    user_roles = frappe.get_roles(frappe.session.user)
+    return any(role in user_roles for role in roles)
+
+def can_access_pick_orders():
+    """Check if user can access pick order APIs"""
+    allowed_roles = [
+        'System Manager',
+        'Stock Manager', 
+        'Stock User',
+        'Manufacturing Manager',
+        'Manufacturing User'
+    ]
+    return check_role_permission(allowed_roles)
+
+def filter_pick_orders_by_user(filters):
+    """Apply user-based filtering for pick orders"""
+    user = frappe.session.user
+    
+    # System Manager and Stock Manager can see all
+    if check_role_permission(['System Manager', 'Stock Manager', 'Manufacturing Manager']):
+        return filters
+    
+    # Stock User - filter by warehouse permissions or assigned_to
+    if 'Stock User' in frappe.get_roles(user):
+        # Get user's warehouse permissions
+        user_warehouses = frappe.get_all(
+            'User Permission',
+            filters={
+                'user': user,
+                'allow': 'Warehouse'
+            },
+            pluck='for_value'
+        )
+        
+        if user_warehouses:
+            # User can see pick orders for their warehouses or assigned to them
+            filters['source_warehouse'] = ['in', user_warehouses]
+        else:
+            # If no warehouse permissions, only see assigned pick orders
+            filters['assigned_to'] = user
+    
+    return filters
 
 # ==================== PICK ORDER LIST & DETAILS ====================
 
 @frappe.whitelist()
 def get_pick_orders(status=None, assigned_to=None):
     """
-    Get pick orders for mobile app
+    Get pick orders for mobile app with security filtering
     
     Args:
-        status: Filter by status (Pending, In Progress, Completed, etc.)
-        assigned_to: Filter by assigned user
-    
+        status: Optional status filter (Pending, In Progress, Completed)
+        assigned_to: Optional user filter
+        
     Returns:
-        dict: Success status and list of pick orders
+        dict: {success: bool, data: list, count: int}
     """
     try:
+        # Security check
+        if not can_access_pick_orders():
+            frappe.throw(_("You don't have permission to access Pick Orders"), frappe.PermissionError)
+        
+        # Base filters
         filters = {
-            "docstatus": 1
+            'docstatus': 1  # Only submitted documents
         }
         
-        # Add status filter
-        if status and status != "all":
-            filters["status"] = status
-        else:
-            # Default: show only Pending and In Progress
-            filters["status"] = ["in", ["Pending", "In Progress"]]
-        
-        # Add assigned_to filter
+        # Apply optional filters
+        if status:
+            filters['status'] = status
         if assigned_to:
-            filters["assigned_to"] = assigned_to
+            filters['assigned_to'] = assigned_to
         
-        # Get pick orders
+        # Apply user-based filtering
+        filters = filter_pick_orders_by_user(filters)
+        
+        # Fetch pick orders
         pick_orders = frappe.get_all(
-            "Roll Wise Pick Order",
+            'Roll Wise Pick Order',
             filters=filters,
             fields=[
-                "name", "posting_date", "status", "pick_type", 
-                "document_type", "document_name", "project", 
-                "source_warehouse", "target_warehouse", "batch", 
-                "total_qty", "total_rolls", "assigned_to",
-                "company", "remarks", "creation", "modified"
+                'name', 'posting_date', 'pick_type', 'document_name',
+                'project', 'status', 'source_warehouse', 'target_warehouse',
+                'batch', 'total_qty', 'total_rolls', 'assigned_to', 'creation'
             ],
-            order_by="posting_date desc, modified desc",
+            order_by='creation desc',
             limit=100
         )
         
         return {
             "success": True,
-            "message": pick_orders,
+            "data": pick_orders,
             "count": len(pick_orders)
         }
-        
+    
+    except frappe.PermissionError:
+        raise
     except Exception as e:
-        frappe.log_error(f"Error in get_pick_orders: {str(e)}", "API Error")
+        frappe.log_error(f"Error fetching pick orders: {str(e)}", "API Error")
         return {
             "success": False,
-            "message": str(e)
+            "message": str(e),
+            "data": [],
+            "count": 0
         }
-
 
 @frappe.whitelist()
 def get_pick_order_details(pick_order_name):
     """
-    Get complete pick order details including required items and picked rolls
+    Get detailed pick order information for mobile app
     
     Args:
-        pick_order_name: Name of the Roll Wise Pick Order document
-    
+        pick_order_name: Name of the pick order document
+        
     Returns:
-        dict: Complete pick order data
+        dict: {success: bool, data: dict}
     """
     try:
+        # Get document with permission check
         doc = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
         
-        # Check permissions
+        # Check read permission
         if not doc.has_permission("read"):
-            frappe.throw(_("You don't have permission to view this pick order"))
+            frappe.throw(_("You don't have permission to view this Pick Order"), frappe.PermissionError)
         
         return {
             "success": True,
             "data": {
                 "name": doc.name,
                 "posting_date": doc.posting_date,
-                "status": doc.status,
                 "pick_type": doc.pick_type,
                 "document_type": doc.document_type,
                 "document_name": doc.document_name,
                 "project": doc.project,
+                "production_item": doc.production_item if hasattr(doc, 'production_item') else None,
                 "source_warehouse": doc.source_warehouse,
                 "target_warehouse": doc.target_warehouse,
                 "batch": doc.batch,
+                "status": doc.status,
                 "total_qty": doc.total_qty,
                 "total_rolls": doc.total_rolls,
                 "assigned_to": doc.assigned_to,
-                "company": doc.company,
-                "remarks": doc.remarks,
-                "from_work_order": doc.from_work_order,
-                "from_subcontracting_order": doc.from_subcontracting_order,
                 "required_items": [
                     {
                         "item_code": item.item_code,
                         "item_name": item.item_name,
                         "stock_uom": item.stock_uom,
-                        "required_qty": flt(item.required_qty, 2),
-                        "transferred_qty": flt(item.transferred_qty or 0, 2),
-                        "supplied_qty": flt(item.supplied_qty or 0, 2),
-                        "picked_qty": flt(item.picked_qty or 0, 2),
-                        "remaining_qty": flt(item.remaining_qty or 0, 2)
+                        "required_qty": item.required_qty,
+                        "picked_qty": item.picked_qty,
+                        "remaining_qty": item.remaining_qty
                     }
                     for item in doc.required_items
                 ],
@@ -122,7 +170,7 @@ def get_pick_order_details(pick_order_name):
                         "item_code": roll.item_code,
                         "warehouse": roll.warehouse,
                         "batch": roll.batch,
-                        "qty": flt(roll.qty, 2),
+                        "qty": roll.qty,
                         "uom": roll.uom
                     }
                     for roll in doc.roll_wise_pick_item
@@ -132,23 +180,24 @@ def get_pick_order_details(pick_order_name):
                         "batch": batch.batch,
                         "item_code": batch.item_code,
                         "warehouse": batch.warehouse,
-                        "qty": flt(batch.qty, 2),
+                        "qty": batch.qty,
                         "uom": batch.uom
                     }
                     for batch in doc.batch_wise_pick_item
                 ]
             }
         }
-        
+    
+    except frappe.PermissionError:
+        raise
     except Exception as e:
-        frappe.log_error(f"Error in get_pick_order_details: {str(e)}", "API Error")
+        frappe.log_error(f"Error fetching pick order details: {str(e)}", "API Error")
         return {
             "success": False,
             "message": str(e)
         }
 
-
-# ==================== ROLL MANAGEMENT ====================
+# ==================== ROLL OPERATIONS ====================
 
 @frappe.whitelist()
 def get_rolls_by_filters(filters):
@@ -156,53 +205,37 @@ def get_rolls_by_filters(filters):
     Get rolls filtered by warehouse, batch, item, etc.
     
     Args:
-        filters: JSON string or dict with filter conditions
-    
+        filters: JSON string of filters {warehouse, batch, item_code, etc.}
+        
     Returns:
-        dict: List of matching rolls
+        dict: {success: bool, data: list}
     """
     try:
-        # Parse filters if string
+        # Parse filters
         if isinstance(filters, str):
             filters = json.loads(filters)
         
-        # Build query filters
-        roll_filters = {}
-        
-        if filters.get("warehouse"):
-            roll_filters["warehouse"] = filters["warehouse"]
-        
-        if filters.get("batch"):
-            roll_filters["batch"] = filters["batch"]
-        
-        if filters.get("item_code"):
-            roll_filters["item_code"] = filters["item_code"]
-        
-        # Get rolls
+        # Fetch rolls
         rolls = frappe.get_all(
-            "Roll",
-            filters=roll_filters,
-            fields=[
-                "name", "roll_no", "item_code", "warehouse", 
-                "batch", "roll_weight", "stock_uom", "status"
-            ],
-            order_by="creation desc",
-            limit=500
+            'Roll',
+            filters=filters,
+            fields=['name', 'item_code', 'batch', 'roll_weight', 'stock_uom', 'warehouse'],
+            limit=100
         )
         
         return {
             "success": True,
-            "message": rolls,
+            "data": rolls,
             "count": len(rolls)
         }
-        
+    
     except Exception as e:
-        frappe.log_error(f"Error in get_rolls_by_filters: {str(e)}", "API Error")
+        frappe.log_error(f"Error fetching rolls: {str(e)}", "API Error")
         return {
             "success": False,
-            "message": str(e)
+            "message": str(e),
+            "data": []
         }
-
 
 @frappe.whitelist()
 def validate_roll_for_pick_order(pick_order_name, roll_no):
@@ -210,219 +243,229 @@ def validate_roll_for_pick_order(pick_order_name, roll_no):
     Validate if a roll can be added to pick order
     
     Args:
-        pick_order_name: Name of the pick order
+        pick_order_name: Pick order name
         roll_no: Roll number to validate
-    
+        
     Returns:
-        dict: Validation result with roll details
+        dict: {success: bool, message: str, data: dict}
     """
     try:
-        # Get pick order
-        pick_order = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
+        doc = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
         
-        # Get roll details
-        roll = frappe.get_doc("Roll", roll_no)
-        
-        # Validations
-        errors = []
-        
-        # Check warehouse
-        if pick_order.source_warehouse and roll.warehouse != pick_order.source_warehouse:
-            errors.append(f"Roll is in {roll.warehouse}, expected {pick_order.source_warehouse}")
-        
-        # Check batch if specified
-        if pick_order.batch and roll.batch != pick_order.batch:
-            errors.append(f"Roll batch {roll.batch} doesn't match {pick_order.batch}")
+        # Check permission
+        if not doc.has_permission("write"):
+            frappe.throw(_("You don't have permission to modify this Pick Order"), frappe.PermissionError)
         
         # Check if already added
-        for existing_roll in pick_order.roll_wise_pick_item:
-            if existing_roll.roll_no == roll_no:
-                errors.append("Roll already added to this pick order")
-                break
+        for roll in doc.roll_wise_pick_item:
+            if roll.roll_no == roll_no:
+                return {
+                    "success": False,
+                    "message": "Roll already added to this pick order"
+                }
         
-        # Check roll status
-        if hasattr(roll, 'status') and roll.status not in ['Active', 'Available', '']:
-            errors.append(f"Roll status is {roll.status}")
+        # Fetch roll details
+        roll_doc = frappe.get_doc("Roll", roll_no)
         
-        if errors:
+        # Validate warehouse
+        if doc.source_warehouse and roll_doc.warehouse != doc.source_warehouse:
             return {
                 "success": False,
-                "message": "\n".join(errors),
-                "roll_data": None
+                "message": f"Roll is in {roll_doc.warehouse}, expected {doc.source_warehouse}"
+            }
+        
+        # Validate batch if specified
+        if doc.batch and roll_doc.batch != doc.batch:
+            return {
+                "success": False,
+                "message": f"Roll batch {roll_doc.batch} doesn't match selected batch {doc.batch}"
             }
         
         return {
             "success": True,
-            "message": "Roll is valid",
-            "roll_data": {
-                "roll_no": roll.name,
-                "item_code": roll.item_code,
-                "warehouse": roll.warehouse,
-                "batch": roll.batch,
-                "qty": roll.roll_weight,
-                "uom": roll.stock_uom
+            "message": "Roll can be added",
+            "data": {
+                "roll_no": roll_doc.name,
+                "item_code": roll_doc.item_code,
+                "batch": roll_doc.batch,
+                "qty": roll_doc.roll_weight,
+                "uom": roll_doc.stock_uom
             }
         }
-        
+    
+    except frappe.PermissionError:
+        raise
     except Exception as e:
-        frappe.log_error(f"Error in validate_roll_for_pick_order: {str(e)}", "API Error")
+        frappe.log_error(f"Error validating roll: {str(e)}", "API Error")
         return {
             "success": False,
-            "message": str(e),
-            "roll_data": None
+            "message": str(e)
         }
-
 
 @frappe.whitelist()
 def add_roll_to_pick_order(pick_order_name, roll_no):
     """
-    Add a roll to pick order after validation
+    Add roll to pick order from mobile app (barcode scanning)
     
     Args:
-        pick_order_name: Name of the pick order
+        pick_order_name: Pick order name
         roll_no: Roll number to add
-    
+        
     Returns:
-        dict: Success status and updated pick order data
+        dict: {success: bool, message: str, data: dict}
     """
     try:
-        # Validate roll first
-        validation = validate_roll_for_pick_order(pick_order_name, roll_no)
-        
-        if not validation["success"]:
-            return validation
-        
-        # Get pick order
         doc = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
         
+        # Check permission
+        if not doc.has_permission("write"):
+            frappe.throw(_("You don't have permission to modify this Pick Order"), frappe.PermissionError)
+        
+        # Check if already added
+        for roll in doc.roll_wise_pick_item:
+            if roll.roll_no == roll_no:
+                return {
+                    "success": False,
+                    "message": "Roll already added to this pick order"
+                }
+        
+        # Fetch roll details
+        roll_doc = frappe.get_doc("Roll", roll_no)
+        
+        # Validate warehouse
+        if doc.source_warehouse and roll_doc.warehouse != doc.source_warehouse:
+            return {
+                "success": False,
+                "message": f"Roll is in {roll_doc.warehouse}, expected {doc.source_warehouse}"
+            }
+        
+        # Validate batch if specified
+        if doc.batch and roll_doc.batch != doc.batch:
+            return {
+                "success": False,
+                "message": f"Roll batch {roll_doc.batch} doesn't match selected batch {doc.batch}"
+            }
+        
         # Add roll
-        roll_data = validation["roll_data"]
         doc.append("roll_wise_pick_item", {
-            "roll_no": roll_data["roll_no"],
-            "item_code": roll_data["item_code"],
-            "warehouse": roll_data["warehouse"],
-            "batch": roll_data["batch"],
-            "qty": roll_data["qty"],
-            "uom": roll_data["uom"]
+            "roll_no": roll_doc.name,
+            "item_code": roll_doc.item_code,
+            "warehouse": roll_doc.warehouse,
+            "batch": roll_doc.batch,
+            "qty": roll_doc.roll_weight,
+            "uom": roll_doc.stock_uom
         })
         
         doc.save()
         
         return {
             "success": True,
-            "message": f"Roll {roll_no} added successfully",
+            "message": "Roll added successfully",
             "data": {
-                "total_qty": doc.total_qty,
-                "total_rolls": doc.total_rolls
+                "roll_no": roll_doc.name,
+                "item_code": roll_doc.item_code,
+                "qty": roll_doc.roll_weight
             }
         }
-        
+    
+    except frappe.PermissionError:
+        raise
     except Exception as e:
-        frappe.log_error(f"Error in add_roll_to_pick_order: {str(e)}", "API Error")
+        frappe.log_error(f"Error adding roll: {str(e)}", "API Error")
         return {
             "success": False,
             "message": str(e)
         }
 
-
 @frappe.whitelist()
 def update_pick_order_rolls(pick_order_name, rolls):
     """
-    Update all rolls in pick order (replace existing)
+    Update all rolls in pick order (bulk update from mobile)
     
     Args:
-        pick_order_name: Name of the pick order
-        rolls: JSON string or list of roll data
-    
+        pick_order_name: Pick order name
+        rolls: JSON string array of roll data
+        
     Returns:
-        dict: Success status
+        dict: {success: bool, message: str}
     """
     try:
-        # Parse rolls if string
+        doc = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
+        
+        # Check permission
+        if not doc.has_permission("write"):
+            frappe.throw(_("You don't have permission to modify this Pick Order"), frappe.PermissionError)
+        
+        # Parse rolls
         if isinstance(rolls, str):
             rolls = json.loads(rolls)
-        
-        # Get pick order
-        doc = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
         
         # Clear existing rolls
         doc.roll_wise_pick_item = []
         
         # Add new rolls
-        for roll in rolls:
-            doc.append("roll_wise_pick_item", {
-                "roll_no": roll.get("roll_no"),
-                "item_code": roll.get("item_code"),
-                "warehouse": roll.get("warehouse"),
-                "batch": roll.get("batch"),
-                "qty": flt(roll.get("qty")),
-                "uom": roll.get("uom")
-            })
+        for roll_data in rolls:
+            doc.append("roll_wise_pick_item", roll_data)
         
         doc.save()
         
         return {
             "success": True,
-            "message": "Rolls updated successfully",
-            "data": {
-                "total_qty": doc.total_qty,
-                "total_rolls": doc.total_rolls
-            }
+            "message": f"Updated {len(rolls)} rolls"
         }
-        
+    
+    except frappe.PermissionError:
+        raise
     except Exception as e:
-        frappe.log_error(f"Error in update_pick_order_rolls: {str(e)}", "API Error")
+        frappe.log_error(f"Error updating rolls: {str(e)}", "API Error")
         return {
             "success": False,
             "message": str(e)
         }
-
 
 # ==================== STATUS MANAGEMENT ====================
 
 @frappe.whitelist()
 def update_pick_order_status(pick_order_name, status):
     """
-    Update pick order status
+    Update pick order status from mobile app
     
     Args:
-        pick_order_name: Name of the pick order
+        pick_order_name: Pick order name
         status: New status (Pending, In Progress, Completed, Cancelled)
-    
+        
     Returns:
-        dict: Success status
+        dict: {success: bool, message: str}
     """
     try:
+        doc = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
+        
+        # Check permission
+        if not doc.has_permission("write"):
+            frappe.throw(_("You don't have permission to modify this Pick Order"), frappe.PermissionError)
+        
         # Validate status
         valid_statuses = ["Draft", "Pending", "In Progress", "Completed", "Cancelled"]
         if status not in valid_statuses:
-            frappe.throw(f"Invalid status: {status}. Must be one of {', '.join(valid_statuses)}")
+            frappe.throw(f"Invalid status: {status}")
         
-        # Get and update document
-        doc = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
-        
-        # Check permissions
-        if not doc.has_permission("write"):
-            frappe.throw(_("You don't have permission to update this pick order"))
-        
-        old_status = doc.status
-        doc.status = status
-        doc.save()
+        # Use db_set to update submitted document
+        doc.db_set('status', status)
+        frappe.db.commit()
         
         return {
             "success": True,
-            "message": f"Status updated from {old_status} to {status}",
-            "old_status": old_status,
-            "new_status": status
+            "message": f"Status updated to {status}"
         }
-        
+    
+    except frappe.PermissionError:
+        raise
     except Exception as e:
-        frappe.log_error(f"Error in update_pick_order_status: {str(e)}", "API Error")
+        frappe.log_error(f"Error updating status: {str(e)}", "API Error")
         return {
             "success": False,
             "message": str(e)
         }
-
 
 @frappe.whitelist()
 def start_picking(pick_order_name):
@@ -430,119 +473,98 @@ def start_picking(pick_order_name):
     Start picking - update status to In Progress
     
     Args:
-        pick_order_name: Name of the pick order
-    
+        pick_order_name: Pick order name
+        
     Returns:
-        dict: Success status
+        dict: {success: bool, message: str}
     """
     return update_pick_order_status(pick_order_name, "In Progress")
-
 
 # ==================== STOCK ENTRY CREATION ====================
 
 @frappe.whitelist()
 def create_stock_entry_from_pick_order(pick_order_name, submit=False):
     """
-    Create Stock Entry from Pick Order without completing it
+    Create Stock Entry from Pick Order
     
     Args:
-        pick_order_name: Name of the pick order
-        submit: Whether to submit the stock entry (default: False)
-    
+        pick_order_name: Pick order name
+        submit: Boolean to auto-submit the stock entry
+        
     Returns:
-        dict: Success status and stock entry name
+        dict: {success: bool, stock_entry: str, message: str}
     """
     try:
-        # Get pick order
         pick_order = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
         
-        # Validate pick order has items
-        if not pick_order.roll_wise_pick_item and not pick_order.batch_wise_pick_item:
-            return {
-                "success": False,
-                "message": "No rolls or batches selected in pick order"
-            }
+        # Check permission
+        if not pick_order.has_permission("submit"):
+            frappe.throw(_("You don't have permission to create Stock Entry"), frappe.PermissionError)
         
-        # Determine stock entry type based on pick type
-        stock_entry_type = get_stock_entry_type(pick_order.pick_type)
+        # Determine stock entry purpose
+        purpose_map = {
+            "From Work Order": "Manufacture",
+            "To Work Order": "Material Transfer for Manufacture",
+            "From Subcontracting Order": "Material Receipt",
+            "To Subcontracting Order": "Send to Subcontractor",
+            "From Purchase Order": "Material Receipt",
+            "Manual Roll Pick": "Material Transfer",
+            "From Batch": "Material Transfer"
+        }
+        
+        purpose = purpose_map.get(pick_order.pick_type, "Material Transfer")
         
         # Create Stock Entry
         stock_entry = frappe.new_doc("Stock Entry")
-        stock_entry.stock_entry_type = stock_entry_type
+        stock_entry.stock_entry_type = purpose
         stock_entry.posting_date = pick_order.posting_date or today()
-        stock_entry.company = pick_order.company
+        stock_entry.from_warehouse = pick_order.source_warehouse
+        stock_entry.to_warehouse = pick_order.target_warehouse
+        stock_entry.custom_roll_pick_order = pick_order.name
         
-        # Set custom field reference (if it exists)
-        if hasattr(stock_entry, 'custom_roll_pick_order'):
-            stock_entry.custom_roll_pick_order = pick_order.name
-        
-        # Set work order reference if applicable
-        if pick_order.pick_type in ["To Work Order", "From Work Order"] and pick_order.document_name:
-            stock_entry.work_order = pick_order.document_name
-        
-        # Set purchase order reference if applicable
-        if pick_order.pick_type == "From Purchase Order" and pick_order.document_name:
-            stock_entry.purchase_order = pick_order.document_name
-        
-        # Set subcontracting order reference if applicable
-        if pick_order.pick_type in ["To Subcontracting Order", "From Subcontracting Order"]:
-            if hasattr(stock_entry, 'subcontracting_order'):
-                stock_entry.subcontracting_order = pick_order.document_name
-        
-        # Add items from roll_wise_pick_item
+        # Add items from rolls
         for roll in pick_order.roll_wise_pick_item:
             stock_entry.append("items", {
                 "item_code": roll.item_code,
-                "qty": flt(roll.qty),
-                "uom": roll.uom,
-                "s_warehouse": pick_order.source_warehouse,
+                "s_warehouse": roll.warehouse,
                 "t_warehouse": pick_order.target_warehouse,
+                "qty": roll.qty,
+                "uom": roll.uom,
                 "batch_no": roll.batch,
-                "custom_roll_no": roll.roll_no if hasattr(stock_entry.items[0], 'custom_roll_no') else None
+                "custom_roll_no": roll.roll_no
             })
         
-        # Add items from batch_wise_pick_item
+        # Add items from batches
         for batch in pick_order.batch_wise_pick_item:
             stock_entry.append("items", {
                 "item_code": batch.item_code,
-                "qty": flt(batch.qty),
-                "uom": batch.uom,
-                "s_warehouse": pick_order.source_warehouse,
+                "s_warehouse": batch.warehouse,
                 "t_warehouse": pick_order.target_warehouse,
+                "qty": batch.qty,
+                "uom": batch.uom,
                 "batch_no": batch.batch
             })
         
-        # Set from/to warehouse at header level
-        stock_entry.from_warehouse = pick_order.source_warehouse
-        stock_entry.to_warehouse = pick_order.target_warehouse
-        
-        # Add remarks
-        stock_entry.remarks = f"Created from Roll Wise Pick Order: {pick_order.name}"
-        if pick_order.remarks:
-            stock_entry.remarks += f"\n{pick_order.remarks}"
-        
-        # Insert stock entry
         stock_entry.insert()
         
-        # Submit if requested
-        if submit:
+        # Auto-submit if requested
+        if submit and cint(submit):
             stock_entry.submit()
         
         return {
             "success": True,
-            "message": f"Stock Entry {'submitted' if submit else 'created'} successfully",
             "stock_entry": stock_entry.name,
-            "submitted": submit
+            "message": f"Stock Entry {stock_entry.name} created successfully"
         }
-        
+    
+    except frappe.PermissionError:
+        raise
     except Exception as e:
         frappe.log_error(f"Error creating stock entry: {str(e)}", "API Error")
-        frappe.db.rollback()
         return {
             "success": False,
             "message": str(e)
         }
-
 
 @frappe.whitelist()
 def complete_pick_order(pick_order_name, rolls=None):
@@ -550,11 +572,11 @@ def complete_pick_order(pick_order_name, rolls=None):
     Complete pick order by creating and submitting stock entry
     
     Args:
-        pick_order_name: Name of the pick order
-        rolls: Optional - update rolls before completing
-    
+        pick_order_name: Pick order name
+        rolls: Optional JSON string of roll updates
+        
     Returns:
-        dict: Success status and stock entry name
+        dict: {success: bool, stock_entry: str, message: str}
     """
     try:
         # Update rolls if provided
@@ -563,62 +585,23 @@ def complete_pick_order(pick_order_name, rolls=None):
             if not update_result.get("success"):
                 return update_result
         
-        # Get pick order
-        pick_order = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
-        
-        # Validate has items
-        if not pick_order.roll_wise_pick_item and not pick_order.batch_wise_pick_item:
-            return {
-                "success": False,
-                "message": "Cannot complete pick order without any rolls or batches"
-            }
-        
         # Create and submit stock entry
         result = create_stock_entry_from_pick_order(pick_order_name, submit=True)
         
         if result.get("success"):
-            # Update pick order status to Completed
-            pick_order.status = "Completed"
-            pick_order.save()
-            
-            result["message"] = "Pick order completed successfully"
+            # Update status to Completed
+            update_pick_order_status(pick_order_name, "Completed")
         
         return result
-        
+    
     except Exception as e:
         frappe.log_error(f"Error completing pick order: {str(e)}", "API Error")
-        frappe.db.rollback()
         return {
             "success": False,
             "message": str(e)
         }
 
-
 # ==================== UTILITY FUNCTIONS ====================
-
-def get_stock_entry_type(pick_type):
-    """
-    Get appropriate stock entry type based on pick type
-    
-    Args:
-        pick_type: Pick type from Roll Wise Pick Order
-    
-    Returns:
-        str: Stock Entry Type
-    """
-    stock_entry_type_map = {
-        "From Work Order": "Manufacture",
-        "To Work Order": "Material Transfer for Manufacture",
-        "From Purchase Order": "Material Receipt",
-        "To Subcontracting Order": "Send to Subcontractor",
-        "From Subcontracting Order": "Material Receipt",
-        "From Stock Entry": "Material Transfer",
-        "From Batch": "Material Transfer",
-        "Manual Roll Pick": "Material Transfer"
-    }
-    
-    return stock_entry_type_map.get(pick_type, "Material Transfer")
-
 
 @frappe.whitelist()
 def get_pick_order_summary(pick_order_name):
@@ -626,46 +609,41 @@ def get_pick_order_summary(pick_order_name):
     Get summary statistics for a pick order
     
     Args:
-        pick_order_name: Name of the pick order
-    
+        pick_order_name: Pick order name
+        
     Returns:
-        dict: Summary statistics
+        dict: {success: bool, summary: dict}
     """
     try:
         doc = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
         
-        # Calculate statistics
-        total_required = sum([flt(item.required_qty) for item in doc.required_items])
-        total_picked = sum([flt(item.picked_qty) for item in doc.required_items])
-        total_remaining = sum([flt(item.remaining_qty) for item in doc.required_items])
+        # Check permission
+        if not doc.has_permission("read"):
+            frappe.throw(_("You don't have permission to view this Pick Order"), frappe.PermissionError)
         
-        completion_percentage = 0
-        if total_required > 0:
-            completion_percentage = (total_picked / total_required) * 100
+        summary = {
+            "total_rolls": len(doc.roll_wise_pick_item),
+            "total_batches": len(doc.batch_wise_pick_item),
+            "total_qty": doc.total_qty,
+            "required_items_count": len(doc.required_items),
+            "fully_picked_items": sum(1 for item in doc.required_items if item.remaining_qty == 0),
+            "over_picked_items": sum(1 for item in doc.required_items if item.remaining_qty < 0),
+            "status": doc.status
+        }
         
         return {
             "success": True,
-            "data": {
-                "pick_order": pick_order_name,
-                "status": doc.status,
-                "total_rolls": doc.total_rolls or 0,
-                "total_weight": doc.total_qty or 0,
-                "total_required": total_required,
-                "total_picked": total_picked,
-                "total_remaining": total_remaining,
-                "completion_percentage": round(completion_percentage, 2),
-                "items_count": len(doc.required_items),
-                "fully_picked_items": len([i for i in doc.required_items if flt(i.remaining_qty) <= 0])
-            }
+            "summary": summary
         }
-        
+    
+    except frappe.PermissionError:
+        raise
     except Exception as e:
-        frappe.log_error(f"Error in get_pick_order_summary: {str(e)}", "API Error")
+        frappe.log_error(f"Error getting summary: {str(e)}", "API Error")
         return {
             "success": False,
             "message": str(e)
         }
-
 
 @frappe.whitelist()
 def cancel_pick_order(pick_order_name, reason=None):
@@ -673,37 +651,33 @@ def cancel_pick_order(pick_order_name, reason=None):
     Cancel a pick order
     
     Args:
-        pick_order_name: Name of the pick order
-        reason: Cancellation reason
-    
+        pick_order_name: Pick order name
+        reason: Optional cancellation reason
+        
     Returns:
-        dict: Success status
+        dict: {success: bool, message: str}
     """
     try:
         doc = frappe.get_doc("Roll Wise Pick Order", pick_order_name)
         
-        # Check if already completed
-        if doc.status == "Completed":
-            return {
-                "success": False,
-                "message": "Cannot cancel a completed pick order"
-            }
-        
-        # Check permissions
+        # Check permission
         if not doc.has_permission("cancel"):
-            frappe.throw(_("You don't have permission to cancel this pick order"))
+            frappe.throw(_("You don't have permission to cancel this Pick Order"), frappe.PermissionError)
         
-        # Update status
-        doc.status = "Cancelled"
+        # Cancel the document
+        doc.cancel()
+        
+        # Add cancellation reason if provided
         if reason:
-            doc.remarks = f"{doc.remarks or ''}\nCancellation Reason: {reason}".strip()
-        doc.save()
+            doc.add_comment("Comment", f"Cancellation Reason: {reason}")
         
         return {
             "success": True,
-            "message": "Pick order cancelled successfully"
+            "message": "Pick Order cancelled successfully"
         }
-        
+    
+    except frappe.PermissionError:
+        raise
     except Exception as e:
         frappe.log_error(f"Error cancelling pick order: {str(e)}", "API Error")
         return {
@@ -711,39 +685,33 @@ def cancel_pick_order(pick_order_name, reason=None):
             "message": str(e)
         }
 
-
-# ==================== BATCH OPERATIONS ====================
-
 @frappe.whitelist()
 def get_available_batches(warehouse=None, item_code=None, project=None):
     """
     Get available batches for selection
     
     Args:
-        warehouse: Filter by warehouse
-        item_code: Filter by item code
-        project: Filter by project
-    
+        warehouse: Optional warehouse filter
+        item_code: Optional item filter
+        project: Optional project filter
+        
     Returns:
-        dict: List of available batches
+        dict: {success: bool, data: list}
     """
     try:
         filters = {}
         
         if warehouse:
-            filters["warehouse"] = warehouse
-        
+            filters['warehouse'] = warehouse
         if item_code:
-            filters["item"] = item_code
-        
-        if project and frappe.db.has_column("Batch", "custom_project"):
-            filters["custom_project"] = project
+            filters['item'] = item_code
+        if project:
+            filters['custom_project'] = project
         
         batches = frappe.get_all(
-            "Batch",
+            'Batch',
             filters=filters,
-            fields=["name", "batch_id", "item", "batch_qty"],
-            order_by="creation desc",
+            fields=['name', 'item', 'batch_qty', 'expiry_date'],
             limit=100
         )
         
@@ -752,10 +720,57 @@ def get_available_batches(warehouse=None, item_code=None, project=None):
             "data": batches,
             "count": len(batches)
         }
-        
+    
     except Exception as e:
-        frappe.log_error(f"Error in get_available_batches: {str(e)}", "API Error")
+        frappe.log_error(f"Error fetching batches: {str(e)}", "API Error")
         return {
             "success": False,
-            "message": str(e)
+            "message": str(e),
+            "data": []
         }
+
+
+@frappe.whitelist()
+def get_conversations():
+    """Get latest message per unique contact for conversation list"""
+    messages = frappe.db.sql("""
+        SELECT 
+            w1.name,
+            w1.type,
+            w1.status,
+            w1.`to`,
+            w1.`from`,
+            w1.profile_name,
+            w1.message,
+            w1.message_type,
+            w1.content_type,
+            w1.attach,
+            w1.template,
+            w1.template_parameters,
+            w1.whatsapp_account,
+            w1.reference_doctype,
+            w1.reference_name,
+            w1.creation,
+            w1.modified,
+            (
+                SELECT COUNT(*) 
+                FROM `tabWhatsApp Message` w2 
+                WHERE w2.reference_name = w1.reference_name 
+                AND w2.type = 'Incoming'
+                AND w2.status NOT IN ('read', 'marked as read')
+            ) as unread_count
+        FROM `tabWhatsApp Message` w1
+        INNER JOIN (
+            SELECT reference_name, MAX(modified) as max_modified
+            FROM `tabWhatsApp Message`
+            WHERE reference_name IS NOT NULL AND reference_name != ''
+            GROUP BY reference_name
+        ) latest 
+        ON w1.reference_name = latest.reference_name 
+        AND w1.modified = latest.max_modified
+        ORDER BY w1.modified DESC
+    """, as_dict=True)
+    
+    return messages
+
+        
