@@ -16,7 +16,9 @@
   "location",
   "out",
   "out_date",
-  "duration"
+  "duration",
+  "department",
+  "sales_person"
  ],
  "fields": [
   {
@@ -85,13 +87,25 @@
    "fieldname": "duration",
    "fieldtype": "Data",
    "label": "Duration"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Select",
+   "label": "Department",
+   "options": "\nFabric\nGarments\nOthers"
+  },
+  {
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "label": "Sales Person",
+   "options": "Sales Person"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-24 14:58:22.854894",
+ "modified": "2026-03-04 09:12:42.756011",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Visitor Data",
@@ -113,6 +127,7 @@
   }
  ],
  "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
