@@ -1,8 +1,9 @@
 # Copyright (c) 2024, Aravind and contributors
 # For license information, please see license.txt
-
+from __future__ import unicode_literals
 import frappe
 from frappe import _
+
 from frappe.model.document import Document
 from frappe.utils.data import flt
 from erpnext.setup.utils import get_exchange_rate
@@ -1764,7 +1765,7 @@ def create_jv_for_lup(docname):
     doc.docstatus=0
     doc.voucher_type="Journal Entry"
     doc.ineligibility_reason="As per rules 42 & 43 of CGST Rules"
-    doc.naming_series = "JV/25/.#"
+    doc.naming_series = "JV/26/.#"
     doc.company="Pranera Services and Solutions Pvt. Ltd.,"
     doc.posting_date = datetime.today().strftime("%Y-%m-%d")  # Assigns current date in "YYYY-MM-DD" format
     doc.apply_tds=0
@@ -1865,7 +1866,7 @@ def create_jv_for_wo(docname):
     doc.docstatus=0
     doc.voucher_type="Journal Entry"
     doc.ineligibility_reason="As per rules 42 & 43 of CGST Rules"
-    doc.naming_series = "JV/25/.#"
+    doc.naming_series = "JV/26/.#"
     doc.company="Pranera Services and Solutions Pvt. Ltd.,"
     doc.posting_date = datetime.today().strftime("%Y-%m-%d")  # Assigns current date in "YYYY-MM-DD" format
     doc.apply_tds=0
@@ -1939,6 +1940,82 @@ def create_jv_for_wo(docname):
     })
     doc.save(ignore_permissions=True)
     frappe.msgprint("JV Created")
+
+
+
+# import frappe
+
+# @frappe.whitelist()
+# def get_matching_po_items(production_item, custom_plan_items):
+#     """
+#     Returns list of Purchase Orders that contain items matching the production_item
+#     """
+#     if not production_item:
+#         return []
+    
+#     # Get all POs containing the specified item
+#     pos = frappe.db.sql("""
+#         SELECT DISTINCT parent 
+#         FROM `tabPurchase Order Item`
+#         WHERE fg_item = %s AND custom_plan_items = %s
+#         AND docstatus = 1
+#     """, (production_item, custom_plan_items), as_dict=True)
+#     print("\n\npos\n\n",pos)
+    
+#     return [po['parent'] for po in pos]
+@frappe.whitelist()
+def get_matching_po_items(production_item, custom_plan_items):
+    """
+    Returns list of Purchase Orders that contain items matching the production_item pattern
+    and have the specified custom_plan_items value
+    """
+    if not production_item:
+        return []
+
+    # Split the item code by /
+    parts = production_item.split('/')
+    
+    # Create search pattern
+    if len(parts) >= 2:
+        # First 3 chars of first part + % + full second part + %
+        search_pattern = f"{parts[0][:3]}%{parts[1]}%"
+    else:
+        # Fallback if no / found
+        search_pattern = f"{production_item}%"
+
+    # Debug output
+    print(f"\n\nSearch pattern: {search_pattern}\n\n")
+
+    # Get matching POs
+    pos = frappe.db.sql("""
+        SELECT DISTINCT poi.parent 
+        FROM `tabPurchase Order Item` poi
+        JOIN `tabPurchase Order` po ON poi.parent = po.name
+        WHERE poi.fg_item LIKE %s 
+        AND po.custom_plan_items = %s
+        AND po.docstatus = 1
+    """, (search_pattern, custom_plan_items), as_dict=True)
+
+    return [po['parent'] for po in pos]
+
+
+@frappe.whitelist()
+def get_matching_work_orders(item_code, plan_items):
+    """Returns Work Orders linked to the given item_code."""
+    work_orders = frappe.get_all(
+        "Work Order",
+        filters={
+            "production_item": item_code,
+            "docstatus": 1,
+            "custom_plan_items": plan_items
+        },
+        pluck="name"
+    )
+    print("\n\nwork_orders\n\n",work_orders)
+    return work_orders
+
+
+ 
 
 
 
