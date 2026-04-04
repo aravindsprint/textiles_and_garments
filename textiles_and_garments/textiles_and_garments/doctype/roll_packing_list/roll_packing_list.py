@@ -258,7 +258,7 @@ def create_manufacture_entry_from_roll_packing(doc):
         stock_entry = frappe.new_doc("Stock Entry")
         stock_entry.stock_entry_type = "Manufacture"
         stock_entry.purpose = "Manufacture"
-        stock_entry.naming_series = "MF/25/"
+        stock_entry.naming_series = "MF/26/"
         stock_entry.work_order = work_order_name
         stock_entry.custom_job_card = doc.document_name
         stock_entry.project = work_order.project
@@ -611,7 +611,7 @@ def round_to_decimals(num, decimals=3):
 #         stock_entry = frappe.new_doc("Stock Entry")
 #         stock_entry.stock_entry_type = "Manufacture"
 #         stock_entry.purpose = "Manufacture"
-#         stock_entry.naming_series = "MF/25/"
+#         stock_entry.naming_series = "MF/26/"
 #         stock_entry.work_order = work_order_name
 #         stock_entry.custom_job_card = doc.document_name
 #         stock_entry.project = work_order.project
