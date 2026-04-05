@@ -277,8 +277,8 @@ def create_manufacture_entry_from_roll_packing(doc):
         stock_entry.posting_date     = frappe.utils.nowdate()
         stock_entry.posting_time     = frappe.utils.nowtime()
         stock_entry.fg_completed_qty = qty
-        stock_entry.from_bom         = 1
-        stock_entry.bom_no           = work_order.bom_no
+        stock_entry.from_bom         = 0   # Must be 0 — we build all items manually.
+        stock_entry.bom_no           = work_order.bom_no  # Still set for valuation rates.
 
         # ==================== STEP 5: Source items (raw materials consumed) ====================
         # Raw material consumption is always weight-based (Kgs), even when FG UOM is Pcs.
