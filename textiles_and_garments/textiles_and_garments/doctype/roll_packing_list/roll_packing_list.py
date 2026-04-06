@@ -52,32 +52,30 @@ def create_manufacture_entry_from_roll_packing(doc):
         if not doc.roll_packing_list_item:
             frappe.throw(_("Roll Packing List has no items"))
 
-        # ==================== Fetch Roll details ====================
+        # ==================== Fetch Roll details (for start/end times only) ====================
+        # NOTE: We intentionally do NOT use Roll.total_qty or Roll.roll_weight here because
+        # total_qty is a virtual field — frappe.get_all returns None for virtual fields.
+        # RPL child item values are the authoritative source for qty/weight calculations.
+        # Roll records are fetched solely to capture start_time and end_time for logging.
         roll_numbers = [item.roll_no for item in doc.roll_packing_list_item if item.roll_no]
 
         if not roll_numbers:
             frappe.throw(_("No roll numbers found in Roll Packing List items"))
 
-        # NOTE: total_qty may be a virtual field — frappe.get_all may return None for it.
-        # We always fall back to item-level data from the RPL child table.
         roll_details = frappe.get_all(
             "Roll",
             filters={"name": ["in", roll_numbers]},
-            fields=[
-                "name", "start_time", "end_time", "roll_weight",
-                "batch", "item_code", "stock_uom", "total_qty", "mistake_qty"
-            ]
+            fields=["name", "start_time", "end_time"]
         )
 
-        # Build lookup map (may be empty if rolls are Draft and permissions block them)
         roll_details_map = {roll.name: roll for roll in roll_details}
 
         frappe.logger().info(
-            f"Roll lookup: requested {len(roll_numbers)}, found {len(roll_details_map)} in map. "
-            f"Missing rolls will use RPL item data as fallback."
+            f"Roll lookup: requested {len(roll_numbers)}, found {len(roll_details_map)} in map."
         )
 
         # ==================== Process rolls & calculate totals ====================
+        # Always use RPL child item data for qty/weight — never rely on Roll virtual fields.
         batch_summary = {}
         all_start_times = []
         all_end_times = []
@@ -86,34 +84,25 @@ def create_manufacture_entry_from_roll_packing(doc):
         stock_uom = None
 
         for item in doc.roll_packing_list_item:
+            # ---- Authoritative values come from RPL child item ----
+            batch             = item.batch
+            current_stock_uom = item.uom
+            roll_weight       = flt(item.roll_weight, 2)
+            roll_qty          = cint(item.total_qty or 0)
+            item_code         = item.item_code
+
+            # ---- Pull start/end times from Roll doc only (no qty logic) ----
             roll_detail = roll_details_map.get(item.roll_no)
-
             if roll_detail:
-                # Roll found in DB — prefer DB values, fall back to RPL item values
-                batch             = roll_detail.batch or item.batch
-                current_stock_uom = roll_detail.stock_uom or item.uom
-                roll_weight       = flt(roll_detail.roll_weight or item.roll_weight, 2)
-                # total_qty may be None if it is a virtual field — fall back to item.total_qty
-                roll_qty          = cint(roll_detail.total_qty or item.total_qty or 0)
-
                 if roll_detail.start_time:
                     all_start_times.append(get_datetime(roll_detail.start_time))
                 if roll_detail.end_time:
                     all_end_times.append(get_datetime(roll_detail.end_time))
-
-                item_code = roll_detail.item_code or item.item_code
-
             else:
-                # Roll NOT found in DB (Draft / permission issue) — use RPL child item data
                 frappe.logger().warning(
-                    f"Roll {item.roll_no} not found in Roll doctype. "
-                    f"Using Roll Packing List item data as fallback."
+                    f"Roll {item.roll_no} not found in Roll doctype (Draft or permission issue). "
+                    f"Start/end times will be excluded for this roll."
                 )
-                batch             = item.batch
-                current_stock_uom = item.uom
-                roll_weight       = flt(item.roll_weight, 2)
-                roll_qty          = cint(item.total_qty or 0)
-                item_code         = item.item_code
 
             # Capture UOM from first roll processed
             if not stock_uom:
@@ -130,12 +119,12 @@ def create_manufacture_entry_from_roll_packing(doc):
             # Accumulate per-batch summary
             if batch not in batch_summary:
                 batch_summary[batch] = {
-                    "batch":            batch,
-                    "item_code":        item_code,
-                    "uom":              current_stock_uom or "Kg",
+                    "batch":             batch,
+                    "item_code":         item_code,
+                    "uom":               current_stock_uom or "Kg",
                     "total_roll_weight": 0,
-                    "total_roll_qty":   0,
-                    "roll_count":       0
+                    "total_roll_qty":    0,
+                    "roll_count":        0
                 }
 
             batch_summary[batch]["total_roll_weight"] += roll_weight
@@ -151,19 +140,26 @@ def create_manufacture_entry_from_roll_packing(doc):
             f"total_roll_weight={total_roll_weight}, total_roll_qty={total_roll_qty}"
         )
 
-        # Determine fg_completed_qty
-        # Pcs UOM  → piece count | Kgs/Kg → weight
+        # ==================== Determine fg_completed_qty ====================
+        # Pcs UOM → piece count | Kgs/Kg → weight
         if stock_uom and stock_uom.lower() == "pcs":
             qty = total_roll_qty
         else:
             qty = total_roll_weight
 
-        final_weight = total_roll_weight  # always used for raw material proportion
+        # final_weight is always weight-based (used for raw material proportion)
+        final_weight = total_roll_weight
 
         if qty <= 0:
             frappe.throw(
                 _("Finished goods quantity is zero. "
-                  "Check that Roll records have total_qty filled or UOM is correct.")
+                  "Check that Roll Packing List items have total_qty filled and UOM is correct.")
+            )
+
+        if final_weight <= 0:
+            frappe.throw(
+                _("Total roll weight is zero. "
+                  "Check that Roll Packing List items have roll_weight filled.")
             )
 
         # ==================== Get time range ====================
@@ -208,10 +204,10 @@ def create_manufacture_entry_from_roll_packing(doc):
         material_transfer_items = frappe.get_all(
             "Stock Entry Detail",
             filters={
-                "parent":          ["in", material_transfer_names],
-                "docstatus":       1,
+                "parent":           ["in", material_transfer_names],
+                "docstatus":        1,
                 "is_finished_item": 0,
-                "is_scrap_item":   0
+                "is_scrap_item":    0
             },
             fields=[
                 "item_code", "qty", "t_warehouse", "s_warehouse",
@@ -277,11 +273,14 @@ def create_manufacture_entry_from_roll_packing(doc):
         stock_entry.posting_date     = frappe.utils.nowdate()
         stock_entry.posting_time     = frappe.utils.nowtime()
         stock_entry.fg_completed_qty = qty
-        stock_entry.from_bom         = 0   # Must be 0 — we build all items manually.
+        stock_entry.from_bom         = 0  # Must be 0 — we build all items manually.
         stock_entry.bom_no           = work_order.bom_no  # Still set for valuation rates.
 
         # ==================== STEP 5: Source items (raw materials consumed) ====================
         # Raw material consumption is always weight-based (Kgs), even when FG UOM is Pcs.
+        # NOTE: Do NOT set use_serial_batch_fields here — ERPNext manages bundle linkage
+        # internally after insert. Setting it manually on new docs causes ERPNext to
+        # recalculate and potentially zero out qty during the submit validate cycle.
         for idx, (key, mat_data) in enumerate(material_batch_summary.items(), start=1):
             proportional_qty = (
                 (mat_data["total_qty"] / total_transferred_qty * final_weight)
@@ -303,20 +302,25 @@ def create_manufacture_entry_from_roll_packing(doc):
             )
 
             stock_entry.append("items", {
-                "s_warehouse":            mat_data["warehouse"],
-                "item_code":              mat_data["item_code"],
-                "qty":                    proportional_qty,
-                "uom":                    mat_data["uom"],
-                "stock_uom":              mat_data["stock_uom"],
-                "conversion_factor":      mat_data["conversion_factor"],
-                "transfer_qty":           proportional_qty * mat_data["conversion_factor"],
-                "batch_no":               mat_data["batch_no"],
-                "is_finished_item":       0,
-                "is_scrap_item":          0,
-                "use_serial_batch_fields": 1 if mat_data["batch_no"] else 0
+                "s_warehouse":       mat_data["warehouse"],
+                "item_code":         mat_data["item_code"],
+                "qty":               proportional_qty,
+                "uom":               mat_data["uom"],
+                "stock_uom":         mat_data["stock_uom"],
+                "conversion_factor": mat_data["conversion_factor"],
+                "transfer_qty":      proportional_qty * mat_data["conversion_factor"],
+                "batch_no":          mat_data["batch_no"],
+                "is_finished_item":  0,
+                "is_scrap_item":     0,
+                # Do NOT set use_serial_batch_fields — see note above STEP 5
             })
 
         # ==================== STEP 6: Finished product items ====================
+        # NOTE: Do NOT set use_serial_batch_fields on FG items. Setting this flag on a
+        # freshly-created FG row causes ERPNext's on_update Serial/Batch Bundle hook to
+        # attempt bundle creation after insert(). If the bundle is empty or incomplete,
+        # ERPNext resets item.qty = 0 in-memory, which then fails validate_qty_is_not_zero
+        # when submit() re-runs validate(). Let ERPNext handle bundle creation automatically.
         for batch_data in batch_summaries_list:
             if stock_uom and stock_uom.lower() == "pcs":
                 finished_qty = cint(batch_data["total_roll_qty"])
@@ -337,17 +341,17 @@ def create_manufacture_entry_from_roll_packing(doc):
             )
 
             stock_entry.append("items", {
-                "t_warehouse":            work_order.fg_warehouse or "NAP_E1/FF/A01 - PSS",
-                "item_code":              batch_data["item_code"],
-                "qty":                    finished_qty,
-                "uom":                    finished_uom,
-                "stock_uom":              finished_uom,
-                "conversion_factor":      1.0,
-                "transfer_qty":           finished_qty,
-                "batch_no":               batch_data["batch"],
-                "is_finished_item":       1,
-                "is_scrap_item":          0,
-                "use_serial_batch_fields": 1
+                "t_warehouse":       work_order.fg_warehouse or "NAP_E1/FF/A02 - PSS",
+                "item_code":         batch_data["item_code"],
+                "qty":               finished_qty,
+                "uom":               finished_uom,
+                "stock_uom":         finished_uom,
+                "conversion_factor": 1.0,
+                "transfer_qty":      finished_qty,
+                "batch_no":          batch_data["batch"],
+                "is_finished_item":  1,
+                "is_scrap_item":     0,
+                # Do NOT set use_serial_batch_fields — see note above STEP 6
             })
 
         # ==================== STEP 7: Validate items ====================
@@ -400,8 +404,34 @@ def create_manufacture_entry_from_roll_packing(doc):
                 )
         frappe.logger().info("=" * 80)
 
-        # ==================== STEP 10: Insert & Submit ====================
-        stock_entry.insert()
+        # ==================== STEP 10: Insert ====================
+        stock_entry.insert(ignore_permissions=True)
+
+        # ==================== STEP 11: Post-insert FG qty guard ====================
+        # ERPNext Serial/Batch Bundle hooks (triggered by on_update after insert) can
+        # reset FG item qty to 0 in-memory if use_serial_batch_fields was set and the
+        # bundle is empty. We detect this early and abort with a clear error rather than
+        # letting submit() raise a cryptic InvalidQtyError.
+        fg_rows = [i for i in stock_entry.items if i.is_finished_item]
+        for fg_row in fg_rows:
+            if flt(fg_row.qty) <= 0:
+                frappe.log_error(
+                    f"ERPNext reset FG item qty to 0 after insert.\n"
+                    f"Stock Entry: {stock_entry.name}\n"
+                    f"Item: {fg_row.item_code}\n"
+                    f"Batch: {fg_row.batch_no}\n"
+                    f"This is likely caused by a Serial/Batch Bundle conflict.",
+                    "Manufacture Entry FG Qty Reset"
+                )
+                frappe.throw(
+                    _("Finished goods qty was reset to 0 by ERPNext after insert for item {0} "
+                      "(batch: {1}). Check Serial/Batch Bundle configuration.").format(
+                        frappe.bold(fg_row.item_code),
+                        frappe.bold(fg_row.batch_no or "None")
+                    )
+                )
+
+        # ==================== STEP 12: Submit ====================
         stock_entry.submit()
 
         # Save reference back to Roll Packing List
@@ -424,7 +454,6 @@ def create_manufacture_entry_from_roll_packing(doc):
             title="Error creating Manufacture Entry for Roll Packing List"
         )
         frappe.throw(_("Failed to create Manufacture Stock Entry: {0}").format(str(e)))
-
         
 # import frappe
 # from frappe import _
