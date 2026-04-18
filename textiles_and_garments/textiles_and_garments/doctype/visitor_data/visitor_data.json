@@ -18,7 +18,21 @@
   "out_date",
   "duration",
   "department",
-  "sales_person"
+  "sales_person",
+  "section_break_customer",
+  "customer_type",
+  "customer_group",
+  "source",
+  "territory",
+  "section_break_product",
+  "commercial_name",
+  "color",
+  "column_break_qty",
+  "sample_qty",
+  "bulk_qty",
+  "section_break_followup",
+  "remarks",
+  "notes"
  ],
  "fields": [
   {
@@ -99,13 +113,89 @@
    "fieldtype": "Link",
    "label": "Sales Person",
    "options": "Sales Person"
+  },
+  {
+   "fieldname": "section_break_customer",
+   "fieldtype": "Section Break",
+   "label": "Customer Information"
+  },
+  {
+   "fieldname": "customer_type",
+   "fieldtype": "Select",
+   "label": "Customer Type",
+   "options": "\nExisting\nNew"
+  },
+  {
+   "fieldname": "customer_group",
+   "fieldtype": "Select",
+   "label": "Customer Group",
+   "options": "\nOEM - Exports\nOEM - Domestic\nIndian Brand\nUnbranded Wholesaler\nSchool Uniforms Only\nCorporate & School\nPromotional / Sportswear\nSports & Athliesure Brands\nCasual wear brand\nTraders"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "\nWalk-In\nInbound Call\nExpo\nOutbound Call"
+  },
+  {
+   "fieldname": "territory",
+   "fieldtype": "Link",
+   "label": "Territory",
+   "options": "Territory"
+  },
+  {
+   "fieldname": "section_break_product",
+   "fieldtype": "Section Break",
+   "label": "Product Interest"
+  },
+  {
+   "fieldname": "commercial_name",
+   "fieldtype": "Select",
+   "label": "Commercial Name",
+   "options": "\n2TF 240\n2TF ECO 220\n3TF 340\n3TF BRUSHED 280\n4 WAY\n4T PIQUE 250\nADVANCE DOT KNIT 180\nADVANCE KNIT 150\nADVANCE KNIT 170\nAIRLITE 160\nAIRLITE 180\nAIRLITE 200\nAIRLITE 220 Z\nAIRTEX 110\nAIRTEX 200\nAIRTEX DL 220\nAIRTEX GREEN GOLD 180\nAIRTEX GREEN GOLD 240\nAIRTEX PIQUE 230\nALPHA T 160\nAMOEBA 202\nANGEL STAR 180\nAPOLLO 220\nARROW STRETCH 130\nARROW 170\nARROW 170X\nARROW PLUS 170\nARROW STRETCH 170\nBABY PIQUE 160\nBARCODE AIR 160\nBEE HIVE 140\nBEE HIVE 150\nBERLIN 120\nBIG BOSS 140\nBIG BOSS 160\nBIG BOSS 170\nBIG BOSS 180\nBIG BOSS 200\nBIG BOSS 220 X\nBIG BOSS 220 Z\nBOGOTA 180\nBREEZE 150\nBRICK 180\nBRIGHT LYCRA RIB 170\nBRIGHT NYLON SPANDEX 220\nBRIGHT PP 100\nBRIGHT SELINA 100\nBRITANNIA 330\nBRITANNIA MICRO 250\nBRITANNIA MICRO 290\nBRITANNIA MICRO 330\nBRITTO EYELET 140\nBROOKLYN 200\nBROOKLYN 240\nBUBBLE KNIT 280\nC KNIT 160\nC KNIT 210\nC KNIT 220\nCALIFORNIA 240\nCALIFORNIA 280\nCALIFORNIA 300\nCALIFORNIA 340\nCALIFORNIA PLUS 340\nCOSMO 120\nCOSMO 140\nCOSMO 160\nCOSMO 220\nCOSMO PLUS 160\nCOSMO RIB 340\nCOSMO SOFT 160\nCUBA 250\nCUBA 300\nCUBA 320\nCUBA 330\nCUBA 360\nCVC FLEECE 320\nCVC FLEECE 340\nCVC PIQUE 220\nCVC PIQUE 230\nHAWAII 100\nHAWAII 120\nHAWAII 140\nHAWAII 150\nHAWAII 160\nHAWAII 180\nHAWAII 200\nHAWAII 210\nHAWAII 220\nHAWAII ECO 140\nHAWAII ECO 160\nHAWAII ECO 200\nHONEY COMB 140\nHONEY COMB 150\nHONEY COMB 200\nHONEYCOMB 170\nHYDRA 110\nHYDRA 150\nHYDRA 170\nINKA 150\nINKA 180\nINKA 220\nINKA SOFT 150\nINKA ZEBRA 180\nIRIS 200\nLACOSTE 200\nLACOSTE 240\nMARS 150\nMARS 170\nMARS 180\nMARS 200\nMARS 220\nMARS 240\nMARS BIO 200\nMARS LYCRA 220\nMARS STRETCH 200\nMINK 135\nMINK 150\nMINK 170\nMINK 200\nMINK 240\nMINK FD 160\nMINK FD 180\nMINK FD 200\nMIRROR 100\nMIRROR 120\nMIRROR 150\nMIRROR 160A\nMIRROR 170\nMIRROR 180\nMIRROR 200\nMIRROR 220\nMIRROR 240\nMIRROR 260\nMIRROR DL 120\nMIRROR DL 140\nMIRROR DL 160\nMIRROR DL 180\nMIRROR DL 200\nMIRROR DL 220\nMIRROR SOFT 160\nMIRROR SOFT 200\nMIRROR SOFT 240\nNYLON SPANDEX 115\nNYLON SPANDEX 150\nNYLON SPANDEX 200\nNYLON SPANDEX 220\nPC PIQUE 220\nPOLO 150\nPOLO 160\nPOLO 180\nPOLO 200\nPP 110\nPP 120\nPP 130\nPP 140\nPP 160\nPULSE FD 200\nSANDWICH 200\nSANDWICH 220\nSELINA 160\nSELINA 220\nSPECTRA 210\nSPECTRA 230\nSPECTRA 250\nSPECTRA 260\nSPECTRA 300\nSPECTRA PLUS 160\nSPECTRA PLUS 180\nSPECTRA PLUS 200\nSPECTRA PLUS 210\nSPECTRA PLUS 260\nSPECTRA PLUS 300\nSPRINT 200\nSPRINT 240\nT 775\nT 815\nVANTAGE 120\nVANTAGE 150X\nVANTAGE 160\nVANTAGE 170\nVANTAGE 180\nVANTAGE 240\nVANTAGE PLUS 160\nVANTAGE PLUS 170\nWAFFLE 200\nWAVE 240\nOthers"
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Select",
+   "label": "Colour",
+   "options": "\nBEIGE MELANGE\nBLACK MELANGE\nCAPRI BLUE MELANGE\nCARBON GREY MELANGE\nCOPPER MELANGE\nI BLUE MELANGE\nLIGHT GREY MELANGE\nLT TURQ MELANGE\nNAVY MELANGE\nPISTA MELANGE\nS RED MELANGE\nALUMINIUM\nARROW RED\nBANANA YELLOW\nBLACK\nCHARCOAL\nFRENCH WINE\nIMPERIAL BLUE\nPINE GREEN\nRAMA BLUE\nTRUE NAVY\nWHITE\nDRESS BLUE\nHARBOUR BLUE\nICE GREEN\nINDIAN GREEN\nMINT\nSUNSHINE YELLOW\nWOODY ORANGE\nBEIGE\nCRICKET IVORY\nEMERALD GREEN\nHEATHER ROSE\nOLIVE\nORCHID BLOOM\nSTRIKING PURPLE\nSTRONG BLUE\nMAGENTA RED\nMEDIUM NAVY\nDARK GREY\nLIGHT GREY\nMEDIUM GREY\nMH OLIVE\nBEETLE GREEN\nAIRFORCE BLUE\nREAL ORANGE\nFLAME RED\nASH GREY\nCHARCOAL MELANGE\nGREY MELANGE\nLIGHT OLIVE\nPAPER BEIGE\nIRON GREY\nBRITISH KHAKHI\nC1 BLACK MELANGE\nC1 NAVY MELANGE\nHAZELNUT BEIGE\nLAVA GREY\nARAB NAVY\nSKY BLUE\nSAFFRON MELANGE\nTAN BROWN\nSEA BLUE\nMUSTARD YELLOW\nRFD\nTEAL BLUE MELANGE\nRED MELANGE\nGOLDEN YELLOW\nNAVY BLUE\nCOOL BLUE\nRACING RED\nLAPIS BLUE\nDARK OLIVE\nYELLOW MELANGE\nKHAKI\nPEPPER BEIGE\nCHROME YELLOW\nDARK NAVY\nIVORY\nPAKISTAN GREEN\nBRITISH KHAKI\nCustomized Color"
+  },
+  {
+   "fieldname": "column_break_qty",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sample_qty",
+   "fieldtype": "Int",
+   "label": "Sample Quantity"
+  },
+  {
+   "fieldname": "bulk_qty",
+   "fieldtype": "Int",
+   "label": "Bulk Quantity"
+  },
+  {
+   "fieldname": "section_break_followup",
+   "fieldtype": "Section Break",
+   "label": "Follow-up"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Select",
+   "label": "Remarks",
+   "options": "\nSwatch Book Given\nSample Ordered\nSample Purchased\nOrder Confirmed\nUnqualified\nAwaiting Customer Confirmation\nSwatch Given"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-03-04 09:12:42.756011",
+ "modified": "2026-04-15 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Visitor Data",
