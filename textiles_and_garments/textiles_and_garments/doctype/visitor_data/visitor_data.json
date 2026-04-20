@@ -129,7 +129,7 @@
    "fieldname": "customer_group",
    "fieldtype": "Select",
    "label": "Customer Group",
-   "options": "\nOEM - Exports\nOEM - Domestic\nIndian Brand\nUnbranded Wholesaler\nSchool Uniforms Only\nCorporate & School\nPromotional / Sportswear\nSports & Athliesure Brands\nCasual wear brand\nTraders"
+   "options": "\nPT/OEM - Exports\nPT/OEM - Domestic\nPT/Indian Brand\nPT/Unbranded Wholesaler\nPT/School Uniforms Only\nPT/Corporate & School\nPT/Promotional / Sportswear\nPT/Sports & Athliesure Brands\nPT/Casual wear brand\nPT/Traders"
   },
   {
    "fieldname": "source",
