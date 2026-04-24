@@ -13,8 +13,8 @@ def execute(filters=None):
         filters = {}
     validate_filters(filters)
     columns = get_columns(filters)
-    data = get_data(filters)
-    chart = get_chart(data, filters)
+    data    = get_data(filters)
+    chart   = get_chart(data, filters)
     return columns, data, None, chart
 
 
@@ -62,7 +62,7 @@ def get_columns(filters):
             "label":     cstr(day),
             "fieldname": "day_" + cstr(day),
             "fieldtype": "Data",
-            "width":     45,
+            "width":     50,
         })
 
     columns += [
@@ -136,8 +136,17 @@ def get_data(filters):
             emp_data[emp]["total_absent"] += 1
 
         elif status == "Half Day":
-            emp_data[emp][key] = "HD/P"
-            emp_data[emp]["total_present"] += 0.5
+            # ✅ Check leave map — if a leave exists show HD/EL, HD/CL etc.
+            leave_abbr = leave_map.get(emp, {}).get(
+                cstr(getdate(att.attendance_date)), None
+            )
+            if leave_abbr:
+                emp_data[emp][key] = "HD/" + leave_abbr
+                emp_data[emp]["total_present"] += 0.5
+                emp_data[emp]["total_leave"]   += 0.5
+            else:
+                emp_data[emp][key] = "HD/P"
+                emp_data[emp]["total_present"] += 0.5
 
         elif status == "Work From Home":
             emp_data[emp][key] = "WFH"
@@ -221,22 +230,17 @@ def get_abbr(leave_type):
     }
     if leave_type in abbr_map:
         return abbr_map[leave_type]
-    # Auto-generate abbreviation from leave type name
     return "".join(w[0].upper() for w in leave_type.split()) or "L"
 
 
 def build_conditions(filters, table=""):
-    """
-    ✅ FIX: Added 'All Departments' guard so passing that
-    default value doesn't create a bad SQL condition.
-    """
     prefix = table + "." if table else ""
     conds  = ""
 
     if filters.get("employee"):
         conds += " AND " + prefix + "employee = %(employee)s"
 
-    # ✅ KEY FIX: skip if value is blank OR the UI default "All Departments"
+    # ✅ Skip if blank OR the UI default "All Departments"
     if filters.get("department") and filters.get("department") != "All Departments":
         conds += " AND " + prefix + "department = %(department)s"
 
@@ -258,11 +262,27 @@ def get_chart(data, filters):
     for row in data:
         for day in range(1, num_days + 1):
             val = row.get("day_" + cstr(day), "")
-            if val in ("P", "WFH", "HD/P"):
+            if not val:
+                continue
+
+            if val in ("P", "WFH"):
+                # Full present / WFH
                 daily_present[day - 1] += 1
+
+            elif val == "HD/P":
+                # Half day present only — count as present
+                daily_present[day - 1] += 1
+
+            elif val.startswith("HD/"):
+                # Half day on leave (HD/EL, HD/CL etc.)
+                daily_present[day - 1] += 1  # half present
+                daily_leave[day - 1]   += 1  # half leave
+
             elif val == "A":
                 daily_absent[day - 1] += 1
-            elif val and val not in ("P", "A", "HD/P", "WFH"):
+
+            else:
+                # Full leave (EL, CL, SL, etc.)
                 daily_leave[day - 1] += 1
 
     labels = [cstr(d) for d in range(1, num_days + 1)]
