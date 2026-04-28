@@ -176,6 +176,9 @@ doc_events = {
     "WhatsApp Message": {
         "after_insert": "textiles_and_garments.utils.webhook.on_whatsapp_message_insert",
         "on_update": "textiles_and_garments.utils.webhook.on_whatsapp_message_update",
+    },
+    "Address": {
+        "validate": "textiles_and_garments.overrides.address.validate"
     }
     # "Purchase Receipt": {
     #     "on_submit": "textiles_and_garments.purchase_receipt.update_awaiting_grn_on_submit",
