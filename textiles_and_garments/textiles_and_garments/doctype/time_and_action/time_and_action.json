@@ -1,0 +1,110 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-09 11:51:31.502850",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_c9z1",
+  "naming_series",
+  "sales_order",
+  "section_break_1fkt",
+  "time_and_action_item",
+  "section_break_6tgv",
+  "remarks",
+  "column_break_wmwk",
+  "total_no_of_days_to_deliver",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_c9z1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Time and Action",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "TA/.#####"
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order"
+  },
+  {
+   "fieldname": "time_and_action_item",
+   "fieldtype": "Table",
+   "label": "Time and Action Item",
+   "options": "Time and Action Item"
+  },
+  {
+   "fieldname": "total_no_of_days_to_deliver",
+   "fieldtype": "Int",
+   "label": "Total no of days to deliver",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "section_break_6tgv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_wmwk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_1fkt",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-05-09 12:46:46.249527",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Time and Action",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
+}
