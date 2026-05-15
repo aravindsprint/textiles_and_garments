@@ -7,7 +7,6 @@ def get_quotation_for_deal(crm_deal: str):
     Returns the latest Quotation linked to this CRM Deal.
     Used by the form script to decide whether to show
     'Create Quotation' or 'View Quotation' button.
-    Returns: { quotation_name, quotation_url, status } or None
     """
     quotation = frappe.db.get_value(
         "Quotation",
@@ -29,6 +28,12 @@ def get_quotation_for_deal(crm_deal: str):
 
 @frappe.whitelist()
 def create_quotation_from_deal(crm_deal: str, organization: str | None = None):
+    """
+    Creates an ERPNext Quotation from a CRM Deal.
+    - Blocks if a Quotation already exists for this Deal
+    - Requires custom_customer to be set on the Deal
+    - Auto-links the primary contact to the customer if not already linked
+    """
     from crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings import (
         _get_enabled_settings,
         get_primary_contact,
@@ -40,7 +45,7 @@ def create_quotation_from_deal(crm_deal: str, organization: str | None = None):
     address = get_organization_address(organization)
     address_name = address.get("name") if address else None
 
-    # ── 0. Block if Quotation already exists for this Deal ────────────────────
+    # ── 0. Block if Quotation already exists ─────────────────────────────────
     existing = frappe.db.get_value("Quotation", {"crm_deal": crm_deal}, "name")
     if existing:
         frappe.throw(
@@ -60,7 +65,8 @@ def create_quotation_from_deal(crm_deal: str, organization: str | None = None):
 
     frappe.logger().info(f"[CRM] Using custom_customer: {customer_name}")
 
-    # ── 2. Contact from CRM Deal ───────────────────────────────────────────────
+    # ── 2. Contact from CRM Deal ──────────────────────────────────────────────
+    # Get primary contact. If not linked to this customer yet, add the link.
     contact = get_primary_contact(crm_deal)
     frappe.logger().info(f"[CRM] Primary contact for deal {crm_deal}: {contact}")
 
@@ -83,6 +89,10 @@ def create_quotation_from_deal(crm_deal: str, organization: str | None = None):
             frappe.logger().info(
                 f"[CRM] Linked contact {contact} to customer {customer_name}"
             )
+        else:
+            frappe.logger().info(
+                f"[CRM] Contact {contact} already linked to {customer_name}"
+            )
 
     # ── 3. Build Quotation ────────────────────────────────────────────────────
     quotation                  = frappe.new_doc("Quotation")
@@ -104,6 +114,7 @@ def create_quotation_from_deal(crm_deal: str, organization: str | None = None):
             "uom":       "Nos",
         })
 
+    # ERPNext requires at least one item row
     if not deal.products:
         quotation.append("items", {})
 
@@ -127,7 +138,7 @@ def create_quotation_from_deal(crm_deal: str, organization: str | None = None):
 def create_customer_from_organisation(crm_deal: str):
     """
     Creates an ERPNext Customer from the Deal's Organisation field.
-    - If customer already exists -> reuse it
+    - If customer already exists (case-insensitive match) -> reuse it
     - If not -> auto-create from Organisation name
     - Saves result to custom_customer field on the Deal
     Returns: { customer_name, customer_url, created }
@@ -141,7 +152,7 @@ def create_customer_from_organisation(crm_deal: str):
             "Please set the Organization field first."
         )
 
-    # Exact match (DB is case-insensitive utf8mb4_unicode_ci)
+    # Exact match — DB collation utf8mb4_unicode_ci is case-insensitive
     customer_name = frappe.db.get_value(
         "Customer", {"customer_name": org}, "name"
     )
@@ -152,6 +163,7 @@ def create_customer_from_organisation(crm_deal: str):
             f"[CRM] Existing customer found for '{org}': {customer_name}"
         )
     else:
+        # Auto-create Customer from Organisation name
         new_customer               = frappe.new_doc("Customer")
         new_customer.customer_name = org
         new_customer.customer_type = "Company"
@@ -165,6 +177,9 @@ def create_customer_from_organisation(crm_deal: str):
     # Save to custom_customer on the Deal
     frappe.db.set_value("CRM Deal", crm_deal, "custom_customer", customer_name)
     frappe.db.commit()
+    frappe.logger().info(
+        f"[CRM] Saved '{customer_name}' to custom_customer on Deal {crm_deal}"
+    )
 
     return {
         "customer_name": customer_name,
