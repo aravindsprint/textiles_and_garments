@@ -133,6 +133,21 @@ def create_quotation_from_deal(crm_deal: str, organization: str | None = None):
 
     return f"/app/quotation/{quotation.name}"
 
+@frappe.whitelist()
+def set_lead_geolocation(docname, geolocation):
+    """
+    Directly sets geolocation on CRM Lead bypassing timestamp/version check.
+    Called from the frontend after GPS capture.
+    """
+    frappe.db.set_value(
+        "CRM Lead",
+        docname,
+        "custom_geolocation",
+        geolocation,
+        update_modified=False  # Don't update modified timestamp — avoids re-triggering
+    )
+    frappe.db.commit()
+    return True
 
 @frappe.whitelist()
 def create_customer_from_organisation(crm_deal: str):
