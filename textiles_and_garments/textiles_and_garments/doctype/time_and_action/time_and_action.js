@@ -24,14 +24,12 @@ function validate_date_sequence(frm, cdt, cdn) {
     const row  = locals[cdt][cdn];
     const rows = frm.doc.time_and_action_item || [];
 
-    // Only validate Sequential rows
     if (row.method !== "Sequential") return;
     if (!row.start_date) return;
 
-    // Find the last Sequential row before this one
     const prevSequential = rows
         .filter(r => r.idx < row.idx && r.method === "Sequential" && r.end_date)
-        .sort((a, b) => b.idx - a.idx)[0];  // highest idx before current
+        .sort((a, b) => b.idx - a.idx)[0];
 
     if (!prevSequential) return;
 
@@ -51,7 +49,6 @@ function validate_date_sequence(frm, cdt, cdn) {
     }
 }
 
-// Called on form validate (submit guard)
 function validate_all_sequential_dates(frm) {
     const rows = frm.doc.time_and_action_item || [];
     const sequential = rows
@@ -61,6 +58,7 @@ function validate_all_sequential_dates(frm) {
     for (let i = 1; i < sequential.length; i++) {
         const prev = sequential[i - 1];
         const curr = sequential[i];
+
         if (!prev.end_date || !curr.start_date) continue;
 
         const prevEnd   = frappe.datetime.str_to_obj(prev.end_date);
@@ -89,7 +87,6 @@ function calculate_days(frm, cdt, cdn) {
 
 function update_total(frm) {
     const total = (frm.doc.time_and_action_item || []).reduce((sum, row) => {
-        if (row.method === "Parallel") return sum;
         return sum + (row.no_of_days_to_deliver || 0);
     }, 0);
     frm.set_value("total_no_of_days_to_deliver", total);
