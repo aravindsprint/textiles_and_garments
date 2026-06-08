@@ -23,19 +23,16 @@ frappe.ui.form.on("Time and Action Item", {
 function validate_date_sequence(frm, cdt, cdn) {
     const row  = locals[cdt][cdn];
     const rows = frm.doc.time_and_action_item || [];
-
     if (row.method !== "Sequential") return;
     if (!row.start_date) return;
 
     const prevSequential = rows
         .filter(r => r.idx < row.idx && r.method === "Sequential" && r.end_date)
         .sort((a, b) => b.idx - a.idx)[0];
-
     if (!prevSequential) return;
 
     const prevEnd   = frappe.datetime.str_to_obj(prevSequential.end_date);
     const currStart = frappe.datetime.str_to_obj(row.start_date);
-
     if (currStart <= prevEnd) {
         frappe.msgprint({
             title: "Date Overlap",
@@ -58,12 +55,9 @@ function validate_all_sequential_dates(frm) {
     for (let i = 1; i < sequential.length; i++) {
         const prev = sequential[i - 1];
         const curr = sequential[i];
-
         if (!prev.end_date || !curr.start_date) continue;
-
         const prevEnd   = frappe.datetime.str_to_obj(prev.end_date);
         const currStart = frappe.datetime.str_to_obj(curr.start_date);
-
         if (currStart <= prevEnd) {
             frappe.throw(
                 `Row ${curr.idx} <b>${curr.process_name}</b>: Start Date must be after 
@@ -76,18 +70,37 @@ function validate_all_sequential_dates(frm) {
 function calculate_days(frm, cdt, cdn) {
     const row = locals[cdt][cdn];
     if (row.start_date && row.end_date) {
+        // +1 for inclusive count
         const days = frappe.datetime.get_diff(
             frappe.datetime.str_to_obj(row.end_date),
             frappe.datetime.str_to_obj(row.start_date)
-        );
-        frappe.model.set_value(cdt, cdn, "no_of_days_to_deliver", days < 0 ? 0 : days);
+        ) + 1;
+        frappe.model.set_value(cdt, cdn, "no_of_days_to_deliver", days < 1 ? 0 : days);
     }
     update_total(frm);
 }
 
 function update_total(frm) {
-    const total = (frm.doc.time_and_action_item || []).reduce((sum, row) => {
-        return sum + (row.no_of_days_to_deliver || 0);
+    const rows = frm.doc.time_and_action_item || [];
+
+    const sequentialRows = rows.filter(r => r.method === "Sequential");
+    const parallelRows   = rows.filter(r => r.method === "Parallel");
+
+    // Sequential: sum of individual days
+    const sequentialTotal = sequentialRows.reduce((sum, r) => {
+        return sum + (r.no_of_days_to_deliver || 0);
     }, 0);
-    frm.set_value("total_no_of_days_to_deliver", total);
+
+    // Parallel: span from earliest start to latest end (inclusive)
+    let parallelTotal = 0;
+    const starts = parallelRows.map(r => r.start_date).filter(Boolean);
+    const ends   = parallelRows.map(r => r.end_date).filter(Boolean);
+    if (starts.length && ends.length) {
+        const minStart = starts.map(d => frappe.datetime.str_to_obj(d)).reduce((a, b) => a < b ? a : b);
+        const maxEnd   = ends.map(d => frappe.datetime.str_to_obj(d)).reduce((a, b) => a > b ? a : b);
+        parallelTotal  = frappe.datetime.get_diff(maxEnd, minStart) + 1;
+        if (parallelTotal < 0) parallelTotal = 0;
+    }
+
+    frm.set_value("total_no_of_days_to_deliver", sequentialTotal + parallelTotal);
 }
