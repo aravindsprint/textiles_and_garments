@@ -14,6 +14,8 @@
   "amended_from",
   "id",
   "location",
+  "state",
+  "city",
   "out",
   "out_date",
   "duration",
@@ -189,13 +191,23 @@
    "fieldname": "notes",
    "fieldtype": "Text",
    "label": "Notes"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-04-15 12:00:00.000000",
+ "modified": "2026-06-15 11:33:21.978194",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Visitor Data",
