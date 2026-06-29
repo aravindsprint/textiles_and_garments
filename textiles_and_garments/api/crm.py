@@ -201,3 +201,62 @@ def create_customer_from_organisation(crm_deal: str):
         "customer_url":  f"/app/customer/{customer_name}",
         "created":       created
     }
+
+
+@frappe.whitelist()
+def get_sales_order_for_deal(crm_deal):
+    """Return the latest Sales Order linked to this CRM Deal, or None."""
+    so_name = frappe.db.get_value(
+        "Sales Order",
+        {"custom_crm_deal": crm_deal, "docstatus": ["<", 2]},
+        "name",
+        order_by="creation desc"
+    )
+    if so_name:
+        return {"sales_order_name": so_name}
+    return None
+
+
+@frappe.whitelist()
+def create_sales_order_from_deal(crm_deal, organization):
+    """
+    Create a Sales Order from a CRM Deal.
+    Copies items from the linked Quotation if one exists,
+    otherwise creates an empty SO for the customer.
+    Returns the ERPNext URL of the new Sales Order.
+    """
+    deal = frappe.get_doc("CRM Deal", crm_deal)
+    customer = deal.custom_customer
+    if not customer:
+        frappe.throw("No customer linked to this Deal. Please create the customer first.")
+
+    so = frappe.new_doc("Sales Order")
+    so.customer = customer
+    so.custom_crm_deal = crm_deal
+    so.delivery_date = frappe.utils.add_days(frappe.utils.today(), 7)  # default +7 days
+
+    # Try to copy items from the linked Quotation
+    quotation_name = frappe.db.get_value(
+        "Quotation",
+        {"crm_deal": crm_deal, "docstatus": ["<", 2]},
+        "name",
+        order_by="creation desc"
+    )
+    if quotation_name:
+        quotation = frappe.get_doc("Quotation", quotation_name)
+        so.selling_price_list = quotation.selling_price_list
+        for item in quotation.items:
+            so.append("items", {
+                "item_code": item.item_code,
+                "item_name": item.item_name,
+                "description": item.description,
+                "qty": item.qty,
+                "rate": item.rate,
+                "uom": item.uom,
+                "delivery_date": so.delivery_date,
+            })
+
+    so.flags.ignore_mandatory = False
+    so.insert(ignore_permissions=True)
+
+    return f"/app/sales-order/{frappe.utils.cstr(so.name)}"    
