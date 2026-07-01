@@ -219,12 +219,6 @@ def get_sales_order_for_deal(crm_deal):
 
 @frappe.whitelist()
 def create_sales_order_from_deal(crm_deal, organization):
-    """
-    Create a Sales Order from a CRM Deal.
-    Copies items from the linked Quotation if one exists,
-    otherwise creates an empty SO for the customer.
-    Returns the ERPNext URL of the new Sales Order.
-    """
     deal = frappe.get_doc("CRM Deal", crm_deal)
     customer = deal.custom_customer
     if not customer:
@@ -233,15 +227,15 @@ def create_sales_order_from_deal(crm_deal, organization):
     so = frappe.new_doc("Sales Order")
     so.customer = customer
     so.custom_crm_deal = crm_deal
-    so.delivery_date = frappe.utils.add_days(frappe.utils.today(), 7)  # default +7 days
+    so.delivery_date = frappe.utils.add_days(frappe.utils.today(), 7)
 
-    # Try to copy items from the linked Quotation
     quotation_name = frappe.db.get_value(
         "Quotation",
         {"crm_deal": crm_deal, "docstatus": ["<", 2]},
         "name",
         order_by="creation desc"
     )
+
     if quotation_name:
         quotation = frappe.get_doc("Quotation", quotation_name)
         so.selling_price_list = quotation.selling_price_list
@@ -255,8 +249,31 @@ def create_sales_order_from_deal(crm_deal, organization):
                 "uom": item.uom,
                 "delivery_date": so.delivery_date,
             })
+    else:
+        # Fallback: pull items straight from CRM Deal products, same as quotation flow
+        for product in deal.products:
+            so.append("items", {
+                "item_code": product.custom_item_code,
+                "item_name": product.product_name or product.custom_item_code,
+                "qty": product.qty or 1,
+                "rate": product.rate or 0,
+                "uom": "Nos",
+                "delivery_date": so.delivery_date,
+            })
+
+    # Hard stop instead of inserting an itemless Sales Order
+    if not so.items:
+        frappe.throw(
+            "No items found to create this Sales Order. "
+            "Please add products to the Deal or create a Quotation first."
+        )
 
     so.flags.ignore_mandatory = False
     so.insert(ignore_permissions=True)
 
-    return f"/app/sales-order/{frappe.utils.cstr(so.name)}"    
+    return f"/app/sales-order/{frappe.utils.cstr(so.name)}" 
+    
+
+
+
+       
