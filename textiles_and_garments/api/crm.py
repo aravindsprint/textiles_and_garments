@@ -219,15 +219,53 @@ def get_sales_order_for_deal(crm_deal):
 
 @frappe.whitelist()
 def create_sales_order_from_deal(crm_deal, organization):
+    from crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings import _get_enabled_settings
+
     deal = frappe.get_doc("CRM Deal", crm_deal)
     customer = deal.custom_customer
     if not customer:
         frappe.throw("No customer linked to this Deal. Please create the customer first.")
 
+    customer_doc = frappe.get_doc("Customer", customer)
+    erpnext_crm_settings = _get_enabled_settings()
+
     so = frappe.new_doc("Sales Order")
     so.customer = customer
+    so.company = erpnext_crm_settings.erpnext_company
     so.custom_crm_deal = crm_deal
     so.delivery_date = frappe.utils.add_days(frappe.utils.today(), 7)
+
+    # Mandatory custom fields on this instance
+    so.payment_terms = "Standard"
+    so.delivery_terms = "Ex MILL"
+    so.delivery_to = customer
+
+    # Sales team — pull from Customer's own sales team allocation
+    if customer_doc.sales_team:
+        for row in customer_doc.sales_team:
+            so.append("sales_team", {
+                "sales_person": row.sales_person,
+                "allocated_percentage": row.allocated_percentage
+            })
+
+    # Customer billing address (needed for GST fields below)
+    customer_address = frappe.db.get_value(
+        "Dynamic Link",
+        {"link_doctype": "Customer", "link_name": customer, "parenttype": "Address"},
+        "parent"
+    )
+    if customer_address:
+        so.customer_address = customer_address
+        addr = frappe.get_doc("Address", customer_address)
+        so.billing_address_gstin = addr.gstin
+        if addr.gst_state_number:
+            so.place_of_supply = f"{addr.gst_state_number}-{addr.state}"
+
+    so.gst_category = customer_doc.gst_category or "Unregistered"
+
+    # Company GST address (adjust to your actual default branch/GSTIN)
+    so.company_address = "Pranera Tirupur"
+    so.company_gstin = "33AAECP8397C1ZA"
 
     quotation_name = frappe.db.get_value(
         "Quotation",
@@ -250,30 +288,25 @@ def create_sales_order_from_deal(crm_deal, organization):
                 "delivery_date": so.delivery_date,
             })
     else:
-        # Fallback: pull items straight from CRM Deal products, same as quotation flow
         for product in deal.products:
+            item_doc = frappe.get_cached_doc("Item", product.custom_item_code)
             so.append("items", {
                 "item_code": product.custom_item_code,
                 "item_name": product.product_name or product.custom_item_code,
                 "qty": product.qty or 1,
                 "rate": product.rate or 0,
-                "uom": "Nos",
+                "uom": item_doc.stock_uom,   # pull real UOM, don't hardcode
                 "delivery_date": so.delivery_date,
             })
 
-    # Hard stop instead of inserting an itemless Sales Order
     if not so.items:
         frappe.throw(
             "No items found to create this Sales Order. "
             "Please add products to the Deal or create a Quotation first."
         )
 
+    so.set_missing_values()
     so.flags.ignore_mandatory = False
     so.insert(ignore_permissions=True)
 
-    return f"/app/sales-order/{frappe.utils.cstr(so.name)}" 
-    
-
-
-
-       
+    return f"/app/sales-order/{frappe.utils.cstr(so.name)}"
