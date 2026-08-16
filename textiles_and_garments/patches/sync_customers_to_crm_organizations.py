@@ -1,7 +1,7 @@
 """
 Patch: sync_customers_to_crm_organizations
 
-One-time migration: link every ERPNext Customer to a Frappe CRM Organization,
+One-time migration:link every ERPNext Customer to a Frappe CRM Organization,
 creating new Organization records where no match exists.
 
 Place this file at:
