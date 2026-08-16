@@ -9,7 +9,7 @@ Place this file at:
 
 Register in:
     textiles_and_garments/textiles_and_garments/patches.txt
-    (add the line: textiles_and_garments.patches.sync_customers_to_crm_organizations)
+    (add the line:textiles_and_garments.patches.sync_customers_to_crm_organizations)
 
 Then run:
     bench --site pranera.erpnext.com migrate
