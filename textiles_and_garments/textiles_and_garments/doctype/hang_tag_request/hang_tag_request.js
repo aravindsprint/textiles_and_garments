@@ -112,7 +112,7 @@ function get_sales_invoice_items(frm) {
                 return;
             }
             // Clear existing hang tag items first if you wish
-            frm.clear_table('hang_tag_request_item');  
+            // frm.clear_table('hang_tag_request_item');  
 
             items.forEach(item => {
                 frm.add_child('hang_tag_request_item', {

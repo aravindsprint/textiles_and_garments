@@ -511,159 +511,60 @@ def create_production_stock_reservation_from_plan(
 
 
 
-# def on_cancel_cancel_reservation(doc, method=None):
-#     """
-#     Cancel Production Stock Reservation when Purchase Receipt is cancelled
-#     """
-#     try:
-#         print(f"\n\nCancelling production stock reservation for Purchase Receipt: {doc.name}")
-        
-#         # First break the links in the database
-#         for item in doc.items:
-#             if item.get('custom_plans'):
-#                 plan_name = item.custom_plans
-                
-#                 # Break the link between plan and purchase receipt in milestones
-#                 frappe.db.sql("""
-#                     UPDATE `tabTime and Action Milestones` 
-#                     SET status = 'Pending', actual_date = NULL, reference_document_name = NULL, delay_days = 0
-#                     WHERE parent = %s AND milestone_name = 'Purchase Receipt' AND reference_document_name = %s
-#                 """, (plan_name, doc.name))
-                
-#                 frappe.db.commit()
-#                 print(f"Broken link between plan {plan_name} and PR {doc.name}")
-        
-#         # Now cancel related Production Stock Reservations
-#         for item in doc.items:
-#             if item.get('custom_plans'):
-#                 plan_name = item.custom_plans
-                
-#                 reservations = frappe.get_all(
-#                     "Production Stock Reservation",
-#                     filters={
-#                         "plans_no": plan_name,
-#                         "docstatus": 1
-#                     },
-#                     pluck="name"
-#                 )
-                
-#                 for reservation_name in reservations:
-#                     try:
-#                         psr = frappe.get_doc("Production Stock Reservation", reservation_name)
-#                         psr.cancel()
-#                         frappe.db.commit()
-#                         print(f"Cancelled Production Stock Reservation: {reservation_name}")
-#                     except Exception as e:
-#                         frappe.log_error(f"Failed to cancel PSR {reservation_name}: {str(e)}")
-        
-#         # Update overall status for plans
-#         for item in doc.items:
-#             if item.get('custom_plans'):
-#                 plan_name = item.custom_plans
-#                 if frappe.db.exists("Plans", plan_name):
-#                     plan = frappe.get_doc("Plans", plan_name)
-#                     plan.update_overall_status()
-#                     plan.save(ignore_permissions=True)
-#                     frappe.db.commit()
-        
-#         frappe.msgprint("Successfully cancelled reservations and reset milestones")
-        
-#     except Exception as e:
-#         frappe.log_error(f"Error in on_cancel_cancel_reservation: {str(e)}")
-#         frappe.throw(f"Error cancelling reservation: {str(e)}")
 
+def on_cancel_cancel_reservation(doc, method):
+    if doc.doctype == "Stock Entry" and doc.get("stock_entry_type") != "Manufacture":
+        return
 
-def on_cancel_cancel_reservation(doc, method=None):
-    """
-    Cancel Production Stock Reservation when Purchase Receipt is cancelled
-    """
-    try:
-        print(f"\n\nCancelling production stock reservation for Purchase Receipt: {doc.name}")
-        
-        # Just cancel PSRs without touching plans initially
-        for item in doc.items:
-            if item.get('custom_plans'):
-                plan_name = item.custom_plans
-                
-                reservations = frappe.get_all(
-                    "Production Stock Reservation",
-                    filters={
-                        "plans_no": plan_name,
-                        "docstatus": 1
-                    },
-                    pluck="name"
-                )
-                
-                for reservation_name in reservations:
+    for item in doc.items:
+        if item.get("custom_plans"):
+            plan_doc = frappe.get_doc("Plans", item.custom_plans)
+            # Convert actual_qty to float for calculations
+            actual_qty = flt(plan_doc.get("actual_qty", 0))
+            
+            # Debug prints (consider using frappe.logger() in production)
+            print("\n\nCreating production stock reservation for plan:", plan_name)
+            print("For item:", item_code)
+            print("Actual quantity:", actual_qty)
+
+            # Initialize variables with proper float conversion
+            reserved_received_qty = flt(plan_doc.get("reserved_received_qty", 0))
+            unreserved_received_qty = flt(plan_doc.get("unreserved_received_qty", 0))
+            reserved_qty = flt(plan_doc.get("reserved_qty", 0))
+            plan_qty = flt(plan_doc.get("plan_qty", 0))
+
+            # Update received quantities based on reservation type
+            if create_for_all is None and specific_reserved_plan is None:
+                print("Updating unreserved received quantity")
+                plan_doc.received_qty = actual_qty
+                plan_doc.unreserved_received_qty = flt(plan_doc.get("unreserved_received_qty", 0)) - actual_qty
+                plan_doc.unreserved_qty = plan_qty - plan_doc.unreserved_received_qty - plan_doc.reserved_qty
+            else:
+                print("Updating reserved received quantity")
+                plan_doc.received_qty = actual_qty
+                plan_doc.reserved_received_qty = flt(plan_doc.get("reserved_received_qty", 0)) - actual_qty
+                plan_doc.unreserved_qty = plan_qty - plan_doc.unreserved_received_qty - plan_doc.reserved_qty
+
+            # Save and commit changes
+            plan_doc.save()
+            frappe.db.commit()
+            
+            for row in plan_doc.get("reserved_wip_plans") or []:
+                # print("\n\nreserved_wip_plans\n\n", reserved_wip_plans)
+                filters = {
+                    # "plan": item.custom_plans,
+                    "plans_no": row.plan,
+                    # "reference_doctype": doc.doctype,
+                    # "reference_name": doc.name
+                }
+                reservation_name = frappe.db.get_value("Production Stock Reservation", filters, "name")
+                if reservation_name:
                     try:
-                        psr = frappe.get_doc("Production Stock Reservation", reservation_name)
-                        psr.cancel()
-                        frappe.db.commit()
-                        print(f"Cancelled Production Stock Reservation: {reservation_name}")
-                    except Exception as e:
-                        frappe.log_error(f"Failed to cancel PSR {reservation_name}: {str(e)}")
-        
-        frappe.msgprint("Successfully cancelled Production Stock Reservations")
-        
-    except Exception as e:
-        frappe.log_error(f"Error in on_cancel_cancel_reservation: {str(e)}")
-        # Don't throw error here, let the cancellation proceed
-        frappe.msgprint(f"Warning: Some reservations may not have been cancelled: {str(e)}")
-
-
-# def on_cancel_cancel_reservation(doc, method):
-#     if doc.doctype == "Stock Entry" and doc.get("stock_entry_type") != "Manufacture":
-#         return
-
-#     for item in doc.items:
-#         if item.get("custom_plans"):
-#             plan_doc = frappe.get_doc("Plans", item.custom_plans)
-#             # Convert actual_qty to float for calculations
-#             actual_qty = flt(plan_doc.get("actual_qty", 0))
-            
-#             # Debug prints (consider using frappe.logger() in production)
-#             print("\n\nCreating production stock reservation for plan:", plan_name)
-#             print("For item:", item_code)
-#             print("Actual quantity:", actual_qty)
-
-#             # Initialize variables with proper float conversion
-#             reserved_received_qty = flt(plan_doc.get("reserved_received_qty", 0))
-#             unreserved_received_qty = flt(plan_doc.get("unreserved_received_qty", 0))
-#             reserved_qty = flt(plan_doc.get("reserved_qty", 0))
-#             plan_qty = flt(plan_doc.get("plan_qty", 0))
-
-#             # Update received quantities based on reservation type
-#             if create_for_all is None and specific_reserved_plan is None:
-#                 print("Updating unreserved received quantity")
-#                 plan_doc.received_qty = actual_qty
-#                 plan_doc.unreserved_received_qty = flt(plan_doc.get("unreserved_received_qty", 0)) - actual_qty
-#                 plan_doc.unreserved_qty = plan_qty - plan_doc.unreserved_received_qty - plan_doc.reserved_qty
-#             else:
-#                 print("Updating reserved received quantity")
-#                 plan_doc.received_qty = actual_qty
-#                 plan_doc.reserved_received_qty = flt(plan_doc.get("reserved_received_qty", 0)) - actual_qty
-#                 plan_doc.unreserved_qty = plan_qty - plan_doc.unreserved_received_qty - plan_doc.reserved_qty
-
-#             # Save and commit changes
-#             plan_doc.save()
-#             frappe.db.commit()
-            
-#             for row in plan_doc.get("reserved_wip_plans") or []:
-#                 # print("\n\nreserved_wip_plans\n\n", reserved_wip_plans)
-#                 filters = {
-#                     # "plan": item.custom_plans,
-#                     "plans_no": row.plan,
-#                     # "reference_doctype": doc.doctype,
-#                     # "reference_name": doc.name
-#                 }
-#                 reservation_name = frappe.db.get_value("Production Stock Reservation", filters, "name")
-#                 if reservation_name:
-#                     try:
-#                         reservation_doc = frappe.get_doc("Production Stock Reservation", reservation_name)
-#                         if reservation_doc.docstatus == 1:
-#                             reservation_doc.cancel()
-#                     except Exception:
-#                         frappe.log_error(frappe.get_traceback(), f"Failed to cancel Production Stock Reservation: {reservation_name}")
+                        reservation_doc = frappe.get_doc("Production Stock Reservation", reservation_name)
+                        if reservation_doc.docstatus == 1:
+                            reservation_doc.cancel()
+                    except Exception:
+                        frappe.log_error(frappe.get_traceback(), f"Failed to cancel Production Stock Reservation: {reservation_name}")
 
 
 # def on_stock_entry_cancel_reservation(doc, method):
@@ -842,63 +743,6 @@ def update_psr_transfer_quantities(row, operation):
             psr_doc.save(ignore_permissions=True)
 
 
-# def on_stock_entry_cancel_reservation(doc, method):
-#     """Cancel PSR when manufacturing stock entry is cancelled"""
-#     if doc.doctype != "Stock Entry" or doc.stock_entry_type != "Manufacture":
-#         return
-
-#     for item in doc.items:
-#         if not item.get("custom_plans"):
-#             continue
-
-#         plan_doc = frappe.get_doc("Plans", item.custom_plans)
-
-#         # Convert actual_qty to float for calculations
-#         actual_qty = flt(plan_doc.get("actual_qty", 0))
-        
-#         # Debug prints (consider using frappe.logger() in production)
-#         # print("\n\nCreating production stock reservation for plan:", plan_name)
-#         # print("For item:", item_code)
-#         print("Actual quantity:", actual_qty)
-
-#         # Initialize variables with proper float conversion
-#         reserved_received_qty = flt(plan_doc.get("reserved_received_qty", 0))
-#         unreserved_received_qty = flt(plan_doc.get("unreserved_received_qty", 0))
-#         reserved_qty = flt(plan_doc.get("reserved_qty", 0))
-#         plan_qty = flt(plan_doc.get("plan_qty", 0))
-
-#         # Update received quantities based on reservation type
-#         if create_for_all is None and specific_reserved_plan is None:
-#             print("Updating unreserved received quantity")
-#             plan_doc.received_qty = actual_qty
-#             plan_doc.unreserved_received_qty = flt(plan_doc.get("unreserved_received_qty", 0)) - actual_qty
-#             plan_doc.unreserved_qty = plan_qty - plan_doc.unreserved_received_qty - plan_doc.reserved_qty
-#         else:
-#             print("Updating reserved received quantity")
-#             plan_doc.received_qty = actual_qty
-#             plan_doc.reserved_received_qty = flt(plan_doc.get("reserved_received_qty", 0)) - actual_qty
-#             plan_doc.unreserved_qty = plan_qty - plan_doc.unreserved_received_qty - plan_doc.reserved_qty
-
-#         # Save and commit changes
-#         plan_doc.save()
-#         frappe.db.commit()
-
-#         for row in plan_doc.get("reserved_wip_plans") or []:
-#             filters = {
-#                 "plans_no": row.plan,
-#             }
-#             reservation_name = frappe.db.get_value("Production Stock Reservation", filters, "name")
-            
-#             if reservation_name:
-#                 try:
-#                     reservation_doc = frappe.get_doc("Production Stock Reservation", reservation_name)
-#                     if reservation_doc.docstatus == 1:
-#                         reservation_doc.cancel()
-#                 except Exception:
-#                     frappe.log_error(frappe.get_traceback(), 
-#                         f"Failed to cancel Production Stock Reservation: {reservation_name}")
-
-
 def on_stock_entry_cancel_reservation(doc, method):
     """Cancel PSR when manufacturing stock entry is cancelled"""
     if doc.doctype != "Stock Entry" or doc.stock_entry_type != "Manufacture":
@@ -911,10 +755,12 @@ def on_stock_entry_cancel_reservation(doc, method):
         plan_doc = frappe.get_doc("Plans", item.custom_plans)
 
         # Convert actual_qty to float for calculations
-        actual_qty = flt(item.get("qty", 0))  # Use item qty, not plan's actual_qty
+        actual_qty = flt(plan_doc.get("actual_qty", 0))
         
-        print(f"Processing cancellation for plan: {item.custom_plans}, item: {item.item_code}")
-        print(f"Actual quantity to deduct: {actual_qty}")
+        # Debug prints (consider using frappe.logger() in production)
+        print("\n\nCreating production stock reservation for plan:", plan_name)
+        print("For item:", item_code)
+        print("Actual quantity:", actual_qty)
 
         # Initialize variables with proper float conversion
         reserved_received_qty = flt(plan_doc.get("reserved_received_qty", 0))
@@ -922,27 +768,22 @@ def on_stock_entry_cancel_reservation(doc, method):
         reserved_qty = flt(plan_doc.get("reserved_qty", 0))
         plan_qty = flt(plan_doc.get("plan_qty", 0))
 
-        # Determine if this was a reserved or unreserved receipt
-        # Check if there are any reserved WIP plans to determine reservation type
-        has_reserved_wip = plan_doc.get("reserved_wip_plans") and len(plan_doc.get("reserved_wip_plans")) > 0
-        
         # Update received quantities based on reservation type
-        if not has_reserved_wip:
+        if create_for_all is None and specific_reserved_plan is None:
             print("Updating unreserved received quantity")
-            plan_doc.unreserved_received_qty = max(0, unreserved_received_qty - actual_qty)
+            plan_doc.received_qty = actual_qty
+            plan_doc.unreserved_received_qty = flt(plan_doc.get("unreserved_received_qty", 0)) - actual_qty
+            plan_doc.unreserved_qty = plan_qty - plan_doc.unreserved_received_qty - plan_doc.reserved_qty
         else:
             print("Updating reserved received quantity")
-            plan_doc.reserved_received_qty = max(0, reserved_received_qty - actual_qty)
-
-        # Recalculate total received qty and unreserved qty
-        plan_doc.received_qty = flt(plan_doc.reserved_received_qty) + flt(plan_doc.unreserved_received_qty)
-        plan_doc.unreserved_qty = plan_qty - plan_doc.received_qty - reserved_qty
+            plan_doc.received_qty = actual_qty
+            plan_doc.reserved_received_qty = flt(plan_doc.get("reserved_received_qty", 0)) - actual_qty
+            plan_doc.unreserved_qty = plan_qty - plan_doc.unreserved_received_qty - plan_doc.reserved_qty
 
         # Save and commit changes
         plan_doc.save()
         frappe.db.commit()
 
-        # Cancel associated Production Stock Reservations
         for row in plan_doc.get("reserved_wip_plans") or []:
             filters = {
                 "plans_no": row.plan,
@@ -954,9 +795,10 @@ def on_stock_entry_cancel_reservation(doc, method):
                     reservation_doc = frappe.get_doc("Production Stock Reservation", reservation_name)
                     if reservation_doc.docstatus == 1:
                         reservation_doc.cancel()
-                        print(f"Cancelled Production Stock Reservation: {reservation_name}")
-                except Exception as e:
-                    frappe.log_error(f"Failed to cancel Production Stock Reservation: {reservation_name}. Error: {str(e)}")
+                except Exception:
+                    frappe.log_error(frappe.get_traceback(), 
+                        f"Failed to cancel Production Stock Reservation: {reservation_name}")
+
 
 
 
@@ -1203,137 +1045,137 @@ def cancel_plans_for_wo_short_close_qty(docname, qty):
         return {"status": "error", "message": str(e)}
 
 # uncomment this below code while deploy in pranera instance
-def on_submit_wo(doc, method):
-    print("\n\non_submit_wo triggered]\n")
+# def on_submit_wo(doc, method):
+#     print("\n\non_submit_wo triggered]\n")
 
-    if doc.custom_short_close_wo_qty >= 0:
-        update_plans_for_wo_short_close_qty(doc.custom_plans, doc.custom_short_close_wo_qty)
+#     if doc.custom_short_close_wo_qty >= 0:
+#         update_plans_for_wo_short_close_qty(doc.custom_plans, doc.custom_short_close_wo_qty)
 
-    if not doc.custom_plans or doc.custom_short_close_plan_qty is None:
-        return
+#     if not doc.custom_plans or doc.custom_short_close_plan_qty is None:
+#         return
 
-    # Optional: Fetch plan_qty
-    plan_qty = frappe.db.get_value("Plans", doc.custom_plans, "plan_qty") or 0
+#     # Optional: Fetch plan_qty
+#     plan_qty = frappe.db.get_value("Plans", doc.custom_plans, "plan_qty") or 0
 
-    # Get total qty and short close qty from submitted Work Orders
-    existing_data = frappe.db.sql("""
-        SELECT 
-            COALESCE(SUM(wo.qty), 0) AS total_qty,
-            COALESCE(SUM(wo.custom_short_close_plan_qty), 0) AS total_short_close
-        FROM 
-            `tabWork Order` wo
-        WHERE 
-            wo.custom_plans = %s
-            AND wo.docstatus = 1
-    """, (doc.custom_plans,))[0]
+#     # Get total qty and short close qty from submitted Work Orders
+#     existing_data = frappe.db.sql("""
+#         SELECT 
+#             COALESCE(SUM(wo.qty), 0) AS total_qty,
+#             COALESCE(SUM(wo.custom_short_close_plan_qty), 0) AS total_short_close
+#         FROM 
+#             `tabWork Order` wo
+#         WHERE 
+#             wo.custom_plans = %s
+#             AND wo.docstatus = 1
+#     """, (doc.custom_plans,))[0]
 
-    total_wo_qty = existing_data[0]
-    total_short_close_qty = existing_data[1]
+#     total_wo_qty = existing_data[0]
+#     total_short_close_qty = existing_data[1]
 
-    print(f"\n📘 Plan: {doc.custom_plans}")
-    print(f"➤ WO Qty: {total_wo_qty}, Short Close Qty: {total_short_close_qty}")
+#     print(f"\n📘 Plan: {doc.custom_plans}")
+#     print(f"➤ WO Qty: {total_wo_qty}, Short Close Qty: {total_short_close_qty}")
 
-    # ✅ Update the short_close_plan_qty in Plans doc
-    frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
+#     # ✅ Update the short_close_plan_qty in Plans doc
+#     frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
 
-    # 🔄 Adjust plan_qty in plan_item_planned_wise inside Plan Items
-    plan_items = frappe.get_all(
-        "Plan Items",
-        filters={"plan": doc.custom_plans},
-        fields=["name"]
-    )
+#     # 🔄 Adjust plan_qty in plan_item_planned_wise inside Plan Items
+#     plan_items = frappe.get_all(
+#         "Plan Items",
+#         filters={"plan": doc.custom_plans},
+#         fields=["name"]
+#     )
 
-    for plan_item in plan_items:
-        plan_item_doc = frappe.get_doc("Plan Items", plan_item.name)
+#     for plan_item in plan_items:
+#         plan_item_doc = frappe.get_doc("Plan Items", plan_item.name)
 
-        for row in plan_item_doc.get("plan_item_planned_wise", []):
-            if row.plan == doc.custom_plans:
-                original_qty = row.plan_qty or 0
-                new_qty = max(original_qty - total_short_close_qty, 0)
-                print(f"🔧 Updating row {row.name} in plan_item_planned_wise: {original_qty} → {new_qty}")
-                row.plan_qty = new_qty
+#         for row in plan_item_doc.get("plan_item_planned_wise", []):
+#             if row.plan == doc.custom_plans:
+#                 original_qty = row.plan_qty or 0
+#                 new_qty = max(original_qty - total_short_close_qty, 0)
+#                 print(f"🔧 Updating row {row.name} in plan_item_planned_wise: {original_qty} → {new_qty}")
+#                 row.plan_qty = new_qty
 
-        # 💾 Save Plan Item doc after updating both tables
-        plan_item_doc.save(ignore_permissions=True)
+#         # 💾 Save Plan Item doc after updating both tables
+#         plan_item_doc.save(ignore_permissions=True)
 
-        # ✅ Update summary table inside Plan Items doc
-        update_plan_items_summary_wo(plan_item_doc.name)
+#         # ✅ Update summary table inside Plan Items doc
+#         update_plan_items_summary_wo(plan_item_doc.name)
 
 
 
-def on_update_after_submit_wo(doc, method):
-    print("\n\non_update_after_submit_wo triggered]\n")
+# def on_update_after_submit_wo(doc, method):
+#     print("\n\non_update_after_submit_wo triggered]\n")
 
-    if doc.custom_short_close_wo_qty >= 0:
-        update_plans_for_wo_short_close_qty(doc.custom_plans, doc.custom_short_close_wo_qty)
+#     if doc.custom_short_close_wo_qty >= 0:
+#         update_plans_for_wo_short_close_qty(doc.custom_plans, doc.custom_short_close_wo_qty)
 
     
-    if not doc.custom_plans and doc.custom_short_close_plan_qty is None:
-        return
+#     if not doc.custom_plans and doc.custom_short_close_plan_qty is None:
+#         return
 
-    # if doc.custom_short_close_plan_qty > 0:
-    # Optional: Fetch plan_qty
-    plan_qty = frappe.db.get_value("Plans", doc.custom_plans, "plan_qty") or 0
+#     # if doc.custom_short_close_plan_qty > 0:
+#     # Optional: Fetch plan_qty
+#     plan_qty = frappe.db.get_value("Plans", doc.custom_plans, "plan_qty") or 0
 
-    # Get total qty and short close qty from submitted Work Orders
-    existing_data = frappe.db.sql("""
-        SELECT 
-            COALESCE(SUM(wo.qty), 0) AS total_qty,
-            COALESCE(SUM(wo.custom_short_close_plan_qty), 0) AS total_short_close
-        FROM 
-            `tabWork Order` wo
-        WHERE 
-            wo.custom_plans = %s
-            AND wo.docstatus = 1
-    """, (doc.custom_plans,))[0]
+#     # Get total qty and short close qty from submitted Work Orders
+#     existing_data = frappe.db.sql("""
+#         SELECT 
+#             COALESCE(SUM(wo.qty), 0) AS total_qty,
+#             COALESCE(SUM(wo.custom_short_close_plan_qty), 0) AS total_short_close
+#         FROM 
+#             `tabWork Order` wo
+#         WHERE 
+#             wo.custom_plans = %s
+#             AND wo.docstatus = 1
+#     """, (doc.custom_plans,))[0]
 
-    existing_short_close_wo_data = frappe.db.sql("""
-        SELECT 
-            COALESCE(SUM(wo.custom_short_close_wo_qty), 0) AS total_short_close_wo
-        FROM 
-            `tabWork Order` wo
-        WHERE 
-            wo.custom_plans = %s
-            AND wo.docstatus = 1
-    """, (doc.custom_plans,))[0]
+#     existing_short_close_wo_data = frappe.db.sql("""
+#         SELECT 
+#             COALESCE(SUM(wo.custom_short_close_wo_qty), 0) AS total_short_close_wo
+#         FROM 
+#             `tabWork Order` wo
+#         WHERE 
+#             wo.custom_plans = %s
+#             AND wo.docstatus = 1
+#     """, (doc.custom_plans,))[0]
 
-    total_wo_qty_after_short_close = existing_data[0] - existing_data[1]
-    total_short_close_qty = existing_data[1]
+#     total_wo_qty_after_short_close = existing_data[0] - existing_data[1]
+#     total_short_close_qty = existing_data[1]
 
-    print(f"\n📘 Plan: {doc.custom_plans}")
-    print(f"➤ WO Qty: {total_wo_qty_after_short_close}, Short Close Qty: {total_short_close_qty}")
+#     print(f"\n📘 Plan: {doc.custom_plans}")
+#     print(f"➤ WO Qty: {total_wo_qty_after_short_close}, Short Close Qty: {total_short_close_qty}")
 
-    # ✅ Update the short_close_plan_qty in Plans doc
-    frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
+#     # ✅ Update the short_close_plan_qty in Plans doc
+#     frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
 
-    # frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
+#     # frappe.db.set_value("Plans", doc.custom_plans, "short_close_plan_qty", total_short_close_qty)
 
 
-    # frappe.db.set_value("Plans", doc.custom_plans, "rm_reserved_qty", total_wo_qty_after_short_close)
+#     # frappe.db.set_value("Plans", doc.custom_plans, "rm_reserved_qty", total_wo_qty_after_short_close)
 
-    # 🔄 Adjust plan_qty in plan_item_planned_wise inside Plan Items
-    plan_items = frappe.get_all(
-        "Plan Items",
-        filters={"plan": doc.custom_plans},
-        fields=["name"]
-    )
+#     # 🔄 Adjust plan_qty in plan_item_planned_wise inside Plan Items
+#     plan_items = frappe.get_all(
+#         "Plan Items",
+#         filters={"plan": doc.custom_plans},
+#         fields=["name"]
+#     )
 
-    for plan_item in plan_items:
-        plan_item_doc = frappe.get_doc("Plan Items", plan_item.name)
+#     for plan_item in plan_items:
+#         plan_item_doc = frappe.get_doc("Plan Items", plan_item.name)
 
-        for row in plan_item_doc.get("plan_item_planned_wise", []):
-            if row.plan == doc.custom_plans:
-                original_qty = row.plan_qty or 0
-                # new_qty = max(original_qty - total_short_close_qty, 0)
-                new_qty = total_wo_qty_after_short_close
-                print(f"🔧 Updating row {row.name} in plan_item_planned_wise: {original_qty} → {new_qty}")
-                row.plan_qty = new_qty
+#         for row in plan_item_doc.get("plan_item_planned_wise", []):
+#             if row.plan == doc.custom_plans:
+#                 original_qty = row.plan_qty or 0
+#                 # new_qty = max(original_qty - total_short_close_qty, 0)
+#                 new_qty = total_wo_qty_after_short_close
+#                 print(f"🔧 Updating row {row.name} in plan_item_planned_wise: {original_qty} → {new_qty}")
+#                 row.plan_qty = new_qty
 
-        # 💾 Save Plan Item doc after updating both tables
-        plan_item_doc.save(ignore_permissions=True)
+#         # 💾 Save Plan Item doc after updating both tables
+#         plan_item_doc.save(ignore_permissions=True)
 
-        # ✅ Update summary table inside Plan Items doc
-        update_plan_items_summary_wo(plan_item_doc.name)
+#         # ✅ Update summary table inside Plan Items doc
+#         update_plan_items_summary_wo(plan_item_doc.name)
 # uncomment this above code while deploy in pranera instance
 
 

@@ -14,11 +14,6 @@ frappe.ui.form.on("Plans", {
                 }
             };
         });
-        if (frm.doc.docstatus === 1) { // Only for submitted documents
-            frm.add_custom_button(__('Mark as Completed'), function() {
-                mark_plan_completed(frm);
-            }).addClass('btn-primary');
-        }
 
 
 	},
@@ -807,31 +802,6 @@ function validate_to_reserve_qty(frm, cdt, cdn, child_table_type) {
     });
         
 }
-
-function mark_plan_completed(frm) {
-    frappe.confirm(
-        'Are you sure you want to mark this plan as completed?',
-        function() {
-            // Yes button clicked
-            frappe.call({
-                method: 'textiles_and_garments.textiles_and_garments.doctype.plans.plans.mark_plan_completed',
-                args: {
-                    plan_name: frm.doc.name
-                },
-                callback: function(r) {
-                    if (r.message) {
-                        frappe.msgprint(r.message);
-                        frm.reload_doc();
-                    }
-                }
-            });
-        },
-        function() {
-            // No button clicked - do nothing
-        }
-    );
-}
-
 
 // Stock Table Trigger
 frappe.ui.form.on('Plans Stock Item', {

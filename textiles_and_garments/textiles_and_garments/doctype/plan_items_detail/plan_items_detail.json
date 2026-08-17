@@ -13,9 +13,7 @@
   "qty",
   "uom",
   "color",
-  "width",
-  "available_qty",
-  "shortfall_qty"
+  "width"
  ],
  "fields": [
   {
@@ -68,24 +66,12 @@
    "in_list_view": 1,
    "label": "Operation",
    "options": "Operation"
-  },
-  {
-   "fieldname": "available_qty",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Available Qty"
-  },
-  {
-   "fieldname": "shortfall_qty",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Shortfall Qty"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-10-07 15:57:48.395581",
+ "modified": "2025-07-23 17:42:48.405871",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Plan Items Detail",

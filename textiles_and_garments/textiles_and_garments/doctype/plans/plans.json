@@ -47,17 +47,7 @@
   "plans_wip_item",
   "section_break_emnm",
   "reserved_wip_plans",
-  "amended_from",
-  "section_break_skfw",
-  "overall_planned_date",
-  "overall_actual_date",
-  "overall_status",
-  "column_break_meer",
-  "progress_percentage",
-  "completed_milestones",
-  "total_milestones",
-  "milestones_section",
-  "time_and_action_milestones"
+  "amended_from"
  ],
  "fields": [
   {
@@ -309,61 +299,6 @@
    "fieldname": "reserved_received_qty",
    "fieldtype": "Float",
    "label": "Reserved Received Qty"
-  },
-  {
-   "fieldname": "section_break_skfw",
-   "fieldtype": "Section Break",
-   "label": "Time and Action Calendar"
-  },
-  {
-   "fieldname": "overall_planned_date",
-   "fieldtype": "Date",
-   "label": "Overall Planned Date"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "overall_actual_date",
-   "fieldtype": "Date",
-   "label": "Overall Actual Date"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "overall_status",
-   "fieldtype": "Select",
-   "label": "Overall Status",
-   "options": "\nCompleted\nDelayed\nIn Progress\nPlanning"
-  },
-  {
-   "fieldname": "column_break_meer",
-   "fieldtype": "Column Break"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "progress_percentage",
-   "fieldtype": "Percent",
-   "label": "Progress Percentage"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "completed_milestones",
-   "fieldtype": "Int",
-   "label": "Completed Milestones"
-  },
-  {
-   "fieldname": "total_milestones",
-   "fieldtype": "Int",
-   "label": "Total Milestones"
-  },
-  {
-   "fieldname": "milestones_section",
-   "fieldtype": "Section Break",
-   "label": "Milestones"
-  },
-  {
-   "fieldname": "time_and_action_milestones",
-   "fieldtype": "Table",
-   "label": "Time and Action Milestones",
-   "options": "Time and Action Milestones"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -374,7 +309,7 @@
    "link_fieldname": "plans_no"
   }
  ],
- "modified": "2025-10-06 10:00:38.199560",
+ "modified": "2025-07-31 13:28:00.004267",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Plans",

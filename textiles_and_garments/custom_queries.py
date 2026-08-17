@@ -88,7 +88,6 @@ def get_item_history(item_code, company):
         ORDER BY si.posting_date DESC
         LIMIT 50
     """, (item_code, company), as_dict=1)
-    print("\n\nsales_history\n\n",sales_history)
     
     return {
         'purchase_history': purchase_history,

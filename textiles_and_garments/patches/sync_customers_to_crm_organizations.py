@@ -20,37 +20,37 @@ import frappe
 
 def _ensure_territory(territory_name):
     """
-    CRM Organization.territory is a Link field — but its `options` points to
-    "CRM Territory", NOT the standard ERPNext "Territory" doctype (confirmed
-    via DocField: fieldname=territory, label="Territory", options="CRM
-    Territory"). The field's label is "Territory", which is why Frappe's own
-    error message ("Could not find Territory: X") looks like it's about the
-    standard Territory doctype — it isn't; that's just the field's display
-    label leaking into the error text. The standard Territory doctype
-    genuinely does have all these values already; "CRM Territory" is a
-    separate, nearly-empty table (4 rows) that was never populated. Auto-
-    create the missing leaf CRM Territory record instead of failing the
-    whole customer record. parent_crm_territory isn't a required field on
-    this doctype, so these can land as flat top-level leaves; they can be
-    reorganized under proper parents later if needed.
-    Returns None (instead of raising) if creation itself fails for some
+    CRM Organization.territory is a Link field to Territory — Frappe refuses
+    to save a record whose linked value doesn't exist ("Could not find
+    Territory: X"). Most Customer.territory values here are city/district
+    names (Tiruppur, Chennai, Erode, ...) that were never created as
+    Territory records, which is why ~14,600 of 14,727 customers failed to
+    sync. Auto-create the missing leaf Territory under the tree root instead
+    of failing the whole customer record — this is a one-time backfill, so
+    it's fine for these to land as flat leaves under "All Territories"; they
+    can be reorganized under proper parent territories later if needed.
+    Returns None(instead of raising) if creation itself fails for some
     other reason, so the caller can fall back to leaving territory unset
     rather than losing the whole customer/organization record over it.
     """
     if not territory_name:
         return None
-    if frappe.db.exists("CRM Territory", territory_name):
+    if frappe.db.exists("Territory", territory_name):
         return territory_name
 
+    root = frappe.db.get_value("Territory", {"territory_name": "All Territories"}) \
+        or frappe.db.get_value("Territory", {"parent_territory": ["is", "not set"]})
+
     try:
-        doc = frappe.new_doc("CRM Territory")
+        doc = frappe.new_doc("Territory")
         doc.territory_name = territory_name
+        doc.parent_territory = root
         doc.is_group = 0
         doc.insert(ignore_permissions=True)
         return doc.name
     except Exception as e:
         frappe.log_error(
-            f"Could not auto-create CRM Territory '{territory_name}': {e}",
+            f"Could not auto-create Territory '{territory_name}': {e}",
             "sync_customers_to_crm_organizations",
         )
         frappe.db.rollback()
@@ -85,7 +85,7 @@ def execute():
         cust_name = cust["name"]
         try:
             territory = cust.get("territory")
-            if territory and not frappe.db.exists("CRM Territory", territory):
+            if territory and not frappe.db.exists("Territory", territory):
                 resolved = _ensure_territory(territory)
                 if resolved:
                     territories_created += 1
