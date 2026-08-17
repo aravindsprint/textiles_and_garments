@@ -29,7 +29,7 @@ def _ensure_territory(territory_name):
     of failing the whole customer record — this is a one-time backfill, so
     it's fine for these to land as flat leaves under "All Territories"; they
     can be reorganized under proper parent territories later if needed.
-    Returns None (instead of raising) if creation itself fails for some
+    Returns None(instead of raising) if creation itself fails for some
     other reason, so the caller can fall back to leaving territory unset
     rather than losing the whole customer/organization record over it.
     """
