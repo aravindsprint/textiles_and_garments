@@ -1,11 +1,11 @@
 
 
 
-frappe.ui.form.on("Purchase Order", { 
-    custom_parent_fabric_work_order: function (frm) { 
-        frm.doc.items.forEach(d => { 
-            frappe.model.set_value(d.doctype, d.name, "custom_parent_fabric_work_order", frm.doc.custom_parent_fabric_work_order); 
-        }) 
+frappe.ui.form.on("Purchase Order", {
+    custom_parent_fabric_work_order: function (frm) {
+        frm.doc.items.forEach(d => {
+            frappe.model.set_value(d.doctype, d.name, "custom_parent_fabric_work_order", frm.doc.custom_parent_fabric_work_order);
+        })
     }
 });
 
@@ -16,27 +16,50 @@ frappe.ui.form.on('Purchase Order', {
         });
 
 
-        frm.set_query("custom_parent_fabric_work_order", function() {
-                return {
-                    filters: [
-                        ["docstatus", "=", 1],
-                        ["custom_plan_items", "=", frm.doc.custom_plan_items],
-                        // Use the dynamically constructed filter_production_item
-                        // ["production_item", "like", filter_production_item]
-                    ]
-                };
+        frm.set_query("custom_parent_fabric_work_order", function () {
+            return {
+                filters: [
+                    ["docstatus", "=", 1],
+                    ["custom_plan_items", "=", frm.doc.custom_plan_items],
+                    // Use the dynamically constructed filter_production_item
+                    // ["production_item", "like", filter_production_item]
+                ]
+            };
         });
+
+        if (frm.doc.docstatus === 1) {
+            // Check if there are linked plans
+            let has_linked_plans = false;
+            if (frm.doc.items) {
+                frm.doc.items.forEach(item => {
+                    if (item.custom_plans) {
+                        has_linked_plans = true;
+                    }
+                });
+            }
+
+            if (has_linked_plans) {
+                frm.add_custom_button(__('🔗 Remove Links & Cancel'), function () {
+                    remove_links_and_cancel_advanced(frm);
+                }).addClass('btn-warning');
+            }
+
+            // Also keep the regular cancel button
+            frm.add_custom_button(__('Cancel'), function () {
+                frm.cancel();
+            });
+        }
 
 
     },
-    before_submit(frm){
+    before_submit(frm) {
         let requiresValidation = false;
 
         // Check each item in the items table
         (frm.doc.items || []).forEach(item => {
             const itemCode = item.item_code;
             console.log("Checking item:", itemCode, "Type:", item.custom_item_type);
-            
+
             // Skip validation if custom_item_type is "Fabric"
             if (item.custom_item_type !== "Fabric" && /[.X]/i.test(itemCode)) {
                 console.log("Item contains '.' or 'X' and is not Fabric");
@@ -46,9 +69,9 @@ frappe.ui.form.on('Purchase Order', {
 
         if (requiresValidation) {
             console.log("Validation required for items containing '.' or 'X'");
-            if (!frm.doc.custom_parent_fabric_work_order || 
+            if (!frm.doc.custom_parent_fabric_work_order ||
                 frm.doc.custom_parent_fabric_work_order === "") {
-                
+
                 frappe.msgprint(__('Parent Fabric Work Order is mandatory for Collar and Cuff WO'));
                 frappe.validated = false;
             }
@@ -58,9 +81,58 @@ frappe.ui.form.on('Purchase Order', {
 });
 
 
+function remove_links_and_cancel_advanced(frm) {
+    // Get linked plans for confirmation message
+    let linked_plans = [];
+    frm.doc.items.forEach(item => {
+        if (item.custom_plans && !linked_plans.includes(item.custom_plans)) {
+            linked_plans.push(item.custom_plans);
+        }
+    });
+
+    let confirm_message = `This Purchase Order is linked to ${linked_plans.length} plan(s):<br><br>`;
+    linked_plans.forEach(plan => {
+        confirm_message += `• ${plan}<br>`;
+    });
+    confirm_message += `<br>All milestone links will be removed before cancellation. Continue?`;
+
+    frappe.confirm(
+        confirm_message,
+        function () {
+            frappe.call({
+                method: 'textiles_and_garments.time_and_action_milestones.remove_po_links_before_cancel',
+                args: {
+                    po_name: frm.doc.name,
+                    plan_names: linked_plans  // This should be an array
+                },
+                callback: function (r) {
+                    if (r.message && r.message.success) {
+                        frappe.msgprint({
+                            title: __('Success'),
+                            indicator: 'green',
+                            message: __('Removed links from {0} plan(s). Cancelling PO...', [linked_plans.length])
+                        });
+
+                        // Cancel the PO after a brief delay to show the message
+                        setTimeout(() => {
+                            frm.cancel();
+                        }, 1500);
+                    } else {
+                        frappe.msgprint({
+                            title: __('Error'),
+                            indicator: 'red',
+                            message: __('Failed to remove links: {0}', [r.message.error || 'Unknown error'])
+                        });
+                    }
+                }
+            });
+        }
+    );
+}
 
 
-     
+
+
 
 function show_plans_multi_select_dialog(frm) {
     const custom_plan_items = frm.doc.custom_plan_items;
@@ -119,10 +191,10 @@ function show_plans_multi_select_dialog(frm) {
                     const selected_plans = all_plans.filter(r => selected_names.includes(r.name));
 
                     const existing_plans = (frm.doc.items || []).map(row => row.custom_plans);
-                    console.log("existing_plans",existing_plans);
+                    console.log("existing_plans", existing_plans);
 
                     const new_plans = selected_plans.filter(plan => !existing_plans.includes(plan.name));
-                    console.log("new_plans",new_plans);
+                    console.log("new_plans", new_plans);
 
                     if (new_plans.length === 0) {
                         frappe.msgprint("Selected Plans are already added.");
@@ -132,9 +204,9 @@ function show_plans_multi_select_dialog(frm) {
 
                     frm.clear_table('items');
 
-                    if(frm.doc.is_subcontracted == 1){
+                    if (frm.doc.is_subcontracted == 1) {
                         new_plans.forEach(plan => {
-                        frm.add_child('items', {
+                            frm.add_child('items', {
                                 fg_item: plan.item_code,
                                 custom_plans: plan.name,
                                 fg_item_qty: plan.plan_qty,
@@ -148,9 +220,9 @@ function show_plans_multi_select_dialog(frm) {
                         this.dialog.hide();
 
                     }
-                    else{
+                    else {
                         new_plans.forEach(plan => {
-                        frm.add_child('items', {
+                            frm.add_child('items', {
                                 item_code: plan.item_code,
                                 custom_plans: plan.name,
                                 // fg_item_qty: plan.plan_qty,
@@ -165,7 +237,7 @@ function show_plans_multi_select_dialog(frm) {
 
                     }
 
-                    
+
                 }
             });
         }

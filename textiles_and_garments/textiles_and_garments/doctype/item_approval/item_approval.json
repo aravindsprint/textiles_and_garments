@@ -1,0 +1,160 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-01-20 09:51:32.584945",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_ostl",
+  "naming_series",
+  "item",
+  "item_group",
+  "column_break_l9fe",
+  "item_name",
+  "commercial__name",
+  "section_break_uewq",
+  "description",
+  "is_stock_item",
+  "fixed_asset",
+  "amended_from",
+  "section_break_6udj",
+  "buying_cost_center",
+  "selling_cost_center",
+  "column_break_kulh",
+  "income_account",
+  "expence_account"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_ostl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Data",
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "IA/.####"
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "label": "Item Group",
+   "options": "Item Group"
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name",
+   "options": "Item Name"
+  },
+  {
+   "fieldname": "commercial__name",
+   "fieldtype": "Data",
+   "label": "Commercial  Name",
+   "options": "Commercial  Name"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Decscription"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_stock_item",
+   "fieldtype": "Check",
+   "label": "Maintain Stock"
+  },
+  {
+   "default": "0",
+   "fieldname": "fixed_asset",
+   "fieldtype": "Check",
+   "label": "Fixed Asset"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Item approval",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "buying_cost_center",
+   "fieldtype": "Link",
+   "label": "Buying Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "selling_cost_center",
+   "fieldtype": "Link",
+   "label": "Selling Cost Center ",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "income_account",
+   "fieldtype": "Link",
+   "label": "Income Account ",
+   "options": "Account"
+  },
+  {
+   "fieldname": "expence_account",
+   "fieldtype": "Link",
+   "label": "Expence Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "column_break_l9fe",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_uewq",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_6udj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_kulh",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-01-20 15:46:24.390940",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Item approval",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

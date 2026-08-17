@@ -299,6 +299,7 @@ frappe.ui.form.on('Roll Wise Pick List', {
 function show_roll_multi_select_dialog(frm) {
     const warehouse = frm.doc.warehouse;
     const batch = frm.doc.batch;
+    console.log("show_roll_multi_select_dialog");
     if (!warehouse) {
         frappe.msgprint("Please select a Warehouse first.");
         return;

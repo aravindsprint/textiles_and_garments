@@ -13,8 +13,12 @@
   "target_batch",
   "document_type",
   "document_name",
+  "source_item",
+  "target_item",
   "qty",
-  "remarks"
+  "remarks",
+  "source_warehouse",
+  "target_warehouse"
  ],
  "fields": [
   {
@@ -71,12 +75,36 @@
    "fieldname": "remarks",
    "fieldtype": "Data",
    "label": "Remarks"
+  },
+  {
+   "fieldname": "source_item",
+   "fieldtype": "Link",
+   "label": "Source Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "target_item",
+   "fieldtype": "Link",
+   "label": "Target Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "source_warehouse",
+   "fieldtype": "Link",
+   "label": "Source Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "target_warehouse",
+   "fieldtype": "Link",
+   "label": "Target Warehouse",
+   "options": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-10-29 17:36:31.574189",
+ "modified": "2026-03-06 11:35:40.460043",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Tracking Entries",

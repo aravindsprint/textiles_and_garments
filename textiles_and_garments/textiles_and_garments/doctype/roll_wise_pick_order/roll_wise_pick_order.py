@@ -1,6 +1,9 @@
 # Copyright (c) 2025, Your Company and contributors
 # For license information, please see license.txt
 
+# Copyright (c) 2025, Your Company and contributors
+# For license information, please see license.txt
+
 import frappe
 from frappe.model.document import Document
 
@@ -28,12 +31,18 @@ class RollWisePickOrder(Document):
     
     def fetch_required_items(self):
         """Fetch required items from source document"""
+        
+        # ✅ ADD DEBUG LOG
+        frappe.log_error(
+            f"fetch_required_items called\nPick Type: {self.pick_type}\nDocument: {self.document_name}",
+            "Debug: fetch_required_items"
+        )
+        
         if not self.document_name or not self.document_type:
             return
         
-        # Only fetch if required_items is empty (to avoid overwriting)
-        if self.required_items:
-            return
+        # ✅ CLEAR existing items when document changes (removed the early return)
+        # This allows re-fetching when switching between documents
         
         try:
             source_doc = frappe.get_doc(self.document_type, self.document_name)
@@ -42,10 +51,19 @@ class RollWisePickOrder(Document):
             self.required_items = []
             
             if self.document_type == "Work Order":
+                # ✅ SET PROJECT AND PRODUCTION ITEM FOR BOTH PICK TYPES
                 self.project = source_doc.project
                 
+                # ✅ NEW: Store production item (for both From and To Work Order)
+                if hasattr(source_doc, 'production_item'):
+                    self.production_item = source_doc.production_item
+                    frappe.log_error(
+                        f"Production Item set to: {self.production_item}",
+                        "Debug: Production Item"
+                    )
+                
                 if self.pick_type == "To Work Order":
-                    # Fetch required items (Raw Materials)
+                    # ✅ FETCH REQUIRED ITEMS (Raw Materials) - SHOW IN TABLE
                     for item in source_doc.required_items:
                         self.append("required_items", {
                             "item_code": item.item_code,
@@ -59,11 +77,24 @@ class RollWisePickOrder(Document):
                     # Set target warehouse (WIP warehouse)
                     if source_doc.wip_warehouse:
                         self.target_warehouse = source_doc.wip_warehouse
+                    
+                    frappe.log_error(
+                        f"To Work Order: Added {len(self.required_items)} required items",
+                        "Debug: Required Items"
+                    )
                 
                 elif self.pick_type == "From Work Order":
+                    # ✅ FOR "FROM WORK ORDER" - DON'T POPULATE REQUIRED ITEMS
+                    # Just show Production Item (already set above)
+                    
                     # Set source warehouse (FG warehouse)
                     if source_doc.fg_warehouse:
                         self.source_warehouse = source_doc.fg_warehouse
+                    
+                    frappe.log_error(
+                        f"From Work Order: Production Item = {self.production_item}, FG Warehouse = {self.source_warehouse}",
+                        "Debug: From Work Order"
+                    )
             
             elif self.document_type == "Purchase Order":
                 if hasattr(source_doc, 'project'):
@@ -122,6 +153,7 @@ class RollWisePickOrder(Document):
                     })
         
         except Exception as e:
+            frappe.log_error(f"Error fetching document details: {str(e)}", "API Error")
             frappe.throw(f"Error fetching document details: {str(e)}")
     
     def update_required_items_picked_qty(self):
@@ -180,12 +212,6 @@ class RollWisePickOrder(Document):
         # Check if any rolls/batches are selected
         if not self.roll_wise_pick_item and not self.batch_wise_pick_item:
             frappe.throw("Please add at least one roll or batch before submitting")
-        
-        # Validate that all required items have been picked (optional validation)
-        # for item in self.required_items:
-        #     if item.remaining_qty > 0:
-        #         frappe.msgprint(f"Warning: {item.item_code} still has {item.remaining_qty} {item.stock_uom} remaining", 
-        #                       alert=True)
     
     def on_submit(self):
         """On submit, update status to Pending"""

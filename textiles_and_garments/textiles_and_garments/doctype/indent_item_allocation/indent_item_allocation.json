@@ -1,0 +1,183 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-03-06 11:11:30.484216",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_pgdj",
+  "naming_series",
+  "indent_no",
+  "indent_item",
+  "allocate_indent_item",
+  "from_item_code",
+  "to_item_code",
+  "type",
+  "supplier",
+  "column_break_d32b",
+  "bom",
+  "indent_qty",
+  "get_allocate_qty",
+  "need_to_allocate_qty",
+  "rm_allocated_qty",
+  "fg_ordered_qty",
+  "fg_to_order_qty",
+  "to_allocate_qty",
+  "amended_from",
+  "previous_operation",
+  "operation"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_pgdj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Indent Item Allocation",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "IIA/.####"
+  },
+  {
+   "fieldname": "from_item_code",
+   "fieldtype": "Link",
+   "label": "From Item code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "to_item_code",
+   "fieldtype": "Link",
+   "label": "To Item code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "Purchase\nSubcontract\nInhouse"
+  },
+  {
+   "fieldname": "bom",
+   "fieldtype": "Link",
+   "label": "BOM",
+   "options": "BOM"
+  },
+  {
+   "fieldname": "column_break_d32b",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "indent_no",
+   "fieldtype": "Link",
+   "label": "Indent no",
+   "options": "Production Planning"
+  },
+  {
+   "fetch_from": "indent_no.item",
+   "fieldname": "indent_item",
+   "fieldtype": "Data",
+   "label": "Indent Item"
+  },
+  {
+   "fieldname": "allocate_indent_item",
+   "fieldtype": "Select",
+   "label": "Allocate Indent Item",
+   "options": "Yes\nNo"
+  },
+  {
+   "fieldname": "rm_allocated_qty",
+   "fieldtype": "Float",
+   "label": "RM Allocated Qty"
+  },
+  {
+   "fieldname": "fg_ordered_qty",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "FG Ordered Qty"
+  },
+  {
+   "fieldname": "fg_to_order_qty",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "FG To Order Qty"
+  },
+  {
+   "fieldname": "to_allocate_qty",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "To Allocate Qty"
+  },
+  {
+   "fetch_from": "indent_no.indent_qty",
+   "fieldname": "indent_qty",
+   "fieldtype": "Float",
+   "label": "Indent Qty"
+  },
+  {
+   "fieldname": "need_to_allocate_qty",
+   "fieldtype": "Float",
+   "label": "Need to Allocate Qty"
+  },
+  {
+   "fieldname": "get_allocate_qty",
+   "fieldtype": "Button",
+   "label": "Get Allocate Qty"
+  },
+  {
+   "fetch_from": "from_item_code.custom_operation",
+   "fieldname": "previous_operation",
+   "fieldtype": "Data",
+   "label": "Previous Operation"
+  },
+  {
+   "fetch_from": "to_item_code.custom_operation",
+   "fieldname": "operation",
+   "fieldtype": "Data",
+   "label": "Operation"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-03-21 09:56:47.323030",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Indent Item Allocation",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
