@@ -11,6 +11,8 @@
   "batch",
   "column_break_z3d0",
   "posting_date",
+  "stock_entry",
+  "roll_pick_assignment",
   "section_break_ra5c",
   "roll_wise_pick_item",
   "section_break_y6dp",
@@ -89,12 +91,27 @@
    "fieldtype": "Link",
    "label": "Batch",
    "options": "Batch"
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "options": "Stock Entry"
+  },
+  {
+   "description": "Set automatically when this Pick List fulfilled a supervisor-assigned Roll Pick Assignment.",
+   "fieldname": "roll_pick_assignment",
+   "fieldtype": "Link",
+   "label": "Roll Pick Assignment",
+   "no_copy": 1,
+   "options": "Roll Pick Assignment",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-07 09:14:59.323452",
+ "modified": "2026-08-24 11:35:36.119611",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Wise Pick List",
@@ -117,6 +134,8 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
