@@ -13,9 +13,12 @@
   "section_break_order",
   "pick_type",
   "work_order",
+  "manufactured_qty",
   "column_break_2",
   "project",
   "posting_date",
+  "sales_order",
+  "batch_items",
   "section_break_warehouse",
   "source_warehouse",
   "column_break_3",
@@ -71,7 +74,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Pick Type",
-   "options": "From Work Order\nTo Work Order\nFrom Batch\nManual Roll Pick",
+   "options": "From Work Order\nTo Work Order\nFrom Batch\nManual Roll Pick\nTo Sales Order",
    "reqd": 1
   },
   {
@@ -81,6 +84,15 @@
    "label": "Work Order",
    "mandatory_depends_on": "eval:doc.pick_type=='From Work Order' || doc.pick_type=='To Work Order'",
    "options": "Work Order"
+  },
+  {
+   "depends_on": "eval:doc.pick_type=='From Work Order' || doc.pick_type=='To Work Order'",
+   "fetch_from": "work_order.manufactured_qty",
+   "fieldname": "manufactured_qty",
+   "fieldtype": "Float",
+   "label": "Manufactured Qty",
+   "precision": "3",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_2",
@@ -99,6 +111,21 @@
    "fieldtype": "Date",
    "label": "Posting Date",
    "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.pick_type=='To Sales Order'",
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "mandatory_depends_on": "eval:doc.pick_type=='To Sales Order'",
+   "options": "Sales Order"
+  },
+  {
+   "depends_on": "eval:doc.pick_type=='From Batch' || doc.pick_type=='To Sales Order'",
+   "fieldname": "batch_items",
+   "fieldtype": "Table",
+   "label": "Batch Items",
+   "options": "Roll Pick Batch Item"
   },
   {
    "fieldname": "section_break_warehouse",
