@@ -87,7 +87,7 @@
   },
   {
    "depends_on": "eval:doc.pick_type=='From Work Order' || doc.pick_type=='To Work Order'",
-   "fetch_from": "work_order.manufactured_qty",
+   "fetch_from": "work_order.produced_qty",
    "fieldname": "manufactured_qty",
    "fieldtype": "Float",
    "label": "Manufactured Qty",
