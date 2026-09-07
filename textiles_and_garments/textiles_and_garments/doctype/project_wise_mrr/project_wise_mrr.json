@@ -1,0 +1,215 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-01-23 09:40:28.168521",
+ "default_view": "List",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_4shf",
+  "naming_series",
+  "cuff_avg_weight",
+  "collar_avg_weight",
+  "column_break_bnvz",
+  "posting_date",
+  "section_break_5spd",
+  "projects",
+  "section_break_swjv",
+  "get_data",
+  "section_break_8u6m",
+  "project_po_sent_details",
+  "section_break_05s0",
+  "project_po_return_details",
+  "section_break_vhfz",
+  "project_po_received_details",
+  "section_break_0jsg",
+  "project_wo_sent_details",
+  "section_break_kvoy",
+  "project_wo_return_details",
+  "section_break_t7wa",
+  "project_wo_received_details",
+  "section_break_loe2",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_4shf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "MRR/.####"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "section_break_5spd",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_05s0",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_vhfz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_0jsg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0.034",
+   "fieldname": "collar_avg_weight",
+   "fieldtype": "Float",
+   "label": "Collar Avg Weight"
+  },
+  {
+   "default": "0.013",
+   "fieldname": "cuff_avg_weight",
+   "fieldtype": "Float",
+   "label": "Cuff Avg Weight"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Project Wise MRR",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Project Wise MRR",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "projects",
+   "fieldtype": "Table",
+   "label": "Projects",
+   "options": "Projects"
+  },
+  {
+   "fieldname": "section_break_swjv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "project_po_sent_details",
+   "fieldtype": "Table",
+   "label": "Project PO Sent Details",
+   "options": "Project PO Sent Details"
+  },
+  {
+   "fieldname": "project_po_return_details",
+   "fieldtype": "Table",
+   "label": "Project PO Return Details",
+   "options": "Project PO Return Details"
+  },
+  {
+   "fieldname": "project_po_received_details",
+   "fieldtype": "Table",
+   "label": "Project PO Received Details",
+   "options": "Project PO Received Details"
+  },
+  {
+   "fieldname": "project_wo_sent_details",
+   "fieldtype": "Table",
+   "label": "Project WO Sent Details",
+   "options": "Project WO Sent Details"
+  },
+  {
+   "fieldname": "project_wo_return_details",
+   "fieldtype": "Table",
+   "label": "Project WO Return Details",
+   "options": "Project WO Return Details"
+  },
+  {
+   "fieldname": "project_wo_received_details",
+   "fieldtype": "Table",
+   "label": "Project WO Received Details",
+   "options": "Project WO Received Details"
+  },
+  {
+   "fieldname": "column_break_bnvz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_kvoy",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_t7wa",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_loe2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "get_data",
+   "fieldtype": "Button",
+   "label": "Get Data"
+  },
+  {
+   "fieldname": "section_break_8u6m",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-01-23 11:16:54.054079",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Project Wise MRR",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
