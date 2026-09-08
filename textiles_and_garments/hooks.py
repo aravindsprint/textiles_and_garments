@@ -194,14 +194,14 @@ doc_events = {
     #     "on_submit": "textiles_and_garments.purchase_receipt.update_awaiting_grn_on_submit",
     #     "on_cancel": "textiles_and_garments.purchase_receipt.clear_awaiting_grn_on_cancel"
     # }
-    "Quality Inspection": {
-        "on_submit": [
-            "textiles_and_garments.overrides.quality_inspection.update_roll_weight_on_qi_submit"
-        ],
-        "on_cancel": [
-            "textiles_and_garments.overrides.quality_inspection.revert_roll_weight_on_qi_cancel"
-        ]
-    }
+    # "Quality Inspection": {
+    #     "on_submit": [
+    #         "textiles_and_garments.overrides.quality_inspection.update_roll_weight_on_qi_submit"
+    #     ],
+    #     "on_cancel": [
+    #         "textiles_and_garments.overrides.quality_inspection.revert_roll_weight_on_qi_cancel"
+    #     ]
+    # }
 }
 
 
