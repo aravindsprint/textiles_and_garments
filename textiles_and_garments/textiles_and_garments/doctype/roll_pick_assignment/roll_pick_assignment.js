@@ -8,6 +8,12 @@ frappe.ui.form.on("Roll Pick Assignment", {
 	refresh(frm) {
 		update_pick_qty_from_batch_items(frm);
 	},
+	work_order(frm) {
+		update_pick_qty_from_manufactured_batch(frm);
+	},
+	source_warehouse(frm) {
+		update_pick_qty_from_manufactured_batch(frm);
+	},
 });
 
 frappe.ui.form.on("Roll Pick Batch Item", {
@@ -34,4 +40,30 @@ function update_pick_qty_from_batch_items(frm) {
 	});
 
 	frm.set_value("pick_qty", total);
+}
+
+function update_pick_qty_from_manufactured_batch(frm) {
+	// For "From Work Order" picks, pick_qty is auto-set to whatever stock is
+	// actually still available (in source_warehouse) from the batch(es) this
+	// Work Order manufactured, so the worker isn't asked to pick more than exists.
+	if (frm.doc.pick_type !== "From Work Order") {
+		return;
+	}
+	if (!frm.doc.work_order || !frm.doc.source_warehouse) {
+		return;
+	}
+
+	frappe.call({
+		method:
+			"textiles_and_garments.textiles_and_garments.doctype.roll_pick_assignment.roll_pick_assignment.get_manufactured_batch_available_qty",
+		args: {
+			work_order: frm.doc.work_order,
+			source_warehouse: frm.doc.source_warehouse,
+		},
+		callback: function (r) {
+			if (r.message !== undefined) {
+				frm.set_value("pick_qty", r.message);
+			}
+		},
+	});
 }
