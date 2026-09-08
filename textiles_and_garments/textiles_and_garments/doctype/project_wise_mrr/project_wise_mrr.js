@@ -2,21 +2,21 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Project Wise MRR", {
-	refresh(frm) {
+    refresh(frm) {
 
-	},
-	get_data: function (frm) {
+    },
+    get_data: function (frm) {
         frappe.call({
-            method: 'textiles_and_garments.textiles_and_garments.doctype.project_wise_mrr.project_wise_mrr.get_data',
+            method: 'textiles_and_garments.textiles_and_garments.doctype.project_wise_mrr.project_wise_mrr.calculate_process_loss_by_project',
             args: {
-                docname: frm.doc.name,
-                purchase_orders: frm.doc.purchase_orders
+                doc: frm.doc
             },
-            callback: function (response) {
-                if (response.message && Array.isArray(response.message)) {
-                    // console.log("Filtered stock items:", response.message);
-                    // Reload the form to show the updated sent_details tables
-                    frm.reload_doc();
+            freeze: true,
+            freeze_message: __('Fetching Data...'),
+            callback: function (r) {
+                if (r.message) {
+                    frappe.model.sync(r.message);
+                    frm.refresh();
                 }
             }
         });
