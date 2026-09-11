@@ -29,6 +29,12 @@
   "project_wo_return_details",
   "section_break_t7wa",
   "project_wo_received_details",
+  "section_break_so_sent",
+  "project_so_sent_details",
+  "section_break_so_return",
+  "project_so_return_details",
+  "section_break_so_received",
+  "project_so_received_details",
   "section_break_loe2",
   "amended_from"
  ],
@@ -141,6 +147,39 @@
    "fieldtype": "Table",
    "label": "Project WO Received Details",
    "options": "Project WO Received Details"
+  },
+  {
+   "fieldname": "section_break_so_sent",
+   "fieldtype": "Section Break",
+   "label": "Subcontracting Order Sent Details"
+  },
+  {
+   "fieldname": "project_so_sent_details",
+   "fieldtype": "Table",
+   "label": "Project SO Sent Details",
+   "options": "Project SO Sent Details"
+  },
+  {
+   "fieldname": "section_break_so_return",
+   "fieldtype": "Section Break",
+   "label": "Subcontracting Order Return Details"
+  },
+  {
+   "fieldname": "project_so_return_details",
+   "fieldtype": "Table",
+   "label": "Project SO Return Details",
+   "options": "Project SO Return Details"
+  },
+  {
+   "fieldname": "section_break_so_received",
+   "fieldtype": "Section Break",
+   "label": "Subcontracting Order Received Details"
+  },
+  {
+   "fieldname": "project_so_received_details",
+   "fieldtype": "Table",
+   "label": "Project SO Received Details",
+   "options": "Project SO Received Details"
   },
   {
    "fieldname": "column_break_bnvz",

@@ -27,6 +27,9 @@ def calculate_process_loss_by_project(doc):
     doc.project_po_sent_details = []
     doc.project_po_return_details = []
     doc.project_po_received_details = []
+    doc.project_so_sent_details = []
+    doc.project_so_return_details = []
+    doc.project_so_received_details = []
     
     # Get all projects from the Projects child table
     projects = [row.project for row in doc.projects if row.project]
@@ -43,11 +46,17 @@ def calculate_process_loss_by_project(doc):
     fetch_wo_return_details_by_project(doc, projects)
     fetch_wo_received_details_by_project(doc, projects)
     
-    # ========== PURCHASE ORDER PROCESSING ==========
+    # ========== PURCHASE ORDER PROCESSING (non-subcontracted POs only) ==========
     print("\n=== PURCHASE ORDER PROCESSING ===")
     fetch_po_sent_details_by_project(doc, projects)
     fetch_po_return_details_by_project(doc, projects)
     fetch_po_received_details_by_project(doc, projects)
+    
+    # ========== SUBCONTRACTING ORDER PROCESSING (POs with a linked SCO) ==========
+    print("\n=== SUBCONTRACTING ORDER PROCESSING ===")
+    fetch_so_sent_details_by_project(doc, projects)
+    fetch_so_return_details_by_project(doc, projects)
+    fetch_so_received_details_by_project(doc, projects)
     
     return doc
 
@@ -213,26 +222,139 @@ def fetch_wo_received_details_by_project(doc, projects):
 
 
 # ============================================================================
-# PURCHASE ORDER FUNCTIONS
+# PURCHASE ORDER FUNCTIONS (non-subcontracted POs only)
 # ============================================================================
+# A Purchase Order that has a submitted Subcontracting Order against it is
+# handled entirely by the SUBCONTRACTING ORDER FUNCTIONS below instead. These
+# functions only ever see "plain" POs - direct purchases with no job-work leg.
 
 def fetch_po_sent_details_by_project(doc, projects):
     """
+    Plain (non-subcontracted) Purchase Orders have no 'material sent' leg -
+    material is only sent out to a supplier under a Subcontracting Order,
+    which is tracked separately in project_so_sent_details. Intentionally
+    left empty for this table.
+    """
+    print("\nPO Sent Details: not applicable for non-subcontracted Purchase Orders (see SO Sent Details)")
+    return
+
+
+def fetch_po_return_details_by_project(doc, projects):
+    """
+    Fetch goods returned (return Purchase Receipts) against plain
+    (non-subcontracted) Purchase Orders, filtered by project.
+    """
+    receipt_items = frappe.db.sql("""
+        SELECT 
+            pri.purchase_order,
+            pri.project,
+            pri.item_code,
+            SUM(ABS(pri.qty)) as return_qty,
+            pri.stock_uom as uom,
+            poi.qty as po_qty
+        FROM 
+            `tabPurchase Receipt Item` pri
+        INNER JOIN 
+            `tabPurchase Receipt` pr ON pri.parent = pr.name
+        LEFT JOIN
+            `tabPurchase Order Item` poi ON pri.purchase_order_item = poi.name
+        WHERE 
+            pr.docstatus = 1
+            AND pr.is_return = 1
+            AND pri.project IN %(projects)s
+            AND NOT EXISTS (
+                SELECT 1 FROM `tabSubcontracting Order` sco
+                WHERE sco.purchase_order = pri.purchase_order AND sco.docstatus = 1
+            )
+        GROUP BY
+            pri.purchase_order, pri.item_code, pri.project
+        ORDER BY
+            pr.posting_date
+    """, {"projects": projects}, as_dict=1)
+    
+    print(f"\nPO (non-subcontracted) Return Details found: {len(receipt_items)}")
+    
+    for entry in receipt_items:
+        doc.append("project_po_return_details", {
+            "project": entry.project,
+            "purchase_order": entry.purchase_order,
+            "item_code": entry.item_code,
+            "po_qty": entry.po_qty,
+            "return_qty": entry.return_qty,
+            "uom": entry.uom
+        })
+
+
+def fetch_po_received_details_by_project(doc, projects):
+    """
+    Fetch goods received (Purchase Receipts) against plain (non-subcontracted)
+    Purchase Orders, filtered by project.
+    """
+    receipt_items = frappe.db.sql("""
+        SELECT 
+            pri.purchase_order,
+            pri.project,
+            pri.item_code,
+            SUM(pri.qty) as received_qty,
+            pri.stock_uom as uom,
+            poi.qty as po_qty
+        FROM 
+            `tabPurchase Receipt Item` pri
+        INNER JOIN 
+            `tabPurchase Receipt` pr ON pri.parent = pr.name
+        LEFT JOIN
+            `tabPurchase Order Item` poi ON pri.purchase_order_item = poi.name
+        WHERE 
+            pr.docstatus = 1
+            AND pr.is_return = 0
+            AND pri.project IN %(projects)s
+            AND NOT EXISTS (
+                SELECT 1 FROM `tabSubcontracting Order` sco
+                WHERE sco.purchase_order = pri.purchase_order AND sco.docstatus = 1
+            )
+        GROUP BY
+            pri.purchase_order, pri.item_code, pri.project
+        ORDER BY
+            pr.posting_date
+    """, {"projects": projects}, as_dict=1)
+    
+    print(f"\nPO (non-subcontracted) Received Details found: {len(receipt_items)}")
+    
+    for entry in receipt_items:
+        doc.append("project_po_received_details", {
+            "project": entry.project,
+            "purchase_order": entry.purchase_order,
+            "item_code": entry.item_code,
+            "po_qty": entry.po_qty,
+            "received_qty": entry.received_qty,
+            "uom": entry.uom
+        })
+
+
+# ============================================================================
+# SUBCONTRACTING ORDER FUNCTIONS (POs with a linked Subcontracting Order)
+# ============================================================================
+
+def fetch_so_sent_details_by_project(doc, projects):
+    """
     Fetch material sent to subcontracting orders filtered by project
     """
-    # Get Subcontracting Orders for the projects
+    # Get Subcontracting Orders for the projects.
+    # NOTE: project is tracked at item level (Subcontracting Order Item / Purchase
+    # Order Item), not always on the Purchase Order / Subcontracting Order header,
+    # so we join on the item-level project field rather than po.project.
     sco_list = frappe.db.sql("""
-        SELECT 
+        SELECT DISTINCT
             sco.name,
             sco.purchase_order,
-            po.project
+            scoi.project
         FROM 
             `tabSubcontracting Order` sco
         INNER JOIN
-            `tabPurchase Order` po ON sco.purchase_order = po.name
+            `tabSubcontracting Order Item` scoi ON scoi.parent = sco.name
         WHERE 
             sco.docstatus = 1
-            AND po.project IN %(projects)s
+            AND scoi.project IN %(projects)s
     """, {"projects": projects}, as_dict=1)
     
     if not sco_list:
@@ -294,7 +416,7 @@ def fetch_po_sent_details_by_project(doc, projects):
             'po_qty': item.get('po_qty', 0)
         }
     
-    print(f"\nPO Sent Details (Stock Entries) found: {len(stock_entries)}")
+    print(f"\nSO Sent Details (Stock Entries) found: {len(stock_entries)}")
     
     for entry in stock_entries:
         sco_name = entry.subcontracting_order
@@ -309,7 +431,7 @@ def fetch_po_sent_details_by_project(doc, projects):
         if entry.item_code and (entry.item_code.startswith("DYES") or entry.item_code.startswith("CHEM")):
             continue
         
-        doc.append("project_po_sent_details", {
+        doc.append("project_so_sent_details", {
             "project": project,
             "purchase_order": purchase_order,
             "subcontracting_order": sco_name,
@@ -322,24 +444,26 @@ def fetch_po_sent_details_by_project(doc, projects):
         })
 
 
-def fetch_po_return_details_by_project(doc, projects):
+def fetch_so_return_details_by_project(doc, projects):
     """
     Fetch material returned from subcontracting orders filtered by project
     """
-    # Get Subcontracting Orders with supplier warehouses
+    # Get Subcontracting Orders with supplier warehouses.
+    # NOTE: project is tracked at item level (Subcontracting Order Item), not
+    # always on the header, so join on the item-level project field.
     sco_list = frappe.db.sql("""
-        SELECT 
+        SELECT DISTINCT
             sco.name,
             sco.purchase_order,
             sco.supplier_warehouse,
-            po.project
+            scoi.project
         FROM 
             `tabSubcontracting Order` sco
         INNER JOIN
-            `tabPurchase Order` po ON sco.purchase_order = po.name
+            `tabSubcontracting Order Item` scoi ON scoi.parent = sco.name
         WHERE 
             sco.docstatus = 1
-            AND po.project IN %(projects)s
+            AND scoi.project IN %(projects)s
             AND sco.supplier_warehouse IS NOT NULL
     """, {"projects": projects}, as_dict=1)
     
@@ -401,7 +525,7 @@ def fetch_po_return_details_by_project(doc, projects):
             'po_qty': item.get('po_qty', 0)
         }
     
-    print(f"\nPO Return Details found: {len(stock_entries)}")
+    print(f"\nSO Return Details found: {len(stock_entries)}")
     
     for entry in stock_entries:
         sco_name = entry.subcontracting_order
@@ -416,7 +540,7 @@ def fetch_po_return_details_by_project(doc, projects):
         if entry.item_code and (entry.item_code.startswith("DYES") or entry.item_code.startswith("CHEM")):
             continue
         
-        doc.append("project_po_return_details", {
+        doc.append("project_so_return_details", {
             "project": project,
             "purchase_order": purchase_order,
             "subcontracting_order": sco_name,
@@ -429,23 +553,25 @@ def fetch_po_return_details_by_project(doc, projects):
         })
 
 
-def fetch_po_received_details_by_project(doc, projects):
+def fetch_so_received_details_by_project(doc, projects):
     """
     Fetch finished goods received from subcontracting orders filtered by project
     """
-    # Get Subcontracting Orders
+    # Get Subcontracting Orders.
+    # NOTE: project is tracked at item level (Subcontracting Order Item), not
+    # always on the header, so join on the item-level project field.
     sco_list = frappe.db.sql("""
-        SELECT 
+        SELECT DISTINCT
             sco.name,
             sco.purchase_order,
-            po.project
+            scoi.project
         FROM 
             `tabSubcontracting Order` sco
         INNER JOIN
-            `tabPurchase Order` po ON sco.purchase_order = po.name
+            `tabSubcontracting Order Item` scoi ON scoi.parent = sco.name
         WHERE 
             sco.docstatus = 1
-            AND po.project IN %(projects)s
+            AND scoi.project IN %(projects)s
     """, {"projects": projects}, as_dict=1)
     
     if not sco_list:
@@ -499,7 +625,7 @@ def fetch_po_received_details_by_project(doc, projects):
         key = (item['subcontracting_order'], item['item_code'])
         po_qty_map[key] = item.get('po_qty', 0)
     
-    print(f"\nPO Received Details found: {len(receipt_items)}")
+    print(f"\nSO Received Details found: {len(receipt_items)}")
     
     for entry in receipt_items:
         sco_name = entry.subcontracting_order
@@ -510,7 +636,7 @@ def fetch_po_received_details_by_project(doc, projects):
         key = (sco_name, entry.item_code)
         po_qty = po_qty_map.get(key, 0)
         
-        doc.append("project_po_received_details", {
+        doc.append("project_so_received_details", {
             "project": project,
             "purchase_order": purchase_order,
             "subcontracting_order": sco_name,
@@ -790,8 +916,11 @@ def calculate_po_summary_by_project(doc):
     summary_data = {}
     
     # Create main item mapping
+    # NOTE: sent/return/received subcontracting data now lives in the SO
+    # (Subcontracting Order) tables - the PO tables only cover plain,
+    # non-subcontracted Purchase Orders, which have no "sent" leg.
     main_item_mapping = {}
-    for sent_item in doc.project_po_sent_details:
+    for sent_item in doc.project_so_sent_details:
         main_item_code = sent_item.get("po_item_code")
         raw_item_code = sent_item.get("item_code")
         
@@ -803,7 +932,7 @@ def calculate_po_summary_by_project(doc):
             }
     
     # Process Sent Details
-    for sent_item in doc.project_po_sent_details:
+    for sent_item in doc.project_so_sent_details:
         project = sent_item.project
         main_item_code = sent_item.get("po_item_code")
         raw_item_code = sent_item.get("item_code")
@@ -840,7 +969,7 @@ def calculate_po_summary_by_project(doc):
         summary_data[key]["sent_qty"] += flt(sent_item.get("sent_qty", 0))
     
     # Process Return Details
-    for return_item in doc.project_po_return_details:
+    for return_item in doc.project_so_return_details:
         project = return_item.project
         main_item_code = return_item.get("po_item_code")
         raw_item_code = return_item.get("item_code")
@@ -878,7 +1007,7 @@ def calculate_po_summary_by_project(doc):
         summary_data[key]["return_qty"] += flt(return_item.get("return_qty", 0))
     
     # Process Received Details
-    for received_item in doc.project_po_received_details:
+    for received_item in doc.project_so_received_details:
         project = received_item.project
         main_item_code = received_item.get("item_code")
         
