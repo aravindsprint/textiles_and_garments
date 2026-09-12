@@ -3,6 +3,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, cint, now_datetime, get_datetime
 import json
+import re
 
 
 class RollPackingList(Document):
@@ -13,6 +14,157 @@ def round_to_decimals(num, decimals=3):
     """Round a float to the given number of decimal places."""
     factor = 10 ** decimals
     return round(flt(num) * factor) / factor
+
+
+# ==================== Draft correction for batch negative-stock errors ====================
+#
+# ERPNext blocks a Manufacture Stock Entry submit if the batch being consumed
+# is short in the source warehouse, e.g.:
+#   "Batch No <b>26PTIN1645/PO-18556/K4320/L-1224</b> of an Item <b>YRFPP090/GREIGE</b>
+#    has negative stock of quantity <b>-1.615000000000002</b> in the warehouse
+#    <b>WIP - FK20/6014/SJ/KH - PSS</b>"
+#
+# This has been fixed manually until now by creating a matching Material Receipt
+# (e.g. MR/26/01309) for the exact shortfall. The functions below detect that
+# specific error and create a matching Material Receipt IN DRAFT — it is never
+# auto-submitted. A draft doesn't affect stock, so it can't silently unblock the
+# Manufacture entry on its own; someone has to look at it and submit it (or not).
+#
+# Because the draft doesn't fix the shortfall, there's no retry loop here — the
+# Manufacture Stock Entry submit fails once, a draft correction is created (or
+# reused if one is already pending for the same batch/warehouse), and the error
+# tells you both doc names so you can review and act.
+#
+# IMPORTANT: reviewing means checking WHY the batch is short before submitting
+# the receipt, not rubber-stamping it — especially given the earlier
+# yarn-consumption-ratio bug that produced batches going negative in the first
+# place. If the same batch/warehouse needs a draft repeatedly, that's a signal
+# to go find the root cause.
+
+CORRECTION_REMARK_TAG = "[Batch Stock Draft Correction]"
+
+NEGATIVE_STOCK_ERROR_PATTERN = re.compile(
+    r"Batch No\s+(?P<batch_no>\S+)\s+of an Item\s+(?P<item_code>\S+)\s+"
+    r"has negative stock of quantity\s+(?P<qty>-?[\d.]+)\s+"
+    r"in the warehouse\s+(?P<warehouse>.+?)(?:\.\s*$|\.\s*\n|\.$|$)"
+)
+
+
+def _parse_batch_negative_stock_error(error_text):
+    """
+    Parse ERPNext's batch negative-stock error message (HTML bold tags and all).
+    Returns {"batch_no", "item_code", "deficit_qty", "warehouse"} or None if the
+    text doesn't match this specific error.
+    """
+    clean_text = re.sub(r"<[^>]+>", "", str(error_text or ""))
+    match = NEGATIVE_STOCK_ERROR_PATTERN.search(clean_text)
+    if not match:
+        return None
+    return {
+        "batch_no": match.group("batch_no").strip(),
+        "item_code": match.group("item_code").strip(),
+        "deficit_qty": abs(flt(match.group("qty"))),
+        "warehouse": match.group("warehouse").strip().rstrip("."),
+    }
+
+
+def _get_correction_rate(item_code):
+    """
+    Best-effort valuation rate for the draft receipt, so it doesn't sit there
+    at zero value. Falls back to the item's last known valuation rate, then
+    the most recent non-zero SLE rate for that item.
+    """
+    rate = frappe.db.get_value("Item", item_code, "valuation_rate")
+    if not rate:
+        rate = frappe.db.get_value(
+            "Stock Ledger Entry",
+            {"item_code": item_code, "is_cancelled": 0, "valuation_rate": (">", 0)},
+            "valuation_rate",
+            order_by="posting_date desc, posting_time desc, creation desc",
+        )
+    return flt(rate)
+
+
+def _find_pending_correction_draft(item_code, batch_no, warehouse):
+    """
+    Reuse an existing draft correction for the same item/batch/warehouse
+    instead of creating a duplicate every time the Manufacture entry is retried.
+    """
+    existing = frappe.get_all(
+        "Stock Entry Detail",
+        filters={
+            "item_code": item_code,
+            "batch_no": batch_no,
+            "t_warehouse": warehouse,
+            "docstatus": 0,
+        },
+        fields=["parent"],
+        limit=1,
+    )
+    for row in existing:
+        parent = frappe.db.get_value(
+            "Stock Entry", row.parent, ["name", "stock_entry_type", "remarks"], as_dict=True
+        )
+        if parent and parent.stock_entry_type == "Material Receipt" and CORRECTION_REMARK_TAG in (parent.remarks or ""):
+            return parent.name
+    return None
+
+
+def create_batch_stock_correction_receipt(
+    item_code, batch_no, warehouse, qty, company, project=None,
+    reference_doctype=None, reference_name=None,
+):
+    """
+    Create (but do NOT submit) a Material Receipt for exactly the batch/warehouse
+    shortfall reported by ERPNext's negative-stock check. Left in draft for
+    manual review — mirrors the manual fix pattern (e.g. MR/26/01309) except
+    submission is a separate, deliberate step.
+    """
+    existing_name = _find_pending_correction_draft(item_code, batch_no, warehouse)
+    if existing_name:
+        return existing_name, False
+
+    stock_uom = frappe.db.get_value("Item", item_code, "stock_uom")
+    rate = _get_correction_rate(item_code)
+
+    se = frappe.new_doc("Stock Entry")
+    se.stock_entry_type = "Material Receipt"
+    se.purpose = "Material Receipt"
+    se.company = company
+    se.project = project
+    se.posting_date = frappe.utils.nowdate()
+    se.posting_time = frappe.utils.nowtime()
+    se.set_posting_time = 1
+    se.remarks = (
+        f"{CORRECTION_REMARK_TAG} Negative batch stock detected. Triggered by "
+        f"{reference_doctype or ''} {reference_name or ''}".strip()
+    )
+    se.append("items", {
+        "t_warehouse": warehouse,
+        "item_code": item_code,
+        "qty": qty,
+        "uom": stock_uom,
+        "stock_uom": stock_uom,
+        "conversion_factor": 1.0,
+        "transfer_qty": qty,
+        "batch_no": batch_no,
+        "use_serial_batch_fields": 1,
+        "basic_rate": rate,
+        "allow_zero_valuation_rate": 1 if not rate else 0,
+    })
+    se.insert(ignore_permissions=True)
+
+    frappe.log_error(
+        message=(
+            f"Draft {se.name} created for negative stock review (NOT submitted).\n"
+            f"Item: {item_code}\nBatch: {batch_no}\nWarehouse: {warehouse}\nQty: {qty}\n"
+            f"Rate used: {rate}\n"
+            f"Reference: {reference_doctype or ''} {reference_name or ''}"
+        ),
+        title="Batch Stock Draft Correction",
+    )
+
+    return se.name, True
 
 
 @frappe.whitelist()
@@ -45,11 +197,22 @@ def create_manufacture_entry_from_roll_packing(doc):
             frappe.throw(_("Roll Packing List must be submitted before creating Manufacture Entry"))
 
         if hasattr(doc, "stock_entry") and doc.stock_entry:
-            frappe.throw(
-                _("Manufacture Stock Entry {0} already exists for this Roll Packing List").format(
-                    frappe.bold(doc.stock_entry)
+            existing_docstatus = frappe.db.get_value("Stock Entry", doc.stock_entry, "docstatus")
+            if existing_docstatus == 1:
+                frappe.throw(
+                    _("Manufacture Stock Entry {0} already exists for this Roll Packing List").format(
+                        frappe.bold(doc.stock_entry)
+                    )
                 )
-            )
+            elif existing_docstatus == 0:
+                frappe.throw(
+                    _(
+                        "Manufacture Stock Entry {0} is already built and waiting on a batch "
+                        "correction — check the Error Log for 'Batch Stock Draft Correction', "
+                        "then submit {0} directly instead of running this again."
+                    ).format(frappe.bold(doc.stock_entry))
+                )
+            # else: the linked entry was cancelled — fall through and build a fresh one.
 
         if not doc.document_name:
             frappe.throw(_("Job Card reference (document_name) is required"))
@@ -508,7 +671,57 @@ def create_manufacture_entry_from_roll_packing(doc):
                 )
 
         # ==================== STEP 13: Submit ====================
-        stock_entry.submit()
+        try:
+            stock_entry.submit()
+        except Exception as submit_error:
+            parsed = _parse_batch_negative_stock_error(str(submit_error))
+
+            # Not the error we know how to handle — let it surface as-is.
+            if not parsed:
+                raise
+
+            correction_name, was_created = create_batch_stock_correction_receipt(
+                item_code=parsed["item_code"],
+                batch_no=parsed["batch_no"],
+                warehouse=parsed["warehouse"],
+                qty=parsed["deficit_qty"],
+                company=stock_entry.company,
+                project=stock_entry.project,
+                reference_doctype="Roll Packing List",
+                reference_name=doc.name,
+            )
+
+            # Link the already-built Manufacture Stock Entry draft back to this
+            # Roll Packing List so a re-run of this function doesn't create a
+            # second one — once the correction draft is reviewed and submitted,
+            # submit THIS draft directly rather than re-running this function.
+            frappe.db.set_value("Roll Packing List", doc.name, "stock_entry", stock_entry.name)
+            frappe.db.commit()
+
+            frappe.logger().warning(
+                f"Manufacture Stock Entry {stock_entry.name} blocked on negative stock "
+                f"(item {parsed['item_code']}, batch {parsed['batch_no']}, "
+                f"warehouse {parsed['warehouse']}, qty {parsed['deficit_qty']}). "
+                f"Draft correction: {correction_name} "
+                f"({'created' if was_created else 'reused existing pending draft'})."
+            )
+
+            frappe.throw(
+                _(
+                    "Manufacture Stock Entry {0} is in Draft — it can't submit because batch "
+                    "{1} of item {2} is short by {3} in warehouse {4}. A draft Material Receipt "
+                    "{5} has been {6} for review. Once you've checked why the batch is short and "
+                    "submitted {5}, submit {0} directly to finish — no need to retry this action."
+                ).format(
+                    frappe.bold(stock_entry.name),
+                    frappe.bold(parsed["batch_no"]),
+                    frappe.bold(parsed["item_code"]),
+                    frappe.bold(parsed["deficit_qty"]),
+                    frappe.bold(parsed["warehouse"]),
+                    frappe.bold(correction_name),
+                    _("created") if was_created else _("reused (already pending)"),
+                )
+            )
 
         frappe.db.set_value("Roll Packing List", doc.name, "stock_entry", stock_entry.name)
         frappe.db.commit()
