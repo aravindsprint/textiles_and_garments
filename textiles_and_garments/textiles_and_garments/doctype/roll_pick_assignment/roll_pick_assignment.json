@@ -25,6 +25,10 @@
   "target_warehouse",
   "section_break_qty",
   "pick_qty",
+  "scanned_rolls",
+  "custom_section_break_cauql",
+  "execution_source_warehouse",
+  "execution_target_warehouse",
   "column_break_4",
   "remarks",
   "amended_from"
@@ -165,6 +169,34 @@
    "non_negative": 1,
    "precision": "3",
    "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Rolls scanned so far for this Assignment but not yet submitted as a Stock Entry. Persisted server-side so a worker can close the app and resume later without rescanning. Cleared automatically once the final Pick Entry is created.",
+   "fieldname": "scanned_rolls",
+   "fieldtype": "Table",
+   "label": "Scanned Rolls (In Progress)",
+   "options": "Roll Pick Assignment Scan"
+  },
+  {
+   "fieldname": "custom_section_break_cauql",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Worker's current Source Warehouse selection during execution \u2014 defaults to Source Warehouse but can be changed on the scan screen if the rolls are actually sitting somewhere else. Persisted so a worker resuming later sees their last choice.",
+   "fieldname": "execution_source_warehouse",
+   "fieldtype": "Link",
+   "label": "Execution Source Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Worker's current Target Warehouse selection during execution \u2014 defaults to Target Warehouse but can be changed on the scan screen.",
+   "fieldname": "execution_target_warehouse",
+   "fieldtype": "Link",
+   "label": "Execution Target Warehouse",
+   "options": "Warehouse"
   },
   {
    "fieldname": "column_break_4",
