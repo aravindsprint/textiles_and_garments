@@ -43,29 +43,62 @@ def round_to_decimals(num, decimals=3):
 
 CORRECTION_REMARK_TAG = "[Batch Stock Draft Correction]"
 
+# ERPNext throws batch-shortfall errors in more than one shape depending on
+# exactly where the check fires (insert-time validate vs. submit-time ledger
+# check). Both are handled here:
+#
+#   1) "Batch No X of an Item Y has negative stock of quantity Z in the
+#       warehouse W"                                    — seen at submit time
+#   2) "Batch X only has A kg in W, but B kg was entered. Check the batch
+#       number."                                        — seen at insert time,
+#      and doesn't name the item, so item_code is resolved from the Batch
+#      record itself (a Batch always belongs to exactly one Item).
+
 NEGATIVE_STOCK_ERROR_PATTERN = re.compile(
     r"Batch No\s+(?P<batch_no>\S+)\s+of an Item\s+(?P<item_code>\S+)\s+"
     r"has negative stock of quantity\s+(?P<qty>-?[\d.]+)\s+"
     r"in the warehouse\s+(?P<warehouse>.+?)(?:\.\s*$|\.\s*\n|\.$|$)"
 )
 
+INSUFFICIENT_BATCH_QTY_PATTERN = re.compile(
+    r"Batch\s+(?P<batch_no>\S+)\s+only has\s+(?P<available_qty>-?[\d.]+)\s+\S+\s+in\s+"
+    r"(?P<warehouse>.+?),\s+but\s+(?P<entered_qty>-?[\d.]+)\s+\S+\s+was entered\."
+)
 
-def _parse_batch_negative_stock_error(error_text):
+
+def _parse_batch_shortfall_error(error_text):
     """
-    Parse ERPNext's batch negative-stock error message (HTML bold tags and all).
-    Returns {"batch_no", "item_code", "deficit_qty", "warehouse"} or None if the
-    text doesn't match this specific error.
+    Parse either shape of ERPNext's batch-shortfall error (HTML bold tags and
+    all). Returns {"batch_no", "item_code", "deficit_qty", "warehouse"} or
+    None if the text doesn't match either known pattern.
     """
     clean_text = re.sub(r"<[^>]+>", "", str(error_text or ""))
+
     match = NEGATIVE_STOCK_ERROR_PATTERN.search(clean_text)
-    if not match:
-        return None
-    return {
-        "batch_no": match.group("batch_no").strip(),
-        "item_code": match.group("item_code").strip(),
-        "deficit_qty": abs(flt(match.group("qty"))),
-        "warehouse": match.group("warehouse").strip().rstrip("."),
-    }
+    if match:
+        return {
+            "batch_no": match.group("batch_no").strip(),
+            "item_code": match.group("item_code").strip(),
+            "deficit_qty": abs(flt(match.group("qty"))),
+            "warehouse": match.group("warehouse").strip().rstrip("."),
+        }
+
+    match = INSUFFICIENT_BATCH_QTY_PATTERN.search(clean_text)
+    if match:
+        batch_no = match.group("batch_no").strip()
+        item_code = frappe.db.get_value("Batch", batch_no, "item")
+        if not item_code:
+            # Can't build a correction receipt without knowing the item —
+            # bail out and let the original error surface as-is.
+            return None
+        return {
+            "batch_no": batch_no,
+            "item_code": item_code,
+            "deficit_qty": abs(flt(match.group("entered_qty")) - flt(match.group("available_qty"))),
+            "warehouse": match.group("warehouse").strip(),
+        }
+
+    return None
 
 
 def _get_correction_rate(item_code):
@@ -596,7 +629,49 @@ def create_manufacture_entry_from_roll_packing(doc):
         frappe.logger().info("=" * 80)
 
         # ==================== STEP 10: Insert ====================
-        stock_entry.insert(ignore_permissions=True)
+        try:
+            stock_entry.insert(ignore_permissions=True)
+        except Exception as insert_error:
+            parsed = _parse_batch_shortfall_error(str(insert_error))
+
+            # Not a batch-shortfall error we know how to handle — surface as-is.
+            if not parsed:
+                raise
+
+            correction_name, was_created = create_batch_stock_correction_receipt(
+                item_code=parsed["item_code"],
+                batch_no=parsed["batch_no"],
+                warehouse=parsed["warehouse"],
+                qty=parsed["deficit_qty"],
+                company=stock_entry.company,
+                project=stock_entry.project,
+                reference_doctype="Roll Packing List",
+                reference_name=doc.name,
+            )
+
+            frappe.logger().warning(
+                f"Manufacture Stock Entry for Roll Packing List {doc.name} blocked before it "
+                f"could even be created — batch {parsed['batch_no']} of item {parsed['item_code']} "
+                f"is short by {parsed['deficit_qty']} in warehouse {parsed['warehouse']}. "
+                f"Draft correction: {correction_name} "
+                f"({'created' if was_created else 'reused existing pending draft'})."
+            )
+
+            frappe.throw(
+                _(
+                    "Couldn't build the Manufacture Stock Entry — batch {0} of item {1} is short "
+                    "by {2} in warehouse {3}. A draft Material Receipt {4} has been {5} for review. "
+                    "Once you've checked why the batch is short and submitted {4}, retry "
+                    "'Create Manufacture Entry' on this Roll Packing List."
+                ).format(
+                    frappe.bold(parsed["batch_no"]),
+                    frappe.bold(parsed["item_code"]),
+                    frappe.bold(parsed["deficit_qty"]),
+                    frappe.bold(parsed["warehouse"]),
+                    frappe.bold(correction_name),
+                    _("created") if was_created else _("reused (already pending)"),
+                )
+            )
         frappe.db.commit()
 
         # ==================== STEP 11: Reload from DB before submit ====================
@@ -674,7 +749,7 @@ def create_manufacture_entry_from_roll_packing(doc):
         try:
             stock_entry.submit()
         except Exception as submit_error:
-            parsed = _parse_batch_negative_stock_error(str(submit_error))
+            parsed = _parse_batch_shortfall_error(str(submit_error))
 
             # Not the error we know how to handle — let it surface as-is.
             if not parsed:
