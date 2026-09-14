@@ -172,6 +172,9 @@ doc_events = {
     "Stock Entry": {
         "before_validate": [
             "textiles_and_garments.fix_scrap_item_valuation.fix_scrap_item_valuation"
+        ],
+        "validate": [
+            "textiles_and_garments.fix_zero_outgoing_valuation.fix_zero_outgoing_valuation"
         ]
     },
     "Work Order": {
