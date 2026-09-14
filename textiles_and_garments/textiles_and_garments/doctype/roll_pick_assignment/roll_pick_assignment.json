@@ -161,7 +161,7 @@
    "label": "Target"
   },
   {
-   "description": "Target weight (kg) \u2014 the worker picks until the total falls within \u00b13% of this",
+   "description": "Target quantity \u2014 the worker picks until the total falls within \u00b13% of this",
    "fieldname": "pick_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
