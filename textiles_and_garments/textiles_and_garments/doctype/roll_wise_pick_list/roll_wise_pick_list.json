@@ -15,6 +15,8 @@
   "roll_pick_assignment",
   "section_break_ra5c",
   "roll_wise_pick_item",
+  "total_roll_weight",
+  "total_qty",
   "section_break_y6dp",
   "batch_wise_pick_item",
   "section_break_mddq",
@@ -31,16 +33,6 @@
    "fieldname": "posting_date",
    "fieldtype": "Date",
    "label": "Posting Date"
-  },
-  {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Roll Wise Pick List",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
   },
   {
    "fieldname": "amended_from",
@@ -71,6 +63,22 @@
    "fieldtype": "Table",
    "label": "Roll Wise Pick Item",
    "options": "Roll Wise Pick Item"
+  },
+  {
+   "description": "Sum of Roll Weight across Roll Wise Pick Item",
+   "fieldname": "total_roll_weight",
+   "fieldtype": "Float",
+   "label": "Total Roll Weight",
+   "precision": "3",
+   "read_only": 1
+  },
+  {
+   "description": "Sum of Qty across Roll Wise Pick Item",
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "label": "Total Qty",
+   "precision": "3",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_y6dp",

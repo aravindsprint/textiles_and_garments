@@ -9,7 +9,9 @@ import json
 
 
 class RollWisePickList(Document):
-    pass
+    def validate(self):
+        self.total_roll_weight = sum(flt(d.roll_weight) for d in self.roll_wise_pick_item)
+        self.total_qty = sum(flt(d.qty) for d in self.roll_wise_pick_item)
 
 
 
