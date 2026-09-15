@@ -1,0 +1,150 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-03-03 22:20:17.451318",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_rrk9",
+  "naming_series",
+  "planner_name",
+  "sales_person",
+  "item_code",
+  "indent_qty",
+  "column_break_xswt",
+  "date",
+  "section_break_gxop",
+  "planning_indent_items",
+  "section_break_c4xp",
+  "production_planning_items",
+  "section_break_ncdd",
+  "get_summary",
+  "production_planning_items_summary",
+  "production_planning_process_workflow",
+  "get_process_summary",
+  "production_planning_process_summary"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_rrk9",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "PT/IN/.####"
+  },
+  {
+   "fieldname": "section_break_c4xp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_ncdd",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "production_planning_items",
+   "fieldtype": "Table",
+   "label": "Production Planning Items",
+   "options": "Production Planning Items"
+  },
+  {
+   "fieldname": "get_summary",
+   "fieldtype": "Button",
+   "label": "Get Summary"
+  },
+  {
+   "fieldname": "production_planning_items_summary",
+   "fieldtype": "Table",
+   "label": "Production Planning Items Summary",
+   "options": "Production Planning Items Summary"
+  },
+  {
+   "fieldname": "production_planning_process_summary",
+   "fieldtype": "Table",
+   "label": "Production Planning Process Summary",
+   "options": "Production Planning Process Summary"
+  },
+  {
+   "fieldname": "get_process_summary",
+   "fieldtype": "Button",
+   "label": "Get Process Summary"
+  },
+  {
+   "fieldname": "production_planning_process_workflow",
+   "fieldtype": "Table",
+   "label": "Production Planning Process Workflow",
+   "options": "Production Planning Process Workflow"
+  },
+  {
+   "fieldname": "planning_indent_items",
+   "fieldtype": "Table",
+   "label": "Planning Indent Items",
+   "options": "Planning Indent Items"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "planner_name",
+   "fieldtype": "Data",
+   "label": "Planner Name"
+  },
+  {
+   "fieldname": "sales_person",
+   "fieldtype": "Link",
+   "label": "Sales Person",
+   "options": "Sales Person"
+  },
+  {
+   "fieldname": "column_break_xswt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_gxop",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "indent_qty",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Indent Qty"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-03-22 10:25:13.202867",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Production Planning",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -18,6 +18,7 @@
   "document_name",
   "column_break_2",
   "project",
+  "production_item",
   "from_work_order",
   "from_subcontracting_order",
   "section_break_warehouse",
@@ -63,7 +64,8 @@
    "in_standard_filter": 1,
    "label": "Status",
    "options": "Draft\nPending\nIn Progress\nCompleted\nCancelled",
-   "reqd": 1
+   "reqd": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "column_break_1",
@@ -120,8 +122,15 @@
    "fieldname": "project",
    "fieldtype": "Link",
    "label": "Project",
-   "options": "Project",
-   "read_only": 1
+   "options": "Project"
+  },
+  {
+   "depends_on": "eval:doc.pick_type=='From Work Order' || doc.pick_type=='To Work Order'",
+   "description": "Item being produced in the Work Order",
+   "fieldname": "production_item",
+   "fieldtype": "Link",
+   "label": "Production Item",
+   "options": "Item"
   },
   {
    "depends_on": "eval:doc.pick_type=='To Subcontracting Order'",
@@ -174,6 +183,7 @@
   },
   {
    "collapsible": 1,
+   "depends_on": "eval:doc.pick_type=='To Work Order' || doc.pick_type=='To Subcontracting Order' || doc.pick_type=='From Purchase Order'",
    "fieldname": "section_break_required_items",
    "fieldtype": "Section Break",
    "label": "Required Items (Reference)"
@@ -253,7 +263,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-02-13 12:50:08.553849",
+ "modified": "2026-02-13 18:01:14.431110",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Wise Pick Order",

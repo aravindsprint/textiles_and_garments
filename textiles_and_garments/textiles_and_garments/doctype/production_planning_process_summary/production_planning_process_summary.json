@@ -1,0 +1,54 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-03-19 17:28:24.118055",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "operation",
+  "column_break_p5j5",
+  "completed_qty",
+  "balance_qty"
+ ],
+ "fields": [
+  {
+   "fieldname": "column_break_p5j5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 4,
+   "fieldname": "operation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Operation",
+   "options": "Operation"
+  },
+  {
+   "columns": 2,
+   "fieldname": "completed_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Allocated Qty"
+  },
+  {
+   "columns": 2,
+   "fieldname": "balance_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Balance Qty"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-03-21 16:47:35.975539",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Production Planning Process Summary",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

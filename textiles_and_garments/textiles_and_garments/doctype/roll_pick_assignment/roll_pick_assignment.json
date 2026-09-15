@@ -21,8 +21,10 @@
   "batch_items",
   "section_break_warehouse",
   "source_warehouse",
+  "source_warehouse_address",
   "column_break_3",
   "target_warehouse",
+  "target_warehouse_address",
   "section_break_qty",
   "pick_qty",
   "scanned_rolls",
@@ -145,6 +147,14 @@
    "reqd": 1
   },
   {
+   "description": "Auto-filled from the Address linked to Source Warehouse",
+   "fieldname": "source_warehouse_address",
+   "fieldtype": "Link",
+   "label": "Source Warehouse Address",
+   "options": "Address",
+   "read_only": 1
+  },
+  {
    "fieldname": "column_break_3",
    "fieldtype": "Column Break"
   },
@@ -154,6 +164,14 @@
    "label": "Target Warehouse",
    "options": "Warehouse",
    "reqd": 1
+  },
+  {
+   "description": "Auto-filled from the Address linked to Target Warehouse",
+   "fieldname": "target_warehouse_address",
+   "fieldtype": "Link",
+   "label": "Target Warehouse Address",
+   "options": "Address",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_qty",

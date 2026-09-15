@@ -1,0 +1,47 @@
+{
+ "add_total_row": 1,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2025-10-05 13:50:31.071667",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "CUSTOM__PSS JV_LOGO",
+ "letterhead": null,
+ "modified": "2025-10-06 11:05:45.671633",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Time and Action Report",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Plans",
+ "report_name": "Time and Action Report",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Stock Manager"
+  },
+  {
+   "role": "Dashboard Manager"
+  },
+  {
+   "role": "Manufacturing Manager"
+  },
+  {
+   "role": "Purchase Manager"
+  },
+  {
+   "role": "Purchase User"
+  },
+  {
+   "role": "Manufacturing User"
+  }
+ ],
+ "timeout": 0
+}

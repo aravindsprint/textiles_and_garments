@@ -4,5 +4,6 @@
 *.swp
 tags
 node_modules
-__pycache__textiles_and_garments/praneraoms-daab053a10d2.json
+__pycache__
+textiles_and_garments/praneraoms-daab053a10d2.json
 textiles_and_garments/credentials.json

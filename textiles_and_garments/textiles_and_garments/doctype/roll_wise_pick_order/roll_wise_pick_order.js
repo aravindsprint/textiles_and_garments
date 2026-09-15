@@ -32,6 +32,7 @@ frappe.ui.form.on('Roll Wise Pick Order', {
         // Clear dependent fields when pick_type changes
         frm.set_value('document_name', '');
         frm.set_value('project', '');
+        frm.set_value('production_item', '');
         frm.set_value('source_warehouse', '');
         frm.set_value('target_warehouse', '');
         frm.set_value('batch', '');
@@ -49,13 +50,43 @@ frappe.ui.form.on('Roll Wise Pick Order', {
     
     document_name: function(frm) {
         if (frm.doc.document_name && frm.doc.document_type) {
-            // Trigger server-side validate to fetch required items
+            // ✅ CLEAR existing required items and production item when document changes
+            frm.clear_table('required_items');
+            frm.refresh_field('required_items');
+            frm.set_value('production_item', '');
+            
+            // Trigger server-side validate to fetch new data
             frm.save().then(() => {
                 frm.refresh_field('required_items');
-                frappe.show_alert({
-                    message: __('Required items loaded successfully'),
-                    indicator: 'green'
-                }, 3);
+                frm.refresh_field('production_item');
+                
+                // ✅ Show appropriate message based on pick type
+                if (frm.doc.pick_type === 'To Work Order') {
+                    if (frm.doc.required_items && frm.doc.required_items.length > 0) {
+                        frappe.show_alert({
+                            message: __('Loaded {0} required items for {1}', 
+                                [frm.doc.required_items.length, frm.doc.production_item || 'production']),
+                            indicator: 'green'
+                        }, 3);
+                    } else {
+                        frappe.msgprint(__('No required items found for this Work Order'));
+                    }
+                } else if (frm.doc.pick_type === 'From Work Order') {
+                    if (frm.doc.production_item) {
+                        frappe.show_alert({
+                            message: __('Production Item: {0}', [frm.doc.production_item]),
+                            indicator: 'green'
+                        }, 3);
+                    }
+                } else {
+                    // For other pick types (PO, Subcontracting, etc.)
+                    if (frm.doc.required_items && frm.doc.required_items.length > 0) {
+                        frappe.show_alert({
+                            message: __('Loaded {0} required items', [frm.doc.required_items.length]),
+                            indicator: 'green'
+                        }, 3);
+                    }
+                }
             });
         }
     },
@@ -73,12 +104,14 @@ frappe.ui.form.on('Roll Wise Pick Order', {
     },
     
     source_warehouse: function(frm) {
-        // Filter rolls by source warehouse
+        // Filter rolls by source warehouse (if Roll has warehouse field)
         if (frm.doc.source_warehouse) {
+            // Note: This filter only works if Roll DocType has a warehouse field
             frm.fields_dict['roll_wise_pick_item'].grid.get_field('roll_no').get_query = function(doc, cdt, cdn) {
                 return {
                     filters: {
-                        'warehouse': frm.doc.source_warehouse
+                        // Remove warehouse filter if Roll doesn't have this field
+                        // 'warehouse': frm.doc.source_warehouse
                     }
                 };
             };
@@ -116,17 +149,19 @@ frappe.ui.form.on('Roll Wise Pick Order', {
         // Check for over-picking
         let over_picked = false;
         
-        frm.doc.required_items.forEach(item => {
-            if (item.remaining_qty < 0) {
-                frappe.msgprint({
-                    title: __('Over Picking Alert'),
-                    message: __('Item {0} is over-picked by {1} {2}', 
-                        [item.item_code, Math.abs(item.remaining_qty), item.stock_uom]),
-                    indicator: 'orange'
-                });
-                over_picked = true;
-            }
-        });
+        if (frm.doc.required_items) {
+            frm.doc.required_items.forEach(item => {
+                if (item.remaining_qty < 0) {
+                    frappe.msgprint({
+                        title: __('Over Picking Alert'),
+                        message: __('Item {0} is over-picked by {1} {2}', 
+                            [item.item_code, Math.abs(item.remaining_qty), item.stock_uom]),
+                        indicator: 'orange'
+                    });
+                    over_picked = true;
+                }
+            });
+        }
         
         if (over_picked) {
             return new Promise((resolve, reject) => {
@@ -159,7 +194,7 @@ frappe.ui.form.on('Roll Wise Pick Item', {
                         
                         // Auto-fill fields
                         frappe.model.set_value(cdt, cdn, 'item_code', roll.item_code);
-                        frappe.model.set_value(cdt, cdn, 'warehouse', roll.warehouse || frm.doc.source_warehouse);
+                        frappe.model.set_value(cdt, cdn, 'warehouse', frm.doc.source_warehouse);
                         frappe.model.set_value(cdt, cdn, 'batch', roll.batch);
                         frappe.model.set_value(cdt, cdn, 'qty', roll.roll_weight);
                         frappe.model.set_value(cdt, cdn, 'uom', roll.stock_uom);
@@ -326,7 +361,7 @@ function add_custom_buttons(frm) {
             });
         }
         
-        // Add "Create Stock Entry" button for completed picks
+        // Add "Create Stock Entry" button
         if (frm.doc.status === 'In Progress' || frm.doc.status === 'Pending') {
             frm.add_custom_button(__('Create Stock Entry'), function() {
                 create_stock_entry(frm);
@@ -404,7 +439,6 @@ function set_document_filters(frm) {
             };
         });
         
-        // Filter for from_work_order
         frm.set_query('from_work_order', function() {
             return {
                 filters: {
@@ -439,7 +473,6 @@ function set_document_filters(frm) {
             };
         });
         
-        // Filter for from_subcontracting_order
         frm.set_query('from_subcontracting_order', function() {
             return {
                 filters: {
@@ -492,8 +525,9 @@ function set_roll_batch_filter(frm) {
         frm.fields_dict['roll_wise_pick_item'].grid.get_field('roll_no').get_query = function(doc, cdt, cdn) {
             return {
                 filters: {
-                    'batch': frm.doc.batch,
-                    'warehouse': frm.doc.source_warehouse || ['!=', '']
+                    'batch': frm.doc.batch
+                    // Remove warehouse filter if Roll doesn't have warehouse field
+                    // 'warehouse': frm.doc.source_warehouse || ['!=', '']
                 }
             };
         };
@@ -514,9 +548,9 @@ function complete_picking(frm) {
         __('Are you sure you want to mark this picking as completed? This will create a Stock Entry.'),
         function() {
             frappe.call({
-                method: 'textiles_and_garments.api.complete_roll_picking',
+                method: 'textiles_and_garments.api.complete_pick_order',
                 args: {
-                    'pick_order': frm.doc.name
+                    'pick_order_name': frm.doc.name
                 },
                 callback: function(r) {
                     if (r.message && r.message.success) {
@@ -543,7 +577,8 @@ function create_stock_entry(frm) {
     frappe.call({
         method: 'textiles_and_garments.api.create_stock_entry_from_pick_order',
         args: {
-            'pick_order': frm.doc.name
+            'pick_order_name': frm.doc.name,
+            'submit': false
         },
         callback: function(r) {
             if (r.message && r.message.success) {
@@ -582,9 +617,7 @@ function scan_roll_dialog(frm) {
                 options: 'Roll',
                 reqd: 1,
                 get_query: function() {
-                    let filters = {
-                        'warehouse': frm.doc.source_warehouse || ['!=', '']
-                    };
+                    let filters = {};
                     
                     if (frm.doc.batch) {
                         filters['batch'] = frm.doc.batch;
@@ -617,7 +650,7 @@ function scan_roll_dialog(frm) {
                         let child = frm.add_child('roll_wise_pick_item');
                         child.roll_no = roll.name;
                         child.item_code = roll.item_code;
-                        child.warehouse = roll.warehouse || frm.doc.source_warehouse;
+                        child.warehouse = frm.doc.source_warehouse;
                         child.batch = roll.batch;
                         child.qty = roll.roll_weight;
                         child.uom = roll.stock_uom;
@@ -653,10 +686,9 @@ function load_rolls_from_batch(frm) {
                 args: {
                     doctype: 'Roll',
                     filters: {
-                        'batch': frm.doc.batch,
-                        'warehouse': frm.doc.source_warehouse || ['!=', '']
+                        'batch': frm.doc.batch
                     },
-                    fields: ['name', 'item_code', 'warehouse', 'batch', 'roll_weight', 'stock_uom']
+                    fields: ['name', 'item_code', 'batch', 'roll_weight', 'stock_uom']
                 },
                 callback: function(r) {
                     if (r.message && r.message.length > 0) {
@@ -670,7 +702,7 @@ function load_rolls_from_batch(frm) {
                                 let child = frm.add_child('roll_wise_pick_item');
                                 child.roll_no = roll.name;
                                 child.item_code = roll.item_code;
-                                child.warehouse = roll.warehouse;
+                                child.warehouse = frm.doc.source_warehouse;
                                 child.batch = roll.batch;
                                 child.qty = roll.roll_weight;
                                 child.uom = roll.stock_uom;
