@@ -10,6 +10,7 @@
   "warehouse",
   "batch",
   "roll_no",
+  "roll_weight",
   "qty",
   "uom"
  ],
@@ -20,6 +21,15 @@
    "in_list_view": 1,
    "label": "Roll No",
    "options": "Roll"
+  },
+  {
+   "fetch_from": "roll_no.roll_weight",
+   "fieldname": "roll_weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Roll Weight",
+   "precision": "3",
+   "read_only": 1
   },
   {
    "fieldname": "qty",
