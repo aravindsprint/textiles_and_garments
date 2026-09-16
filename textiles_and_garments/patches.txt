@@ -11,3 +11,4 @@
 # textiles_and_garments.patches.apply_general_ledger_patch
 # textiles_and_garments.patches.update_work_order_fg_warehouse
 textiles_and_garments.patches.sync_customers_to_crm_organizations
+textiles_and_garments.patches.drop_batch_wise_pick_item_weight_custom_field

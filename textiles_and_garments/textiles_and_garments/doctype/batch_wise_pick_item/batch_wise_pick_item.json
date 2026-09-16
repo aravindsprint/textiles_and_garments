@@ -10,6 +10,7 @@
   "warehouse",
   "batch",
   "qty",
+  "weight",
   "uom"
  ],
  "fields": [
@@ -39,6 +40,15 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Qty"
+  },
+  {
+   "description": "Sum of Qty across every Batch Wise Pick Item row sharing this row's Item Code + Warehouse + Batch. Auto-calculated on save.",
+   "fieldname": "weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Weight",
+   "precision": "3",
+   "read_only": 1
   },
   {
    "fetch_from": "item_code.stock_uom",
