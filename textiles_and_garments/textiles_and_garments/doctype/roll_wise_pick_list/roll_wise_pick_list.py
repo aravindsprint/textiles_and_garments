@@ -12,6 +12,21 @@ class RollWisePickList(Document):
     def validate(self):
         self.total_roll_weight = sum(flt(d.roll_weight) for d in self.roll_wise_pick_item)
         self.total_qty = sum(flt(d.qty) for d in self.roll_wise_pick_item)
+        self.set_batch_wise_weight()
+
+    def set_batch_wise_weight(self):
+        """Batch Wise Pick Item.weight must be the sum of Roll Weight from
+        Roll Wise Pick Item for the matching Item Code + Warehouse + Batch —
+        not a sum of Qty. Computed server-side so it's correct regardless of
+        how the batch rows were built on the client."""
+        weight_by_key = {}
+        for d in self.roll_wise_pick_item:
+            key = (d.item_code, d.warehouse, d.batch)
+            weight_by_key[key] = weight_by_key.get(key, 0) + flt(d.roll_weight)
+
+        for row in self.batch_wise_pick_item:
+            key = (row.item_code, row.warehouse, row.batch)
+            row.weight = flt(weight_by_key.get(key, 0), 3)
 
 
 
