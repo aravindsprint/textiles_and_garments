@@ -7,6 +7,8 @@
  "engine": "InnoDB",
  "field_order": [
   "batch",
+  "item",
+  "warehouse",
   "qty"
  ],
  "fields": [
@@ -17,6 +19,22 @@
    "label": "Batch",
    "options": "Batch",
    "reqd": 1
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "fetch_from": "batch.item",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Warehouse",
+   "options": "Warehouse"
   },
   {
    "fieldname": "qty",

@@ -7,6 +7,7 @@ frappe.ui.form.on("Roll Pick Assignment", {
 	},
 	refresh(frm) {
 		update_pick_qty_from_batch_items(frm);
+		set_batch_item_warehouse_query(frm);
 	},
 	work_order(frm) {
 		update_pick_qty_from_manufactured_batch(frm);
@@ -26,7 +27,29 @@ frappe.ui.form.on("Roll Pick Batch Item", {
 	batch_items_remove(frm) {
 		update_pick_qty_from_batch_items(frm);
 	},
+	batch(frm, cdt, cdn) {
+		// Item is auto-filled via fetch_from (batch.item) — nothing to do
+		// here for that. Warehouse, though, depends on which batch is
+		// selected (its available-qty options come from get_warehouses_for_batch
+		// below), so a warehouse chosen for the previous batch may not even
+		// hold this one — don't leave a stale value sitting there.
+		frappe.model.set_value(cdt, cdn, "warehouse", "");
+	},
 });
+
+function set_batch_item_warehouse_query(frm) {
+	// Shows, for each candidate warehouse, how much of THIS row's batch is
+	// actually sitting there right now — the same "value + qty" dropdown
+	// style as the standard Batch No field.
+	frm.set_query("warehouse", "batch_items", function (doc, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		return {
+			query:
+				"textiles_and_garments.textiles_and_garments.doctype.roll_pick_assignment.roll_pick_assignment.get_warehouses_for_batch",
+			filters: { batch: row.batch },
+		};
+	});
+}
 
 function update_pick_qty_from_batch_items(frm) {
 	// Only auto-total when the child table is actually in play for this pick_type

@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import flt
+from frappe.utils import cint, flt
 
 
 class RollPickAssignment(Document):
@@ -46,3 +46,50 @@ def get_manufactured_batch_available_qty(work_order, source_warehouse):
 	get_batch_qty = frappe.get_attr("erpnext.stock.doctype.batch.batch.get_batch_qty")
 	total = sum(flt(get_batch_qty(batch_no=row.batch_no, warehouse=source_warehouse)) for row in batch_rows)
 	return flt(total, 3)
+
+
+@frappe.whitelist()
+def get_warehouses_for_batch(doctype, txt, searchfield, start, page_len, filters):
+	"""Link-field query for Roll Pick Batch Item.warehouse. Lists only
+	warehouses that actually hold stock of the row's batch, with the
+	available qty shown as the dropdown's description line — same
+	"value + qty" style as the standard Batch No field. Balances are
+	computed the same way roll_wise_pick_list.py's get_filtered_rolls()
+	does: from Stock Ledger Entry (old-style sle.batch_no) plus Serial
+	and Batch Entry (new-style bundles) — Bin doesn't split by batch, so
+	neither source alone is complete."""
+	filters = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+	batch_no = filters.get("batch")
+	if not batch_no:
+		return []
+
+	return frappe.db.sql(
+		"""
+		select warehouse, sum(qty) as qty
+		from (
+			select sle.warehouse as warehouse, sle.actual_qty as qty
+			from `tabStock Ledger Entry` sle
+			where sle.is_cancelled = 0
+				and sle.docstatus = 1
+				and sle.batch_no = %(batch_no)s
+			union all
+			select sbe.warehouse as warehouse, sbe.qty as qty
+			from `tabSerial and Batch Entry` sbe
+			inner join `tabStock Ledger Entry` sle on sle.serial_and_batch_bundle = sbe.parent
+			where sle.is_cancelled = 0
+				and sle.docstatus = 1
+				and sbe.batch_no = %(batch_no)s
+		) combined
+		where warehouse like %(txt)s
+		group by warehouse
+		having sum(qty) > 0
+		order by warehouse
+		limit %(page_len)s offset %(start)s
+		""",
+		{
+			"batch_no": batch_no,
+			"txt": f"%{txt}%" if txt else "%",
+			"start": cint(start),
+			"page_len": cint(page_len),
+		},
+	)
