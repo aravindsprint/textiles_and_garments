@@ -169,7 +169,7 @@ def _respond_list(enquiry_id, viewer):
 
 @frappe.whitelist(methods=["POST"])
 def create_enquiry(subject=None, message=None, customer_name=None,
-                   customer_email=None, external_customer_id=None):
+                   customer_email=None, crm_deal=None):
 	"""Create a new Enquiry Chat, optionally with a first customer message."""
 	_require_roles(CUSTOMER_ROLES)
 
@@ -179,7 +179,7 @@ def create_enquiry(subject=None, message=None, customer_name=None,
 			"subject": subject,
 			"customer_name": customer_name,
 			"customer_email": customer_email,
-			"external_customer_id": external_customer_id,
+			"crm_deal": crm_deal,
 		}
 	).insert(ignore_permissions=True)
 	enquiry_id = int(chat.name)
