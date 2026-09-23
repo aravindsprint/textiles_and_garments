@@ -1439,6 +1439,7 @@ def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitchin
             unpaid_work_orders = frappe.get_all(
                 "Work Order",
                 filters={
+                    "docstatus": 1,  # only submitted Work Orders
                     "custom_payment_status": ["!=", "Paid"],
                     "modified": ["between", [from_date, to_date]],
                     contractor_field: ["=", contractor_value]
@@ -1447,7 +1448,7 @@ def get_unpaid_work_order(docname, from_date, to_date, contractor=None, stitchin
             )
 
             if not unpaid_work_orders:
-                frappe.msgprint(f"No unpaid Work Orders found for {contractor_type} in the given date range.")
+                frappe.msgprint(f"No unpaid submitted Work Orders found for {contractor_type} in the given date range.")
                 return
 
             # Fetch the Work Order Payment document

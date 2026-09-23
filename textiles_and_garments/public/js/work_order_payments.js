@@ -1,4 +1,10 @@
 frappe.ui.form.on("Work Order Payments", {
+    setup: function(frm) {
+        // Allow only submitted Work Orders to be picked manually in the child table
+        frm.set_query("work_order", "work_order_payment_item", function() {
+            return { filters: { docstatus: 1 } };
+        });
+    },
     get_work_order:function(frm){
         console.log("get_work_order button clicked");
         frappe.call({
