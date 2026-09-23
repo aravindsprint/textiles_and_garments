@@ -4,6 +4,7 @@
 frappe.ui.form.on("Roll Pick Assignment", {
 	pick_type(frm) {
 		update_pick_qty_from_batch_items(frm);
+		populate_batch_items_from_sales_order(frm);
 	},
 	refresh(frm) {
 		update_pick_qty_from_batch_items(frm);
@@ -15,6 +16,9 @@ frappe.ui.form.on("Roll Pick Assignment", {
 	},
 	source_warehouse(frm) {
 		update_pick_qty_from_manufactured_batch(frm);
+	},
+	sales_order(frm) {
+		populate_batch_items_from_sales_order(frm);
 	},
 });
 
@@ -37,6 +41,42 @@ frappe.ui.form.on("Roll Pick Batch Item", {
 		frappe.model.set_value(cdt, cdn, "warehouse", "");
 	},
 });
+
+function populate_batch_items_from_sales_order(frm) {
+	// "To Sales Order" picks: once a Sales Order is chosen, add one Batch
+	// Items row per item on that order (skipping any item already
+	// represented in the table, so this never clobbers batches the
+	// supervisor already picked) with just the item code filled in — the
+	// supervisor still picks the actual batch/warehouse/qty per row. Only
+	// sets item, same as this request asked; doesn't touch qty or try to
+	// guess a batch.
+	if (frm.doc.pick_type !== "To Sales Order" || !frm.doc.sales_order) {
+		return;
+	}
+
+	frappe.db.get_doc("Sales Order", frm.doc.sales_order).then((so) => {
+		// Bail if the user switched pick_type/sales_order again while this
+		// was in flight.
+		if (frm.doc.pick_type !== "To Sales Order" || frm.doc.sales_order !== so.name) {
+			return;
+		}
+
+		const existing_items = new Set(
+			(frm.doc.batch_items || []).map((r) => r.item).filter(Boolean)
+		);
+
+		(so.items || []).forEach((so_item) => {
+			if (!so_item.item_code || existing_items.has(so_item.item_code)) {
+				return;
+			}
+			const row = frm.add_child("batch_items");
+			row.item = so_item.item_code;
+			existing_items.add(so_item.item_code);
+		});
+
+		frm.refresh_field("batch_items");
+	});
+}
 
 function set_batch_item_warehouse_query(frm) {
 	// Shows, for each candidate warehouse, how much of THIS row's batch is
