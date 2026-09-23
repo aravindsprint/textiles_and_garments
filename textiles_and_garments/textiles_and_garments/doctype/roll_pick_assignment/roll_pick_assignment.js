@@ -8,6 +8,7 @@ frappe.ui.form.on("Roll Pick Assignment", {
 	refresh(frm) {
 		update_pick_qty_from_batch_items(frm);
 		set_batch_item_warehouse_query(frm);
+		set_batch_item_batch_query(frm);
 	},
 	work_order(frm) {
 		update_pick_qty_from_manufactured_batch(frm);
@@ -47,6 +48,18 @@ function set_batch_item_warehouse_query(frm) {
 			query:
 				"textiles_and_garments.textiles_and_garments.doctype.roll_pick_assignment.roll_pick_assignment.get_warehouses_for_batch",
 			filters: { batch: row.batch },
+		};
+	});
+}
+
+function set_batch_item_batch_query(frm) {
+	// Shows each candidate batch's total qty (summed across all
+	// warehouses) in its own dropdown — same "value + qty" style as the
+	// warehouse field above.
+	frm.set_query("batch", "batch_items", function () {
+		return {
+			query:
+				"textiles_and_garments.textiles_and_garments.doctype.roll_pick_assignment.roll_pick_assignment.get_batches_with_qty",
 		};
 	});
 }

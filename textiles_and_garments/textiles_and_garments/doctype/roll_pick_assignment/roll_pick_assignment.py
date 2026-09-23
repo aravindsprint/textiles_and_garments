@@ -93,3 +93,54 @@ def get_warehouses_for_batch(doctype, txt, searchfield, start, page_len, filters
 			"page_len": cint(page_len),
 		},
 	)
+
+
+@frappe.whitelist()
+def get_batches_with_qty(doctype, txt, searchfield, start, page_len, filters):
+	"""Link-field query for Roll Pick Batch Item.batch itself. Same
+	"value + qty" dropdown style as get_warehouses_for_batch above (and the
+	standard Batch No field) — shows each candidate batch's current total
+	qty, summed across ALL warehouses (unlike get_warehouses_for_batch,
+	which is scoped to one already-chosen batch), as the description line.
+	Balances are computed the same way: Stock Ledger Entry (old-style
+	batch_no) plus Serial and Batch Entry (new-style bundles)."""
+	filters = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+	txt_like = f"%{txt}%" if txt else "%"
+
+	rows = frappe.db.sql(
+		"""
+		select name, qty
+		from (
+			select b.name as name,
+				round(coalesce((
+					select sum(q) from (
+						select sle.actual_qty as q
+						from `tabStock Ledger Entry` sle
+						where sle.is_cancelled = 0
+							and sle.docstatus = 1
+							and sle.batch_no = b.name
+						union all
+						select sbe.qty as q
+						from `tabSerial and Batch Entry` sbe
+						inner join `tabStock Ledger Entry` sle on sle.serial_and_batch_bundle = sbe.parent
+						where sle.is_cancelled = 0
+							and sle.docstatus = 1
+							and sbe.batch_no = b.name
+					) combined
+				), 0), 3) as qty
+			from `tabBatch` b
+			where b.disabled = 0
+				and (b.name like %(txt)s or b.batch_id like %(txt)s)
+		) t
+		where qty > 0
+		order by name
+		limit %(page_len)s offset %(start)s
+		""",
+		{
+			"txt": txt_like,
+			"start": cint(start),
+			"page_len": cint(page_len),
+		},
+	)
+
+	return [(row[0], f"Qty: {row[1]}") for row in rows]
