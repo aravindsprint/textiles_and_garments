@@ -109,31 +109,25 @@ def get_batches_with_qty(doctype, txt, searchfield, start, page_len, filters):
 
 	rows = frappe.db.sql(
 		"""
-		select name, qty
-		from (
-			select b.name as name,
-				round(coalesce((
-					select sum(q) from (
-						select sle.actual_qty as q
-						from `tabStock Ledger Entry` sle
-						where sle.is_cancelled = 0
-							and sle.docstatus = 1
-							and sle.batch_no = b.name
-						union all
-						select sbe.qty as q
-						from `tabSerial and Batch Entry` sbe
-						inner join `tabStock Ledger Entry` sle on sle.serial_and_batch_bundle = sbe.parent
-						where sle.is_cancelled = 0
-							and sle.docstatus = 1
-							and sbe.batch_no = b.name
-					) combined
-				), 0), 3) as qty
-			from `tabBatch` b
-			where b.disabled = 0
-				and (b.name like %(txt)s or b.batch_id like %(txt)s)
-		) t
-		where qty > 0
-		order by name
+		select b.name, round(coalesce(sum(qty_source.qty), 0), 3) as qty
+		from `tabBatch` b
+		left join (
+			select sle.batch_no as batch_no, sle.actual_qty as qty
+			from `tabStock Ledger Entry` sle
+			where sle.is_cancelled = 0
+				and sle.docstatus = 1
+			union all
+			select sbe.batch_no as batch_no, sbe.qty as qty
+			from `tabSerial and Batch Entry` sbe
+			inner join `tabStock Ledger Entry` sle on sle.serial_and_batch_bundle = sbe.parent
+			where sle.is_cancelled = 0
+				and sle.docstatus = 1
+		) qty_source on qty_source.batch_no = b.name
+		where b.disabled = 0
+			and (b.name like %(txt)s or b.batch_id like %(txt)s)
+		group by b.name
+		having qty > 0
+		order by b.name
 		limit %(page_len)s offset %(start)s
 		""",
 		{
