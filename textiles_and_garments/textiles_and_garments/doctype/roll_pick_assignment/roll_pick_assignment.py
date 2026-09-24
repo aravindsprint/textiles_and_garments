@@ -102,38 +102,68 @@ def get_batches_with_qty(doctype, txt, searchfield, start, page_len, filters):
 	standard Batch No field) — shows each candidate batch's current total
 	qty, summed across ALL warehouses (unlike get_warehouses_for_batch,
 	which is scoped to one already-chosen batch), as the description line.
-	Balances are computed the same way: Stock Ledger Entry (old-style
-	batch_no) plus Serial and Batch Entry (new-style bundles)."""
+
+	This company has 100k+ Batch records and millions of Stock Ledger
+	Entry / Serial and Batch Entry rows, so aggregating qty across the
+	whole ledger for every Batch on every keystroke (a straight LEFT JOIN
+	+ GROUP BY over all of them) is far too expensive to run inline in an
+	autocomplete request — it doesn't error, it just hangs. Instead: find
+	a bounded set of candidate batch names matching the search text first
+	(cheap — Batch.name/batch_id are indexed), THEN look up qty only for
+	those via an indexed `batch_no IN (...)` filter on Stock Ledger Entry /
+	Serial and Batch Entry (both have batch_no indexed). Fetches a wider
+	candidate window than page_len since some candidates may turn out to
+	have 0 qty and get filtered out — so the final result can be shorter
+	than page_len even when more matches exist; typing more of the batch
+	name narrows it further."""
 	filters = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
 	txt_like = f"%{txt}%" if txt else "%"
+	page_len = cint(page_len) or 10
+
+	candidates = frappe.db.sql(
+		"""
+		select name
+		from `tabBatch`
+		where disabled = 0
+			and (name like %(txt)s or batch_id like %(txt)s)
+		order by name
+		limit %(candidate_limit)s offset %(start)s
+		""",
+		{
+			"txt": txt_like,
+			"start": cint(start),
+			"candidate_limit": page_len * 5,
+		},
+	)
+	candidate_names = [row[0] for row in candidates]
+	if not candidate_names:
+		return []
 
 	rows = frappe.db.sql(
 		"""
-		select b.name, round(coalesce(sum(qty_source.qty), 0), 3) as qty
-		from `tabBatch` b
-		left join (
+		select batch_no, round(sum(qty), 3) as qty
+		from (
 			select sle.batch_no as batch_no, sle.actual_qty as qty
 			from `tabStock Ledger Entry` sle
 			where sle.is_cancelled = 0
 				and sle.docstatus = 1
+				and sle.batch_no in %(candidate_names)s
 			union all
 			select sbe.batch_no as batch_no, sbe.qty as qty
 			from `tabSerial and Batch Entry` sbe
 			inner join `tabStock Ledger Entry` sle on sle.serial_and_batch_bundle = sbe.parent
 			where sle.is_cancelled = 0
 				and sle.docstatus = 1
-		) qty_source on qty_source.batch_no = b.name
-		where b.disabled = 0
-			and (b.name like %(txt)s or b.batch_id like %(txt)s)
-		group by b.name
+				and sbe.batch_no in %(candidate_names)s
+		) combined
+		group by batch_no
 		having qty > 0
-		order by b.name
-		limit %(page_len)s offset %(start)s
+		order by batch_no
+		limit %(page_len)s
 		""",
 		{
-			"txt": txt_like,
-			"start": cint(start),
-			"page_len": cint(page_len),
+			"candidate_names": candidate_names,
+			"page_len": page_len,
 		},
 	)
 
