@@ -28,6 +28,7 @@
   "section_break_qty",
   "pick_qty",
   "scanned_rolls",
+  "total_weight",
   "custom_section_break_cauql",
   "execution_source_warehouse",
   "execution_target_warehouse",
@@ -195,6 +196,15 @@
    "fieldtype": "Table",
    "label": "Scanned Rolls (In Progress)",
    "options": "Roll Pick Assignment Scan"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Sum of Roll Weight across all Scanned Rolls (In Progress) rows \u2014 always the physical weight regardless of each roll's Stock UOM, unlike Pick Qty which mixes Kgs and Pcs.",
+   "fieldname": "total_weight",
+   "fieldtype": "Float",
+   "label": "Total Weight",
+   "precision": "3",
+   "read_only": 1
   },
   {
    "fieldname": "custom_section_break_cauql",

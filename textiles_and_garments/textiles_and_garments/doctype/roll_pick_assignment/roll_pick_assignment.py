@@ -9,12 +9,22 @@ from frappe.utils import cint, flt
 class RollPickAssignment(Document):
 	def validate(self):
 		self.set_pick_qty_from_batch_items()
+		self.set_total_weight_from_scanned_rolls()
 
 	def set_pick_qty_from_batch_items(self):
 		"""For 'From Batch' / 'To Sales Order' picks, pick_qty is derived from the
 		batch_items child table rather than entered directly."""
 		if self.pick_type in ("From Batch", "To Sales Order"):
 			self.pick_qty = flt(sum(flt(row.qty) for row in self.batch_items or []))
+
+	def set_total_weight_from_scanned_rolls(self):
+		"""Total Weight is always the physical roll weight summed across
+		Scanned Rolls (In Progress) — unlike Qty (which is Pcs for
+		piece-counted items and Kgs otherwise, so summing it directly would
+		mix units), Roll Weight is a constant, UOM-independent measure
+		fetched from the Roll doctype at scan time (see
+		pranera_knit.api.pick_order.scan_pick_order_roll)."""
+		self.total_weight = flt(sum(flt(row.roll_weight) for row in self.scanned_rolls or []), 3)
 
 
 @frappe.whitelist()
