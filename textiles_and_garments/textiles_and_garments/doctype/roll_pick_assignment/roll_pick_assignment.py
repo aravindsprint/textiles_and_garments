@@ -10,6 +10,7 @@ class RollPickAssignment(Document):
 	def validate(self):
 		self.set_pick_qty_from_batch_items()
 		self.set_total_weight_from_scanned_rolls()
+		self.set_item_wise_weight_from_scanned_rolls()
 
 	def set_pick_qty_from_batch_items(self):
 		"""For 'From Batch' / 'To Sales Order' picks, pick_qty is derived from the
@@ -25,6 +26,29 @@ class RollPickAssignment(Document):
 		fetched from the Roll doctype at scan time (see
 		pranera_knit.api.pick_order.scan_pick_order_roll)."""
 		self.total_weight = flt(sum(flt(row.roll_weight) for row in self.scanned_rolls or []), 3)
+
+	def set_item_wise_weight_from_scanned_rolls(self):
+		"""Item Wise Weight breaks Total Weight down by Item Code — same
+		auto-computed-on-save pattern as Pick Qty (by UOM), just grouped by
+		item instead of UOM. Rebuilt from scratch on every save (cheap:
+		scanned_rolls is a handful of rows per Assignment, never hundreds),
+		so it can never drift out of sync with scanned_rolls."""
+		totals_by_item = {}
+		order = []
+		for row in self.scanned_rolls or []:
+			if not row.item_code:
+				continue
+			if row.item_code not in totals_by_item:
+				totals_by_item[row.item_code] = 0.0
+				order.append(row.item_code)
+			totals_by_item[row.item_code] += flt(row.roll_weight)
+
+		self.set("item_wise_weight", [])
+		for item_code in order:
+			self.append("item_wise_weight", {
+				"item_code": item_code,
+				"total_weight": flt(totals_by_item[item_code], 3),
+			})
 
 
 @frappe.whitelist()

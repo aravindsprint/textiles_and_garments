@@ -29,6 +29,7 @@
   "pick_qty",
   "scanned_rolls",
   "total_weight",
+  "item_wise_weight",
   "custom_section_break_cauql",
   "execution_source_warehouse",
   "execution_target_warehouse",
@@ -205,6 +206,14 @@
    "label": "Total Weight",
    "precision": "3",
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Roll Weight from Scanned Rolls (In Progress), grouped by Item Code \u2014 auto-computed, same pattern as Pick Qty (by UOM) but broken down by item instead of UOM.",
+   "fieldname": "item_wise_weight",
+   "fieldtype": "Table",
+   "label": "Item Wise Weight",
+   "options": "Roll Pick Item Weight"
   },
   {
    "fieldname": "custom_section_break_cauql",
