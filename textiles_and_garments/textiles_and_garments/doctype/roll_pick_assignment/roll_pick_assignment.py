@@ -12,6 +12,12 @@ class RollPickAssignment(Document):
 		self.set_total_weight_from_scanned_rolls()
 		self.set_item_wise_weight_from_scanned_rolls()
 
+	def before_update_after_submit(self):
+		"""Rolls are scanned AFTER the Assignment is submitted, and saving a
+		submitted doc skips validate(). Recompute the weight fields here too."""
+		self.set_total_weight_from_scanned_rolls()
+		self.set_item_wise_weight_from_scanned_rolls()
+
 	def set_pick_qty_from_batch_items(self):
 		"""For 'From Batch' / 'To Sales Order' picks, pick_qty is derived from the
 		batch_items child table rather than entered directly."""
