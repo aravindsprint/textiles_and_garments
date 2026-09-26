@@ -15,6 +15,10 @@ class RollPickAssignment(Document):
 	def before_update_after_submit(self):
 		"""Rolls are scanned AFTER the Assignment is submitted, and saving a
 		submitted doc skips validate(). Recompute the weight fields here too."""
+		if not self.scanned_rolls:
+			# Rolls are cleared once the final Pick Entry is created - keep the
+			# last computed weights instead of wiping them to zero.
+			return
 		self.set_total_weight_from_scanned_rolls()
 		self.set_item_wise_weight_from_scanned_rolls()
 
