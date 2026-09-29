@@ -2,12 +2,14 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, flt
 
 
 class RollPickAssignment(Document):
 	def validate(self):
+		self.validate_batch_items_against_sales_order()
 		self.set_pick_qty_from_batch_items()
 		self.set_total_weight_from_scanned_rolls()
 		self.set_item_wise_weight_from_scanned_rolls()
@@ -21,6 +23,34 @@ class RollPickAssignment(Document):
 			return
 		self.set_total_weight_from_scanned_rolls()
 		self.set_item_wise_weight_from_scanned_rolls()
+
+	def validate_batch_items_against_sales_order(self):
+		"""'To Sales Order' picks: every Batch Items row must be for an item
+		that is actually on the linked Sales Order. The form pre-fills one row
+		per SO item and filters the Batch dropdown by that item, but Item is
+		fetched from the chosen Batch, so this guards against a mismatched
+		batch (or rows created via API) slipping through."""
+		if self.pick_type != "To Sales Order" or not self.sales_order:
+			return
+
+		so_items = set(
+			frappe.get_all(
+				"Sales Order Item",
+				filters={"parent": self.sales_order, "parenttype": "Sales Order"},
+				pluck="item_code",
+			)
+		)
+		for row in self.batch_items or []:
+			if row.item and row.item not in so_items:
+				frappe.throw(
+					_("Row #{0}: Item {1} (from Batch {2}) is not in Sales Order {3}").format(
+						row.idx,
+						frappe.bold(row.item),
+						frappe.bold(row.batch),
+						frappe.bold(self.sales_order),
+					),
+					title=_("Item Not In Sales Order"),
+				)
 
 	def set_pick_qty_from_batch_items(self):
 		"""For 'From Batch' / 'To Sales Order' picks, pick_qty is derived from the
@@ -170,11 +200,13 @@ def get_batches_with_qty(doctype, txt, searchfield, start, page_len, filters):
 		from `tabBatch`
 		where disabled = 0
 			and (name like %(txt)s or batch_id like %(txt)s)
+			{item_condition}
 		order by name
 		limit %(candidate_limit)s offset %(start)s
-		""",
+		""".format(item_condition="and item = %(item)s" if filters.get("item") else ""),
 		{
 			"txt": txt_like,
+			"item": filters.get("item"),
 			"start": cint(start),
 			"candidate_limit": page_len * 5,
 		},
@@ -212,3 +244,33 @@ def get_batches_with_qty(doctype, txt, searchfield, start, page_len, filters):
 	)
 
 	return [(row[0], f"Qty: {row[1]}") for row in rows]
+
+
+@frappe.whitelist()
+def get_sales_order_items(sales_order):
+	"""Distinct batch-tracked items on a Sales Order, in SO row order, with
+	their total stock qty. Used by the form to pre-fill Batch Items for
+	'To Sales Order' picks. Non-batch items are skipped because every
+	Roll Pick Batch Item row requires a Batch."""
+	if not sales_order:
+		return []
+	frappe.has_permission("Sales Order", "read", doc=sales_order, throw=True)
+
+	rows = frappe.db.sql(
+		"""
+		select soi.item_code, soi.stock_uom, sum(soi.stock_qty) as stock_qty, min(soi.idx) as first_idx
+		from `tabSales Order Item` soi
+		inner join `tabItem` item on item.name = soi.item_code
+		where soi.parent = %(sales_order)s
+			and soi.parenttype = 'Sales Order'
+			and item.has_batch_no = 1
+		group by soi.item_code, soi.stock_uom
+		order by first_idx
+		""",
+		{"sales_order": sales_order},
+		as_dict=True,
+	)
+	return [
+		{"item_code": r.item_code, "stock_uom": r.stock_uom, "stock_qty": flt(r.stock_qty, 3)}
+		for r in rows
+	]
