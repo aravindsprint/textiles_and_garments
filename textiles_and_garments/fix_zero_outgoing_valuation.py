@@ -105,8 +105,9 @@ def _get_last_known_valuation(item_code, warehouse, posting_date, posting_time):
             and warehouse = %(warehouse)s
             and is_cancelled = 0
             and valuation_rate > 0
+            and valuation_rate < %(max_rate)s
             and timestamp(posting_date, posting_time) <= timestamp(%(posting_date)s, %(posting_time)s)
-        order by posting_date desc, posting_time desc
+        order by posting_date desc, posting_time desc, creation desc
         limit 1
         """,
         {
@@ -114,6 +115,8 @@ def _get_last_known_valuation(item_code, warehouse, posting_date, posting_time):
             "warehouse": warehouse,
             "posting_date": posting_date,
             "posting_time": posting_time,
+            # never copy a corrupted rate (e.g. the Rs 116 crore/kg of BM/25/90012)
+            "max_rate": flt(frappe.conf.get("stock_guard_block_max_rate") or 500000),
         },
         as_dict=True,
     )

@@ -165,6 +165,8 @@ after_install = "textiles_and_garments.overrides.general_ledger"
 
 
 
+_STOCK_VALUATION_GUARD = "textiles_and_garments.stock_valuation_guard.check_voucher"
+
 doc_events = {
     "Material Request": {
         "on_submit": "textiles_and_garments.create_work_orders.on_submit"
@@ -175,8 +177,17 @@ doc_events = {
         ],
         "validate": [
             "textiles_and_garments.fix_zero_outgoing_valuation.fix_zero_outgoing_valuation"
-        ]
+        ],
+        "on_submit": _STOCK_VALUATION_GUARD,
     },
+    # Stock valuation guard: blocks submit if ERPNext values any SLE absurdly
+    # (see stock_valuation_guard.py, incident BM/25/90012 of 21 Feb 2026)
+    "Purchase Receipt": {"on_submit": _STOCK_VALUATION_GUARD},
+    "Subcontracting Receipt": {"on_submit": _STOCK_VALUATION_GUARD},
+    "Delivery Note": {"on_submit": _STOCK_VALUATION_GUARD},
+    "Sales Invoice": {"on_submit": _STOCK_VALUATION_GUARD},
+    "Purchase Invoice": {"on_submit": _STOCK_VALUATION_GUARD},
+    "Stock Reconciliation": {"on_submit": _STOCK_VALUATION_GUARD},
     "Work Order": {
         # "on_submit": [
         # "textiles_and_garments.create_material_transfer_copy.on_submit",
@@ -319,8 +330,12 @@ scheduler_events = {
 	# "all": [
 	# 	"textiles_and_garments.tasks.all"
 	# ],
+	"hourly": [
+        "textiles_and_garments.stock_valuation_guard.check_recent_reposts",
+	],
 	"daily": [
         "textiles_and_garments.leave_allocation.auto_create_earned_leave_allocations",
+        "textiles_and_garments.stock_valuation_guard.daily_monitor",
 		# "textiles_and_garments.tasks.daily"
 	],
 	# "hourly": [
