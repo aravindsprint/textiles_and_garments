@@ -166,6 +166,11 @@ after_install = "textiles_and_garments.overrides.general_ledger"
 
 
 _STOCK_VALUATION_GUARD = "textiles_and_garments.stock_valuation_guard.check_voucher"
+# Stock ledger integrity (see stock_integrity/README.md, clean-up of 3 Oct 2026).
+# Runs after the valuation guard: ledger written, same transaction, "block" rolls back.
+_STOCK_INTEGRITY = "textiles_and_garments.stock_integrity.guard.on_submit"
+_STOCK_ON_SUBMIT = [_STOCK_VALUATION_GUARD, _STOCK_INTEGRITY]
+_PROTECTED_CANCEL = "textiles_and_garments.stock_integrity.protect.guard_cancel"
 
 doc_events = {
     "Material Request": {
@@ -173,21 +178,25 @@ doc_events = {
     },
     "Stock Entry": {
         "before_validate": [
-            "textiles_and_garments.fix_scrap_item_valuation.fix_scrap_item_valuation"
+            "textiles_and_garments.fix_scrap_item_valuation.fix_scrap_item_valuation",
+            "textiles_and_garments.stock_integrity.guard.snap_remainders",
         ],
         "validate": [
             "textiles_and_garments.fix_zero_outgoing_valuation.fix_zero_outgoing_valuation"
         ],
-        "on_submit": _STOCK_VALUATION_GUARD,
+        "on_submit": _STOCK_ON_SUBMIT,
+        "before_cancel": _PROTECTED_CANCEL,
     },
     # Stock valuation guard: blocks submit if ERPNext values any SLE absurdly
     # (see stock_valuation_guard.py, incident BM/25/90012 of 21 Feb 2026)
-    "Purchase Receipt": {"on_submit": _STOCK_VALUATION_GUARD},
-    "Subcontracting Receipt": {"on_submit": _STOCK_VALUATION_GUARD},
-    "Delivery Note": {"on_submit": _STOCK_VALUATION_GUARD},
-    "Sales Invoice": {"on_submit": _STOCK_VALUATION_GUARD},
-    "Purchase Invoice": {"on_submit": _STOCK_VALUATION_GUARD},
-    "Stock Reconciliation": {"on_submit": _STOCK_VALUATION_GUARD},
+    "Purchase Receipt": {"on_submit": _STOCK_ON_SUBMIT},
+    "Subcontracting Receipt": {"on_submit": _STOCK_ON_SUBMIT},
+    "Delivery Note": {"on_submit": _STOCK_ON_SUBMIT},
+    "Sales Invoice": {"on_submit": _STOCK_ON_SUBMIT},
+    "Purchase Invoice": {"on_submit": _STOCK_ON_SUBMIT},
+    "Stock Reconciliation": {"on_submit": _STOCK_ON_SUBMIT, "before_cancel": _PROTECTED_CANCEL},
+    # Refuse reposts that would recalculate protected (clean-up) ledger lines
+    "Repost Item Valuation": {"validate": "textiles_and_garments.stock_integrity.protect.guard_repost"},
     "Work Order": {
         # "on_submit": [
         # "textiles_and_garments.create_material_transfer_copy.on_submit",
@@ -332,10 +341,13 @@ scheduler_events = {
 	# ],
 	"hourly": [
         "textiles_and_garments.stock_valuation_guard.check_recent_reposts",
+        "textiles_and_garments.stock_integrity.monitor.check_failed_reposts",
+        "textiles_and_garments.stock_integrity.monitor.refill_after_reposts",
 	],
 	"daily": [
         "textiles_and_garments.leave_allocation.auto_create_earned_leave_allocations",
         "textiles_and_garments.stock_valuation_guard.daily_monitor",
+        "textiles_and_garments.stock_integrity.monitor.nightly_scan",
 		# "textiles_and_garments.tasks.daily"
 	],
 	# "hourly": [
