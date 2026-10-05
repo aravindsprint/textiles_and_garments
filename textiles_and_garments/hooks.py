@@ -185,10 +185,17 @@ doc_events = {
             "textiles_and_garments.stock_integrity.guard.snap_remainders",
         ],
         "validate": [
-            "textiles_and_garments.fix_zero_outgoing_valuation.fix_zero_outgoing_valuation"
+            "textiles_and_garments.fix_zero_outgoing_valuation.fix_zero_outgoing_valuation",
+            # Roll App "Verify Rolls": one put-away per source Material Transfer
+            "textiles_and_garments.api.verify_rolls.validate_verified_transfer",
         ],
-        "on_submit": _STOCK_ON_SUBMIT,
+        # Same guards as every other stock doctype, then the Verify Rolls
+        # put-away's Roll.warehouse sync (no-op for any other Stock Entry).
+        "on_submit": _STOCK_ON_SUBMIT + [
+            "textiles_and_garments.api.verify_rolls.on_verified_transfer_submit",
+        ],
         "before_cancel": _PROTECTED_CANCEL,
+        "on_cancel": "textiles_and_garments.api.verify_rolls.on_verified_transfer_cancel",
     },
     # Stock valuation guard: blocks submit if ERPNext values any SLE absurdly
     # (see stock_valuation_guard.py, incident BM/25/90012 of 21 Feb 2026)
