@@ -217,11 +217,26 @@ def get_sales_order_for_deal(crm_deal):
     return None
 
 
+def _get_so_naming_series_options():
+    options = frappe.get_meta("Sales Order").get_field("naming_series").options or ""
+    return [s.strip() for s in options.split("\n") if s.strip()]
+
+
 @frappe.whitelist()
-def create_sales_order_from_deal(crm_deal, organization):
+def create_sales_order_from_deal(crm_deal, organization=None, naming_series=None):
     from crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings import _get_enabled_settings
 
     deal = frappe.get_doc("CRM Deal", crm_deal)
+
+    # Naming series: UI value (may be unsaved) wins, else the value saved on the deal
+    naming_series = naming_series or deal.get("custom_sales_order_naming_series")
+    if not naming_series:
+        frappe.throw("Please select Sales Order Naming Series on the Deal.")
+    if naming_series not in _get_so_naming_series_options():
+        frappe.throw(f"Invalid Sales Order Naming Series: {naming_series}")
+    if deal.get("custom_sales_order_naming_series") != naming_series:
+        deal.db_set("custom_sales_order_naming_series", naming_series, update_modified=False)
+
     customer = deal.custom_customer
     if not customer:
         frappe.throw("No customer linked to this Deal. Please create the customer first.")
@@ -295,7 +310,7 @@ def create_sales_order_from_deal(crm_deal, organization):
                 "item_name": product.product_name or product.custom_item_code,
                 "qty": product.qty or 1,
                 "rate": product.rate or 0,
-                "uom": item_doc.stock_uom,   # pull real UOM, don't hardcode
+                "uom": item_doc.stock_uom,
                 "delivery_date": so.delivery_date,
             })
 
@@ -306,7 +321,16 @@ def create_sales_order_from_deal(crm_deal, organization):
         )
 
     so.set_missing_values()
+    so.naming_series = naming_series   # set after set_missing_values, right before naming
     so.flags.ignore_mandatory = False
     so.insert(ignore_permissions=True)
 
     return f"/app/sales-order/{frappe.utils.cstr(so.name)}"
+
+
+def sync_so_series_to_deal(doc, method=None):
+    if (doc.doc_type == "Sales Order" and doc.field_name == "naming_series"
+            and doc.property == "options"
+            and frappe.db.exists("Custom Field", "CRM Deal-custom_sales_order_naming_series")):
+        frappe.db.set_value("Custom Field", "CRM Deal-custom_sales_order_naming_series", "options", doc.value)
+        frappe.clear_cache(doctype="CRM Deal")

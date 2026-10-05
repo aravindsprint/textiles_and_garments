@@ -173,6 +173,9 @@ _STOCK_ON_SUBMIT = [_STOCK_VALUATION_GUARD, _STOCK_INTEGRITY]
 _PROTECTED_CANCEL = "textiles_and_garments.stock_integrity.protect.guard_cancel"
 
 doc_events = {
+    "Property Setter": {
+        "on_update": "textiles_and_garments.api.crm.sync_so_series_to_deal"
+    },
     "Material Request": {
         "on_submit": "textiles_and_garments.create_work_orders.on_submit"
     },
