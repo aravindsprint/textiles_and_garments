@@ -27,8 +27,14 @@ doctype on this site.
 
 Bookkeeping on the new Stock Entry
 ----------------------------------
-custom_verified_from_stock_entry  the scanned source entry
-custom_verified_rolls             Verified Roll Item rows (roll -> bin)
+custom_verified_rolls   Verified Roll Item rows: roll -> bin, plus the
+                        scanned source entry (source_stock_entry) on
+                        every row.
+
+The source entry deliberately lives on the child rows, not in a Stock
+Entry column: `tabStock Entry` on this site is at MariaDB's 65,535-byte
+row-size limit, so it can't take another varchar column. Table and
+Section Break fields add no column.
 
 Doc events registered in hooks.py:
   validate   -> validate_verified_transfer   (one put-away per source entry)
@@ -98,10 +104,31 @@ def _source_map(se):
 
 
 def _existing_put_away(source_se, exclude=None):
-	filters = {"custom_verified_from_stock_entry": source_se, "docstatus": ["<", 2]}
-	if exclude:
-		filters["name"] = ["!=", exclude]
-	return frappe.db.get_value("Stock Entry", filters, ["name", "docstatus"], as_dict=True)
+	"""Live (draft or submitted) put-away Stock Entry for source_se, if any."""
+	rows = frappe.db.sql(
+		"""
+		SELECT se.name, se.docstatus
+		FROM `tabVerified Roll Item` v
+		JOIN `tabStock Entry` se ON se.name = v.parent
+		WHERE v.parenttype = 'Stock Entry'
+		  AND v.parentfield = 'custom_verified_rolls'
+		  AND v.source_stock_entry = %(src)s
+		  AND se.docstatus < 2
+		  AND se.name != %(exclude)s
+		LIMIT 1
+		""",
+		{"src": source_se, "exclude": exclude or ""},
+		as_dict=True,
+	)
+	return rows[0] if rows else None
+
+
+def _verified_source(doc):
+	"""Source entry of a put-away Stock Entry, or None for any other entry."""
+	for row in doc.get("custom_verified_rolls") or []:
+		if row.get("source_stock_entry"):
+			return row.source_stock_entry
+	return None
 
 
 def _get_warehouse_address(warehouse):
@@ -175,12 +202,16 @@ def search_material_transfers(txt=None, limit=20):
 	haven't been put away yet. Newest first."""
 	se = frappe.qb.DocType("Stock Entry")
 	put_away = frappe.qb.DocType("Stock Entry").as_("pa")
+	vri = frappe.qb.DocType("Verified Roll Item")
 
 	sub = (
-		frappe.qb.from_(put_away)
-		.select(put_away.custom_verified_from_stock_entry)
+		frappe.qb.from_(vri)
+		.join(put_away).on(put_away.name == vri.parent)
+		.select(vri.source_stock_entry)
+		.where(vri.parenttype == "Stock Entry")
+		.where(vri.parentfield == "custom_verified_rolls")
+		.where(vri.source_stock_entry.isnotnull())
 		.where(put_away.docstatus < 2)
-		.where(put_away.custom_verified_from_stock_entry.isnotnull())
 	)
 	q = (
 		frappe.qb.from_(se)
@@ -376,8 +407,6 @@ def create_verified_transfer(stock_entry, rolls, posting_date=None, submit=1):
 		se.target_warehouse_address = _get_warehouse_address(se.to_warehouse)
 	se.remarks = _("Roll put-away after verification of {0} (pick list {1})").format(se_src.name, pl.name)
 
-	se.custom_verified_from_stock_entry = se_src.name
-
 	for (item_code, batch, src, bin_wh), g in grouped.items():
 		se.append("items", {
 			"item_code": item_code,
@@ -396,6 +425,7 @@ def create_verified_transfer(stock_entry, rolls, posting_date=None, submit=1):
 	for roll_no, bin_wh in sent.items():
 		r = expected_by_roll[roll_no]
 		se.append("custom_verified_rolls", {
+			"source_stock_entry": se_src.name,
 			"roll_no": roll_no,
 			"item_code": r["item_code"],
 			"batch": r["batch"],
@@ -422,11 +452,14 @@ def create_verified_transfer(stock_entry, rolls, posting_date=None, submit=1):
 
 def validate_verified_transfer(doc, method=None):
 	"""One live put-away per source entry. Also covers Duplicate/Amend from
-	desk (no_copy clears the link on Duplicate; an Amend keeps it and is
-	allowed because the original is cancelled by then)."""
-	src = doc.get("custom_verified_from_stock_entry")
+	desk (no_copy empties Verified Rolls on Duplicate, so the copy is an
+	ordinary Stock Entry; an Amend keeps the rows and is allowed because
+	the original is cancelled by then)."""
+	src = _verified_source(doc)
 	if not src:
 		return
+	if any(r.get("source_stock_entry") != src for r in doc.get("custom_verified_rolls") or []):
+		frappe.throw(_("All verified rolls on a put-away must come from the same source Stock Entry"))
 	existing = _existing_put_away(src, exclude=doc.name)
 	if existing:
 		frappe.throw(_("Rolls of {0} were already put away in {1}").format(
@@ -434,7 +467,7 @@ def validate_verified_transfer(doc, method=None):
 
 
 def on_verified_transfer_submit(doc, method=None):
-	if not doc.get("custom_verified_from_stock_entry"):
+	if not _verified_source(doc):
 		return
 	for row in doc.get("custom_verified_rolls") or []:
 		if row.roll_no and row.bin and frappe.db.exists("Roll", row.roll_no):
@@ -442,7 +475,7 @@ def on_verified_transfer_submit(doc, method=None):
 
 
 def on_verified_transfer_cancel(doc, method=None):
-	if not doc.get("custom_verified_from_stock_entry"):
+	if not _verified_source(doc):
 		return
 	for row in doc.get("custom_verified_rolls") or []:
 		if row.roll_no and row.source_warehouse and frappe.db.exists("Roll", row.roll_no):
