@@ -194,6 +194,8 @@ doc_events = {
         "on_submit": _STOCK_ON_SUBMIT + [
             "textiles_and_garments.api.verify_rolls.on_verified_transfer_submit",
         ],
+        # Stock integrity: no Material Receipt of stock at rate 0 (MR/25/00909, fixed by SR/00035)
+        "before_submit": "textiles_and_garments.stock_integrity.guard.check_zero_rate_receipt",
         "before_cancel": _PROTECTED_CANCEL,
         "on_cancel": "textiles_and_garments.api.verify_rolls.on_verified_transfer_cancel",
     },

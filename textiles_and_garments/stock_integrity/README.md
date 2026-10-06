@@ -18,6 +18,7 @@ It works alongside `stock_valuation_guard.py`, which blocks absurd *valuations*
 | 0.001 kg crumbs left behind carrying value (≈180 dust rows) | Outgoing row takes the whole batch if ≤ 5 g would be left | `guard.snap_remainders` |
 | Non-batch Stock Reconciliation lines stored with actual_qty = 0, so SUM-based reports disagree with the stock (LILA, MARS_POLO) | actual_qty filled with the real change on submit, and again after reposts | `guard.fill_sr_actual_qty`, `monitor.refill_after_reposts` |
 | Clean-up adjustments undone by a repost (SR/00024, 12 minutes after commit) | Reposts starting at or before a protected line are refused; protected vouchers cannot be cancelled | `protect.guard_repost`, `protect.guard_cancel` |
+| Stock received at rate 0 (MR/25/00909: Rs 50 lakh of chemicals into Pranera Marketing at no value) | Material Receipt of a stock item without a rate alerts (or blocks) unless "Allow Zero Valuation Rate" is ticked | `guard.check_zero_rate_receipt` |
 | Problems only noticed when someone ran the report | Nightly e-mail of every red or out-of-sync item/warehouse | `monitor.nightly_scan` |
 | Repairs needed console pasting | One dry-run-first command | `repair.run` |
 
@@ -32,6 +33,7 @@ any new rows it produces and `repair.run` fixes them.
 "stock_integrity_missing_leg": "block",
 "stock_integrity_chain": "block",
 "stock_integrity_negative_batch": "block",
+"stock_integrity_zero_rate_receipt": "alert",
 "stock_integrity_fill_sr_actual_qty": 1,
 "stock_integrity_snap_remainder": 0.005,
 "stock_integrity_protect": 1,

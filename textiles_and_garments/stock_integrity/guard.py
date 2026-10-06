@@ -16,6 +16,12 @@ Each check maps to a failure found in the Stock_balance_checking clean-up of 3 O
 All three run in on_submit, after ERPNext has written the ledger, inside the same transaction:
 "block" rolls the submit back with a message, "alert" lets it through and e-mails/logs.
 
+  zero_rate_receipt  MR/25/00909 (4 Aug 2025) brought 1,672 kg NOBO and 7,000 kg COMFORTEC into
+                  Pranera Marketing at rate 0 (Rs 50 lakh of stock at no value until SR/00035).
+                  A Material Receipt of a stock item must carry a rate unless the row has
+                  "Allow Zero Valuation Rate" ticked on purpose. Runs before_submit, so drafts
+                  can still be saved. Defaults to "alert".
+
 Also here:
   fill_sr_actual_qty  ERPNext stores a non-batch Stock Reconciliation line with actual_qty = 0
                       and only qty_after_transaction. Reports that SUM(actual_qty) (including
@@ -159,6 +165,39 @@ def _negative_batches(doc):
             out.append(_("Batch {0} would be at {1} in {2}; the warehouse does not hold that much of it").format(
                 batch_no, flt(q, 3), warehouse))
     return out
+
+
+# --------------------------------------------------------------------------
+# Stock Entry before_submit: no stock may arrive at zero value by accident
+# --------------------------------------------------------------------------
+def check_zero_rate_receipt(doc, method=None):
+    s = settings()
+    if not s.enabled or s.zero_rate_receipt == "off" or doc.flags.ignore_stock_integrity:
+        return
+    if doc.purpose != "Material Receipt":
+        return
+    lines = []
+    for d in doc.items:
+        if not d.t_warehouse or not flt(d.get("transfer_qty") or d.qty):
+            continue
+        if cint(d.get("allow_zero_valuation_rate")):
+            continue
+        if not frappe.get_cached_value("Item", d.item_code, "is_stock_item"):
+            continue
+        if flt(d.get("valuation_rate")) or flt(d.get("basic_rate")):
+            continue
+        lines.append(_("Row {0}: {1}, {2} into {3} has no rate").format(
+            d.idx, d.item_code, flt(d.get("transfer_qty") or d.qty, 3), d.t_warehouse))
+    if not lines:
+        return
+    if s.zero_rate_receipt == "alert":
+        alert(_("Zero-rate Material Receipt {0}").format(doc.name), html_list(lines))
+        return
+    frappe.throw(
+        _("This Material Receipt brings stock in at no value. Enter the purchase/transfer rate, or tick "
+          "\"Allow Zero Valuation Rate\" on the row if the stock really is free.{0}").format(html_list(lines)),
+        title=_("Stock Ledger Integrity"),
+    )
 
 
 # --------------------------------------------------------------------------

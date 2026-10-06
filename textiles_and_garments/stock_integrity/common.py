@@ -7,6 +7,7 @@ site_config.json keys (all optional; changing them needs no deploy):
     "stock_integrity_missing_leg": "block",     # block | alert | off
     "stock_integrity_chain": "block",           # block | alert | off
     "stock_integrity_negative_batch": "block",  # block | alert | off
+    "stock_integrity_zero_rate_receipt": "alert",  # block | alert | off
     "stock_integrity_fill_sr_actual_qty": 1,
     "stock_integrity_snap_remainder": 0.005,    # stock UOM; 0 disables
     "stock_integrity_protect": 1,
@@ -34,6 +35,7 @@ def settings():
         missing_leg=mode("stock_integrity_missing_leg", "block"),
         chain=mode("stock_integrity_chain", "block"),
         negative_batch=mode("stock_integrity_negative_batch", "block"),
+        zero_rate_receipt=mode("stock_integrity_zero_rate_receipt", "alert"),
         fill_sr_actual_qty=cint(c.get("stock_integrity_fill_sr_actual_qty", 1)),
         snap_remainder=flt(c.get("stock_integrity_snap_remainder", 0.005)),
         protect=cint(c.get("stock_integrity_protect", 1)),
