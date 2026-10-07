@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "creation": "2026-08-29 17:30:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "department",
+  "user",
+  "weekly_digest"
+ ],
+ "fields": [
+  {
+   "columns": 4,
+   "description": "Leave blank to receive escalations for every department (e.g. MD)",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "columns": 4,
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "default": "1",
+   "fieldname": "weekly_digest",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Weekly Overdue Digest"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-07 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Sample Movement Escalation Recipient",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

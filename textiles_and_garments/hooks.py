@@ -87,6 +87,12 @@ doctype_js = {
 # ----------
 
 # add methods and filters to jinja environment
+jinja = {
+	"methods": [
+		"textiles_and_garments.textiles_and_garments.doctype.sample_movement_register.sample_movement_register.gate_pass_qr",
+	],
+}
+
 # jinja = {
 # 	"methods": "textiles_and_garments.utils.jinja_methods",
 # 	"filters": "textiles_and_garments.utils.jinja_filters"
@@ -132,6 +138,14 @@ after_install = "textiles_and_garments.overrides.general_ledger"
 # Permissions
 # -----------
 # Permissions evaluated in scripted ways
+
+permission_query_conditions = {
+	"Sample Movement Register": "textiles_and_garments.textiles_and_garments.doctype.sample_movement_register.sample_movement_register.get_permission_query_conditions",
+}
+
+has_permission = {
+	"Sample Movement Register": "textiles_and_garments.textiles_and_garments.doctype.sample_movement_register.sample_movement_register.has_permission",
+}
 
 # permission_query_conditions = {
 # 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
@@ -365,7 +379,11 @@ scheduler_events = {
         "textiles_and_garments.leave_allocation.auto_create_earned_leave_allocations",
         "textiles_and_garments.stock_valuation_guard.daily_monitor",
         "textiles_and_garments.stock_integrity.monitor.nightly_scan",
+        "textiles_and_garments.textiles_and_garments.doctype.sample_movement_register.reminders.send_daily_reminders",
 		# "textiles_and_garments.tasks.daily"
+	],
+	"weekly": [
+        "textiles_and_garments.textiles_and_garments.doctype.sample_movement_register.reminders.send_weekly_digest",
 	],
 	# "hourly": [
 	# 	"textiles_and_garments.tasks.hourly"

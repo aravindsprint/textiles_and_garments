@@ -1,0 +1,33 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2026-08-29 17:30:00.000000",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2026-10-08 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Party-wise Sample Report",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT\n\tsmr.party_type as \"Party Type:Data:100\",\n\tCOALESCE(smr.party_name, smr.other_party_name) as \"Party:Data:200\",\n\tCOUNT(*) as \"Registers Sent:Int:120\",\n\tSUM(CASE WHEN smr.status = 'Returned' THEN 1 ELSE 0 END) as \"Returned:Int:90\",\n\tSUM(CASE WHEN smr.status = 'Written Off' THEN 1 ELSE 0 END) as \"Written Off:Int:100\",\n\tSUM(CASE WHEN smr.status IN ('Out', 'Partially Returned', 'Overdue', 'Escalated') THEN 1 ELSE 0 END) as \"Still Out:Int:90\",\n\tSUM(CASE WHEN smr.status IN ('Overdue', 'Escalated') THEN 1 ELSE 0 END) as \"Overdue Now:Int:100\",\n\tROUND(100.0 * SUM(CASE WHEN smr.status = 'Returned' THEN 1 ELSE 0 END)\n\t\t/ NULLIF(SUM(CASE WHEN smr.status IN ('Returned', 'Written Off') THEN 1 ELSE 0 END), 0), 1) as \"Return Rate (Closed):Percent:160\"\nFROM `tabSample Movement Register` smr\nWHERE smr.docstatus = 1 AND smr.status NOT IN ('Approved')\nGROUP BY smr.party_type, COALESCE(smr.party_name, smr.other_party_name)\nORDER BY COUNT(*) DESC\n",
+ "ref_doctype": "Sample Movement Register",
+ "report_name": "Party-wise Sample Report",
+ "report_type": "Query Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Merchandising Manager"
+  },
+  {
+   "role": "Merchandiser"
+  }
+ ],
+ "timeout": 0
+}
