@@ -82,6 +82,66 @@ frappe.ui.form.on('Sales Invoice', {
 
 
 
+// ---------------------------------------------------------------------------
+// Delivery OTP: "Send Delivery OTP" button + auto-verify when OTP Number is entered
+// ---------------------------------------------------------------------------
+frappe.ui.form.on('Sales Invoice', {
+    refresh: function(frm) {
+        frm.set_df_property('custom_otp_verified_and_delivered', 'read_only', 1);
+
+        const verified = frm.doc.custom_otp_verified_and_delivered === 'Yes';
+        frm.set_df_property('custom_otp_number', 'read_only', verified ? 1 : 0);
+
+        if (frm.doc.docstatus === 1 && !verified) {
+            frm.add_custom_button(__('Send Delivery OTP'), function() {
+                frappe.call({
+                    method: 'textiles_and_garments.api.otp.send_invoice_otp',
+                    args: { invoice: frm.doc.name },
+                    freeze: true,
+                    freeze_message: __('Sending OTP...'),
+                    callback: function(r) {
+                        if (r.message && r.message.success) {
+                            frappe.show_alert({
+                                message: __('OTP sent to {0}', [r.message.mobile]),
+                                indicator: 'green'
+                            }, 7);
+                        }
+                    }
+                });
+            });
+        }
+    },
+
+    custom_otp_number: function(frm) {
+        const code = (frm.doc.custom_otp_number || '').trim();
+        if (frm.doc.docstatus !== 1 || frm.doc.custom_otp_verified_and_delivered === 'Yes') return;
+        if (!/^\d{6}$/.test(code)) return;   // wait until all 6 digits are typed
+
+        frappe.call({
+            method: 'textiles_and_garments.api.otp.verify_invoice_otp',
+            args: { invoice: frm.doc.name, code: code },
+            freeze: true,
+            freeze_message: __('Verifying OTP...'),
+            callback: function(r) {
+                if (r.message && r.message.success) {
+                    frappe.show_alert({ message: __('OTP verified. Marked as delivered.'), indicator: 'green' }, 7);
+                    frm.reload_doc();
+                } else {
+                    frappe.msgprint({
+                        title: __('Incorrect OTP'),
+                        message: __('The OTP is not correct. Check the SMS and try again.'),
+                        indicator: 'red'
+                    });
+                    frm.set_value('custom_otp_number', '');
+                }
+            },
+            error: function() {
+                frm.set_value('custom_otp_number', '');
+            }
+        });
+    }
+});
+
 frappe.ui.form.on('Sales Invoice Item', {
     custom_view_history_btn: function(frm, cdt, cdn) {
         let item_row = frappe.get_doc(cdt, cdn);

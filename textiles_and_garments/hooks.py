@@ -204,7 +204,12 @@ doc_events = {
     "Purchase Receipt": {"on_submit": _STOCK_ON_SUBMIT},
     "Subcontracting Receipt": {"on_submit": _STOCK_ON_SUBMIT},
     "Delivery Note": {"on_submit": _STOCK_ON_SUBMIT},
-    "Sales Invoice": {"on_submit": _STOCK_ON_SUBMIT},
+    "Sales Invoice": {
+        "on_submit": _STOCK_ON_SUBMIT,
+        # Delivery OTP: "OTP Verified and Delivered" = Yes only via api.otp.verify_invoice_otp
+        "validate": "textiles_and_garments.api.otp.guard_otp_fields",
+        "before_update_after_submit": "textiles_and_garments.api.otp.guard_otp_fields",
+    },
     "Purchase Invoice": {"on_submit": _STOCK_ON_SUBMIT},
     "Stock Reconciliation": {"on_submit": _STOCK_ON_SUBMIT, "before_cancel": _PROTECTED_CANCEL},
     # Refuse reposts that would recalculate protected (clean-up) ledger lines
