@@ -99,7 +99,6 @@ doctype_js = {
 # after_install = "textiles_and_garments.install.after_install"
 
 
-
 # Uninstallation
 # ------------
 
@@ -545,5 +544,3 @@ scheduler_events = {
 
 # # Apply patches after migration
 # after_migrate = "textiles_and_garments.hooks.apply_general_ledger_patches"
-
-
