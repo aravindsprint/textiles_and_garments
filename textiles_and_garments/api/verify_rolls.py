@@ -279,7 +279,7 @@ def search_bins(txt=None, near_warehouse=None, company=None, limit=30):
 	if not txt and near_warehouse:
 		parent = frappe.db.get_value("Warehouse", near_warehouse, "parent_warehouse")
 		if parent:
-			rows = frappe.get_all(
+			rows = frappe.get_list(
 				"Warehouse",
 				filters={**filters, "parent_warehouse": parent, "name": ["!=", near_warehouse]},
 				fields=["name", "warehouse_name", "parent_warehouse"],
@@ -296,7 +296,7 @@ def search_bins(txt=None, near_warehouse=None, company=None, limit=30):
 			"warehouse_name": ["like", f"%{txt}%"],
 			"parent_warehouse": ["like", f"%{txt}%"],
 		}
-	return frappe.get_all(
+	return frappe.get_list(
 		"Warehouse",
 		filters=filters,
 		or_filters=or_filters,

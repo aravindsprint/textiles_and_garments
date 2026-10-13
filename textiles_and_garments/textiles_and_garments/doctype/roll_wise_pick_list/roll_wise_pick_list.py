@@ -4,8 +4,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe.query_builder.functions import Sum
-from frappe.utils import flt, today
-import json
+from frappe.utils import flt
 
 
 class RollWisePickList(Document):
@@ -204,7 +203,7 @@ def get_filtered_rolls(warehouse, batch):
         "name": ["in", used_roll_names]
     }
 
-    rolls = frappe.get_all(
+    rolls = frappe.get_list(
         "Roll",
         filters=roll_filters,
         fields=["name", "item_code", "batch", "roll_weight", "stock_uom"]
@@ -305,7 +304,7 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
 
 @frappe.whitelist()
 def get_sales_invoice_items(sales_invoice):
-    return frappe.get_all("Sales Invoice Item",
+    return frappe.get_list("Sales Invoice Item", parent_doctype="Sales Invoice",
         filters={"parent": sales_invoice},
         fields=["item_code", "item_name", "qty", "rate", "amount", "warehouse"]
     )

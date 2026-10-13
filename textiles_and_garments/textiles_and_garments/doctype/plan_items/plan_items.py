@@ -3,12 +3,10 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe import _
 from collections import defaultdict
 import json
 from frappe.query_builder.functions import Sum
 from frappe.utils import flt, today
-from frappe.utils import nowdate, add_days, getdate
 
 
 
@@ -118,7 +116,7 @@ class PlanItems(Document):
 @frappe.whitelist()
 def get_selected_sales_order():
     # Fetch Sales Order where sales order field contains any of the given Sales Order Items
-    sales_orders = frappe.get_all(
+    sales_orders = frappe.get_list(
         "Sales Order",
         filters={
             "docstatus": 1
@@ -143,8 +141,8 @@ def get_sales_order_items(sales_orders):
         return []
     
     # Fetch Sales Order Items
-    items = frappe.get_all(
-        "Sales Order Item",
+    items = frappe.get_list(
+        "Sales Order Item", parent_doctype="Sales Order",
         filters={
             "parent": ["in", sales_orders],
             "docstatus": 1
@@ -172,8 +170,8 @@ def get_bom_items(bom_names):
         return []
     
     # Fetch BOM items
-    bom_items = frappe.get_all(
-        "BOM Item",
+    bom_items = frappe.get_list(
+        "BOM Item", parent_doctype="BOM",
         filters={
             "parent": ["in", bom_names],
             "docstatus": 1
@@ -279,7 +277,7 @@ def get_latest_boms_for_items(item_codes):
     
     for item_code in item_codes:
         # Get the latest BOM for this item
-        latest_bom = frappe.get_all(
+        latest_bom = frappe.get_list(
             "BOM",
             filters={
                 "item": item_code,

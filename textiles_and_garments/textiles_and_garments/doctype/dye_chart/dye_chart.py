@@ -2,14 +2,9 @@
 # For license information, please see license.txt
 from __future__ import unicode_literals
 import frappe
-from frappe import _
 
 from frappe.model.document import Document
 from frappe.utils.data import flt
-from erpnext.setup.utils import get_exchange_rate
-from bs4 import BeautifulSoup
-import urllib.parse
-from frappe_whatsapp.utils import run_server_script_for_doc_event
 from datetime import datetime
 import re
 
@@ -1429,7 +1424,6 @@ def get_total_of_work_order_payments(custom_work_order_payments):
 #     process_work_orders("custom_padding_contractor", "custom_padding_operation_cost", padding_contractor, "padding_contractor")
 
 
-import re
 import frappe
 
 @frappe.whitelist()
@@ -2003,7 +1997,7 @@ def get_matching_po_items(production_item, custom_plan_items):
 @frappe.whitelist()
 def get_matching_work_orders(item_code, plan_items):
     """Returns Work Orders linked to the given item_code."""
-    work_orders = frappe.get_all(
+    work_orders = frappe.get_list(
         "Work Order",
         filters={
             "production_item": item_code,

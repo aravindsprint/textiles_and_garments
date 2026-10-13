@@ -936,7 +936,7 @@ def get_wip_details(docname, item_code, bom):
     # Collect all matching Plans records for the BOM items
     all_plans = []
     for code in item_codes:
-        plans = frappe.get_all(
+        plans = frappe.get_list(
             "Plans",
             filters={"item_code": code, "docstatus": 1},
             fields=["name", "item_code", "plan_qty", "plan_items", "reserved_qty", "unreserved_qty", "unreserved_received_qty", "reserved_received_qty"]
@@ -1327,7 +1327,7 @@ def get_selected_plans(custom_plan_items):
         return []
 
     # Fetch Plans where plan_items field contains any of the given Plan Items
-    plans = frappe.get_all(
+    plans = frappe.get_list(
         "Plans",
         filters={
             "plan_items": ["in", custom_plan_items],
