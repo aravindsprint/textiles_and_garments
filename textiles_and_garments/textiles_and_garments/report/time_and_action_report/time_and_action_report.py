@@ -22,19 +22,23 @@ def get_columns():
     ]
 
 def get_data(filters):
+    filters = filters or {}
     conditions = ["p.docstatus = 1"]
-    
-    if filters.get("plan_name"):
-        conditions.append(f"p.name = '{filters['plan_name']}'")
-    if filters.get("workflow_type"):
-        conditions.append(f"p.purchase_or_manufacture = '{filters['workflow_type']}'")
-    if filters.get("status"):
-        conditions.append(f"tam.status = '{filters['status']}'")
-    if filters.get("item_code"):
-        conditions.append(f"tam.item_code = '{filters['item_code']}'")
-    
+    values = {}
+
+    # Map each filter to its column; user input is only ever passed as a bound value
+    for key, column in (
+        ("plan_name", "p.name"),
+        ("workflow_type", "p.purchase_or_manufacture"),
+        ("status", "tam.status"),
+        ("item_code", "tam.item_code"),
+    ):
+        if filters.get(key):
+            conditions.append(f"{column} = %({key})s")
+            values[key] = filters.get(key)
+
     where_clause = " AND ".join(conditions)
-    
+
     return frappe.db.sql(f"""
         SELECT 
             p.name as plan_name,
@@ -51,7 +55,7 @@ def get_data(filters):
         INNER JOIN `tabTime And Action Milestones` tam ON p.name = tam.parent
         WHERE {where_clause}
         ORDER BY p.name, tam.planned_date
-    """, as_dict=1)
+    """, values, as_dict=1)
 
 def get_chart(data):
     if not data:

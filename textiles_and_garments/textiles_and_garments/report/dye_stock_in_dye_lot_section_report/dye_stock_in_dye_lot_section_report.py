@@ -7,12 +7,10 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-from collections import defaultdict
 
 import frappe
 from frappe import _
-from frappe.query_builder.functions import Sum
-from frappe.utils import flt, today
+from frappe.utils import flt
 
 
 def execute(filters=None):
@@ -324,19 +322,16 @@ def get_batchwise_data_from_stock_ledger(filters):
             `tabItem` i ON sle.item_code = i.item_code
         WHERE 
             sle.is_cancelled = 0
-            AND sle.item_code LIKE 'DKF%'
-            AND sle.warehouse LIKE 'DYE/LOT%'
+            AND sle.item_code LIKE %(item_prefix)s
+            AND sle.warehouse LIKE %(wh_prefix)s
         GROUP BY 
             sle.batch_no, sle.item_code, sle.warehouse
     """
 
-    # Apply filters if any
-    if filters:
-        # You might want to modify the query further based on your filters
-        query += get_query_based_on_filters_sql(filters)
+    query, values = _apply_filters(query, filters, "DKF%")
 
     # Execute the query and fetch results
-    batchwise_data = frappe.db.sql(query, as_dict=True)
+    batchwise_data = frappe.db.sql(query, values, as_dict=True)
 
     # Create a structured dictionary for batchwise data
     result_dict = frappe._dict({})
@@ -391,18 +386,16 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
         WHERE 
             sle.is_cancelled = 0
             AND sle.docstatus = 1
-            AND sle.item_code LIKE 'DKF%'
-            AND sle.warehouse LIKE 'DYE/LOT%'
+            AND sle.item_code LIKE %(item_prefix)s
+            AND sle.warehouse LIKE %(wh_prefix)s
         GROUP BY 
             c.batch_no, sle.item_code, sle.warehouse
     """
 
-    # Apply filters if any
-    if filters:
-        query += get_query_based_on_filters_sql(filters)
+    query, values = _apply_filters(query, filters, "DKF%")
 
     # Execute the query and fetch results
-    batchwise_data_sql = frappe.db.sql(query, as_dict=True)
+    batchwise_data_sql = frappe.db.sql(query, values, as_dict=True)
 
     # Update existing batchwise_data
     for d in batchwise_data_sql:
@@ -416,23 +409,32 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
 
 
 def get_query_based_on_filters_sql(filters):
-    conditions = []
+    """Return (sql_fragment, values); user input is only ever passed as bound values."""
+    conditions, values = [], {}
+    filters = filters or {}
 
-    if filters.item_code:
-        conditions.append(f"sle.item_code = '{filters.item_code}'")
+    if filters.get("item_code"):
+        conditions.append("sle.item_code = %(item_code)s")
+        values["item_code"] = filters.get("item_code")
 
-    if filters.commercial_name:
-        conditions.append(f"i.commercial_name LIKE '%{filters.commercial_name}%'")
+    if filters.get("commercial_name"):
+        conditions.append("i.commercial_name LIKE %(commercial_name)s")
+        values["commercial_name"] = f"%{filters.get('commercial_name')}%"
 
-    if filters.batch_no:
-        conditions.append(f"b.name = '{filters.batch_no}'")
+    if filters.get("batch_no"):
+        conditions.append("b.name = %(batch_no)s")
+        values["batch_no"] = filters.get("batch_no")
 
-    if filters.show_item_name:
-        # Assuming you want to add item_name to the select statement if show_item_name is True
-        # You might need to modify the select statement accordingly in the main query
-        pass 
+    sql = " AND " + " AND ".join(conditions) if conditions else ""
+    return sql, values
 
-    return " AND " + " AND ".join(conditions) if conditions else ""
+
+def _apply_filters(query, filters, item_prefix):
+    """Insert the filter conditions into the WHERE clause (before GROUP BY) and build bind values."""
+    sql, values = get_query_based_on_filters_sql(filters)
+    values.update(item_prefix=item_prefix, wh_prefix="DYE/LOT%")
+    where, sep, group_by = query.partition("GROUP BY")
+    return where.rstrip() + sql + "\n        " + sep + group_by, values
 
 
 
