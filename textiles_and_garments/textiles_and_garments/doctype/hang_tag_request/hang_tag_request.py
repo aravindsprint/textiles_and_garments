@@ -4,9 +4,6 @@
 # For license information, please see license.txt
 import frappe
 from frappe.model.document import Document
-from frappe.query_builder.functions import Sum
-from frappe.utils import flt, today
-import json
 import re
 import base64
 import os
@@ -422,8 +419,8 @@ def get_sales_invoice_items(sales_invoice):
     """Fetch all items from the given sales invoice."""
     if not sales_invoice:
         return []
-    items = frappe.get_all(
-        "Sales Invoice Item",
+    items = frappe.get_list(
+        "Sales Invoice Item", parent_doctype="Sales Invoice",
         filters={"parent": sales_invoice},
         fields=["item_code", "warehouse", "qty", "rate", "amount"]
     )

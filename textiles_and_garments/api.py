@@ -4,7 +4,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import flt, today, nowdate, cint
+from frappe.utils import today, cint
 import json
 
 # ==================== SECURITY HELPER FUNCTIONS ====================
@@ -216,7 +216,7 @@ def get_rolls_by_filters(filters):
             filters = json.loads(filters)
         
         # Fetch rolls
-        rolls = frappe.get_all(
+        rolls = frappe.get_list(
             'Roll',
             filters=filters,
             fields=['name', 'item_code', 'batch', 'roll_weight', 'stock_uom', 'warehouse'],
@@ -708,7 +708,7 @@ def get_available_batches(warehouse=None, item_code=None, project=None):
         if project:
             filters['custom_project'] = project
         
-        batches = frappe.get_all(
+        batches = frappe.get_list(
             'Batch',
             filters=filters,
             fields=['name', 'item', 'batch_qty', 'expiry_date'],
