@@ -52,7 +52,7 @@ def get_data(filters):
             tam.reference_document_name,
             p.progress_percentage
         FROM `tabPlans` p
-        INNER JOIN `tabTime And Action Milestones` tam ON p.name = tam.parent
+        INNER JOIN `tabTime and Action Milestones` tam ON p.name = tam.parent
         WHERE {where_clause}
         ORDER BY p.name, tam.planned_date
     """, values, as_dict=1)
