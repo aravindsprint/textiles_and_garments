@@ -1,0 +1,165 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series: naming_series",
+ "creation": "2026-10-12 16:45:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "warehouse",
+  "column_break_z3d0",
+  "posting_date",
+  "stock_entry",
+  "garment_pick_assignment",
+  "section_break_ra5c",
+  "garment_wise_pick_item",
+  "total_qty",
+  "section_break_mddq",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "GPICK/.####"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_z3d0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "options": "Stock Entry"
+  },
+  {
+   "description": "Set automatically when this Pick List fulfilled a supervisor-assigned Garment Pick Assignment.",
+   "fieldname": "garment_pick_assignment",
+   "fieldtype": "Link",
+   "label": "Garment Pick Assignment",
+   "no_copy": 1,
+   "options": "Garment Pick Assignment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_ra5c",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "garment_wise_pick_item",
+   "fieldtype": "Table",
+   "label": "Garment Wise Pick Item",
+   "options": "Garment Wise Pick Item"
+  },
+  {
+   "description": "Sum of Qty across Garment Wise Pick Item",
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "label": "Total Qty",
+   "precision": "3",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_mddq",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Garment Wise Pick List",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-13 12:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Garment Wise Pick List",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "select": 1,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "print": 1,
+   "email": 1,
+   "role": "System Manager"
+  },
+  {
+   "select": 1,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "print": 1,
+   "email": 1,
+   "role": "Stock Manager"
+  },
+  {
+   "select": 1,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "Garment Picker"
+  },
+  {
+   "select": 1,
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "Garment Sales"
+  },
+  {
+   "select": 1,
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "Stock User"
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

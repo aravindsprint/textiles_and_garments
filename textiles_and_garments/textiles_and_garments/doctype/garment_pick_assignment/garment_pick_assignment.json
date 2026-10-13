@@ -1,0 +1,307 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "GPA-.####",
+ "creation": "2026-10-12 16:30:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "status",
+  "column_break_1",
+  "company",
+  "assigned_to",
+  "section_break_order",
+  "pick_type",
+  "work_order",
+  "manufactured_qty",
+  "column_break_2",
+  "project",
+  "posting_date",
+  "sales_order",
+  "section_break_items",
+  "items",
+  "section_break_warehouse",
+  "source_warehouse",
+  "source_warehouse_address",
+  "column_break_3",
+  "target_warehouse",
+  "target_warehouse_address",
+  "section_break_qty",
+  "pick_qty",
+  "column_break_qty",
+  "total_qty",
+  "custom_section_break_cauql",
+  "execution_source_warehouse",
+  "execution_target_warehouse",
+  "column_break_4",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nIn Progress\nCompleted\nCancelled",
+   "reqd": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "description": "Worker assigned to pick this",
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Assigned To",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_order",
+   "fieldtype": "Section Break",
+   "label": "Order Details"
+  },
+  {
+   "description": "What this garment pick is for",
+   "fieldname": "pick_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Pick Type",
+   "options": "From Work Order\nTo Work Order\nManual Pick\nTo Sales Order",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.pick_type=='From Work Order' || doc.pick_type=='To Work Order'",
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "label": "Work Order",
+   "mandatory_depends_on": "eval:doc.pick_type=='From Work Order' || doc.pick_type=='To Work Order'",
+   "options": "Work Order"
+  },
+  {
+   "depends_on": "eval:doc.pick_type=='From Work Order' || doc.pick_type=='To Work Order'",
+   "fetch_from": "work_order.produced_qty",
+   "fieldname": "manufactured_qty",
+   "fieldtype": "Float",
+   "label": "Manufactured Qty",
+   "precision": "3",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "For \"To Work Order\" picks, picked garments must belong to this Project",
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.pick_type=='To Sales Order'",
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "mandatory_depends_on": "eval:doc.pick_type=='To Sales Order'",
+   "options": "Sales Order"
+  },
+  {
+   "fieldname": "section_break_items",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "description": "Garment items to pick — Item, Warehouse, Stock UOM and Qty (no batch / roll)",
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Garment Wise Pick Item",
+   "mandatory_depends_on": "eval:doc.pick_type=='To Sales Order' || doc.pick_type=='Manual Pick'"
+  },
+  {
+   "fieldname": "section_break_warehouse",
+   "fieldtype": "Section Break",
+   "label": "Warehouse"
+  },
+  {
+   "description": "Default starting point — the worker can change this in the app before scanning",
+   "fieldname": "source_warehouse",
+   "fieldtype": "Link",
+   "label": "Source Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "description": "Auto-filled on save from the Address linked to Source Warehouse",
+   "fieldname": "source_warehouse_address",
+   "fieldtype": "Link",
+   "label": "Source Warehouse Address",
+   "options": "Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_warehouse",
+   "fieldtype": "Link",
+   "label": "Target Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "description": "Auto-filled on save from the Address linked to Target Warehouse",
+   "fieldname": "target_warehouse_address",
+   "fieldtype": "Link",
+   "label": "Target Warehouse Address",
+   "options": "Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_qty",
+   "fieldtype": "Section Break",
+   "label": "Target"
+  },
+  {
+   "description": "Target quantity — auto-set from the Items table when it has rows",
+   "fieldname": "pick_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Pick Qty",
+   "non_negative": 1,
+   "precision": "3",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_qty",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Sum of Qty across the Items table",
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "label": "Total Qty",
+   "precision": "3",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_section_break_cauql",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Worker's current Source Warehouse selection during execution — defaults to Source Warehouse but can be changed in the app. Persisted so a worker resuming later sees their last choice.",
+   "fieldname": "execution_source_warehouse",
+   "fieldtype": "Link",
+   "label": "Execution Source Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Worker's current Target Warehouse selection during execution — defaults to Target Warehouse but can be changed on the scan screen.",
+   "fieldname": "execution_target_warehouse",
+   "fieldtype": "Link",
+   "label": "Execution Target Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Garment Pick Assignment",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-12 16:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Garment Pick Assignment",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Garment Sales",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Garment Picker",
+   "select": 1,
+   "share": 0
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
