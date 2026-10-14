@@ -18,6 +18,7 @@
   "project",
   "posting_date",
   "sales_order",
+  "customer",
   "section_break_items",
   "items",
   "section_break_warehouse",
@@ -127,6 +128,13 @@
    "label": "Sales Order",
    "mandatory_depends_on": "eval:doc.pick_type=='To Sales Order'",
    "options": "Sales Order"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer"
   },
   {
    "fieldname": "section_break_items",
@@ -251,7 +259,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-12 16:30:00.000000",
+ "modified": "2026-10-14 13:30:00.000000",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Garment Pick Assignment",
