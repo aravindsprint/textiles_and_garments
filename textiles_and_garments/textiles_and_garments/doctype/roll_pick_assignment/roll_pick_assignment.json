@@ -32,6 +32,7 @@
   "item_wise_weight",
   "custom_section_break_cauql",
   "execution_source_warehouse",
+  "source_warehouse_changed",
   "execution_target_warehouse",
   "column_break_4",
   "remarks",
@@ -229,6 +230,15 @@
   },
   {
    "allow_on_submit": 1,
+   "default": "0",
+   "description": "Set automatically when Execution Source Warehouse differs from Source Warehouse. While set, newly scanned rolls use the worker's warehouse instead of the Batch Items warehouse.",
+   "fieldname": "source_warehouse_changed",
+   "fieldtype": "Check",
+   "label": "Source Warehouse Changed by Worker",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
    "description": "Worker's current Target Warehouse selection during execution \u2014 defaults to Target Warehouse but can be changed on the scan screen.",
    "fieldname": "execution_target_warehouse",
    "fieldtype": "Link",
@@ -258,7 +268,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-08-24 00:00:00.000000",
+ "modified": "2026-10-20 12:47:01.619719",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Pick Assignment",

@@ -9,6 +9,7 @@
   "roll_no",
   "item_code",
   "warehouse",
+  "warehouse_from_worker",
   "batch_no",
   "qty",
   "uom",
@@ -32,12 +33,22 @@
    "options": "Item"
   },
   {
-   "description": "Source warehouse the worker had selected at the moment this roll was scanned",
+   "allow_on_submit": 1,
+   "description": "Defaults to the Batch Items warehouse for this roll's batch. If the worker changed the scan screen's Source Warehouse, it is the worker's selection at the moment this roll was scanned (Warehouse From Worker is ticked).",
    "fieldname": "warehouse",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "description": "Ticked = warehouse is the worker's scan-screen selection and is never overwritten. Unticked = warehouse follows Batch Items.",
+   "fieldname": "warehouse_from_worker",
+   "fieldtype": "Check",
+   "label": "Warehouse From Worker",
+   "read_only": 1
   },
   {
    "fieldname": "batch_no",
@@ -83,7 +94,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-09-24 20:48:59.364487",
+ "modified": "2026-10-20 12:47:01.619719",
  "modified_by": "Administrator",
  "module": "Textiles And Garments",
  "name": "Roll Pick Assignment Scan",

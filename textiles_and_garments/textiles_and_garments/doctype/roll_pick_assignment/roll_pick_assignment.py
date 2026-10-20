@@ -11,12 +11,14 @@ class RollPickAssignment(Document):
 	def validate(self):
 		self.validate_batch_items_against_sales_order()
 		self.set_pick_qty_from_batch_items()
+		sync_scanned_roll_warehouses(self)
 		self.set_total_weight_from_scanned_rolls()
 		self.set_item_wise_weight_from_scanned_rolls()
 
 	def before_update_after_submit(self):
 		"""Rolls are scanned AFTER the Assignment is submitted, and saving a
 		submitted doc skips validate(). Recompute the weight fields here too."""
+		sync_scanned_roll_warehouses(self)
 		if not self.scanned_rolls:
 			# Rolls are cleared once the final Pick Entry is created - keep the
 			# last computed weights instead of wiping them to zero.
@@ -89,6 +91,112 @@ class RollPickAssignment(Document):
 				"item_code": item_code,
 				"total_weight": flt(totals_by_item[item_code], 3),
 			})
+
+
+# ---------------------------------------------------------------------------
+# Scanned Rolls (In Progress) warehouse
+#
+# DEFAULT  -> each scanned roll takes the warehouse of the Batch Items row with
+#             the same batch.
+# OVERRIDE -> while the worker has changed the scan screen's Source Warehouse
+#             (execution_source_warehouse != source_warehouse), newly scanned
+#             rolls take the worker's warehouse and are stamped
+#             warehouse_from_worker = 1, after which they are never overwritten.
+# ---------------------------------------------------------------------------
+
+def _batch_warehouse_map(doc):
+	batch_wh = {}
+	for bi in doc.get("batch_items") or []:
+		batch = (bi.batch or "").strip()
+		# first row wins if the same batch appears twice
+		if batch and bi.warehouse and batch not in batch_wh:
+			batch_wh[batch] = bi.warehouse
+	return batch_wh
+
+
+def update_source_warehouse_flag(doc):
+	"""ON only while the worker has picked something other than the
+	assignment's Source Warehouse. Switching back to the default turns it off."""
+	doc.source_warehouse_changed = cint(
+		bool(doc.execution_source_warehouse)
+		and doc.execution_source_warehouse != doc.source_warehouse
+	)
+
+
+def sync_scanned_roll_warehouses(doc):
+	"""Set warehouse on Scanned Rolls (In Progress) rows. Returns rows changed.
+
+	Rows scanned before the worker changed the dropdown keep the batch
+	warehouse; rows scanned while it was changed keep the worker's choice,
+	even if the worker later switches back. Rows whose batch_no has no match
+	in Batch Items are left as they are.
+	"""
+	update_source_warehouse_flag(doc)
+	batch_wh = _batch_warehouse_map(doc)
+
+	changed = 0
+	for row in doc.get("scanned_rolls") or []:
+		if cint(row.warehouse_from_worker):
+			continue
+
+		if row.is_new() and doc.source_warehouse_changed:
+			row.warehouse = doc.execution_source_warehouse
+			row.warehouse_from_worker = 1
+			changed += 1
+			continue
+
+		wh = batch_wh.get((row.batch_no or "").strip())
+		if wh and row.warehouse != wh:
+			row.warehouse = wh
+			changed += 1
+	return changed
+
+
+def backfill_scanned_roll_warehouses(name=None):
+	"""One-off fix for existing assignments. There's no record of which
+	dropdown value was active when old rows were scanned, so they are all
+	treated as default (Batch Items warehouse). Stamped rows are skipped.
+
+	bench --site <site> execute \\
+	  textiles_and_garments.textiles_and_garments.doctype.roll_pick_assignment.roll_pick_assignment.backfill_scanned_roll_warehouses \\
+	  --kwargs "{'name': 'RPA-0810'}"
+	"""
+	filters = {"docstatus": ["<", 2]}
+	if name:
+		filters["name"] = name
+	else:
+		filters["name"] = ["in", frappe.get_all(
+			"Roll Pick Assignment Scan",
+			filters={"parenttype": "Roll Pick Assignment"},
+			pluck="parent",
+			distinct=True,
+		) or [""]]
+
+	names = frappe.get_all("Roll Pick Assignment", filters=filters, pluck="name")
+
+	total = 0
+	for n in names:
+		doc = frappe.get_doc("Roll Pick Assignment", n)
+
+		flag = cint(
+			bool(doc.execution_source_warehouse)
+			and doc.execution_source_warehouse != doc.source_warehouse
+		)
+		if cint(doc.source_warehouse_changed) != flag:
+			doc.db_set("source_warehouse_changed", flag, update_modified=False)
+
+		batch_wh = _batch_warehouse_map(doc)
+		for row in doc.scanned_rolls:
+			if cint(row.warehouse_from_worker):
+				continue
+			wh = batch_wh.get((row.batch_no or "").strip())
+			if wh and row.warehouse != wh:
+				row.db_set("warehouse", wh, update_modified=False)
+				total += 1
+
+	frappe.db.commit()
+	print(f"Updated {total} scanned roll row(s) across {len(names)} assignment(s)")
+	return total
 
 
 @frappe.whitelist()
