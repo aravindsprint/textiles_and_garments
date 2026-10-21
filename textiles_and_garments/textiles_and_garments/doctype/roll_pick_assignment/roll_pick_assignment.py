@@ -133,13 +133,16 @@ def sync_scanned_roll_warehouses(doc):
 	"""
 	update_source_warehouse_flag(doc)
 	batch_wh = _batch_warehouse_map(doc)
+	# Fields only exist after `bench migrate`; until then, skip the override
+	# so scanning keeps working on the batch-warehouse default.
+	can_override = frappe.get_meta("Roll Pick Assignment Scan").has_field("warehouse_from_worker")
 
 	changed = 0
 	for row in doc.get("scanned_rolls") or []:
-		if cint(row.warehouse_from_worker):
+		if cint(row.get("warehouse_from_worker")):
 			continue
 
-		if row.is_new() and doc.source_warehouse_changed:
+		if can_override and row.is_new() and doc.source_warehouse_changed:
 			row.warehouse = doc.execution_source_warehouse
 			row.warehouse_from_worker = 1
 			changed += 1
@@ -182,12 +185,12 @@ def backfill_scanned_roll_warehouses(name=None):
 			bool(doc.execution_source_warehouse)
 			and doc.execution_source_warehouse != doc.source_warehouse
 		)
-		if cint(doc.source_warehouse_changed) != flag:
+		if cint(doc.get("source_warehouse_changed")) != flag:
 			doc.db_set("source_warehouse_changed", flag, update_modified=False)
 
 		batch_wh = _batch_warehouse_map(doc)
 		for row in doc.scanned_rolls:
-			if cint(row.warehouse_from_worker):
+			if cint(row.get("warehouse_from_worker")):
 				continue
 			wh = batch_wh.get((row.batch_no or "").strip())
 			if wh and row.warehouse != wh:
