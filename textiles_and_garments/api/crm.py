@@ -118,6 +118,11 @@ def create_quotation_from_deal(crm_deal: str, organization: str | None = None):
     if not deal.products:
         quotation.append("items", {})
 
+    # Customer address, company GSTIN, place of supply and the GST tax template
+    # (picked by India Compliance), same as selecting the customer on the form
+    quotation.flags.ignore_permissions = True
+    quotation.set_missing_lead_customer_details()
+
     # ── 5. Save ───────────────────────────────────────────────────────────────
     quotation.flags.ignore_mandatory = True
     quotation.flags.ignore_links     = True
