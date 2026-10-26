@@ -6,10 +6,15 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, flt
 
+# "To Work Order" picks may go up to this much over the Work Order's required
+# qty per item (same ±3% the scan flow uses against Pick Qty).
+WORK_ORDER_QTY_TOLERANCE = 0.03
+
 
 class RollPickAssignment(Document):
 	def validate(self):
 		self.validate_batch_items_against_sales_order()
+		self.validate_batch_items_against_work_order()
 		self.set_pick_qty_from_batch_items()
 		sync_scanned_roll_warehouses(self)
 		self.set_total_weight_from_scanned_rolls()
@@ -54,10 +59,75 @@ class RollPickAssignment(Document):
 					title=_("Item Not In Sales Order"),
 				)
 
+	def validate_batch_items_against_work_order(self):
+		"""'To Work Order' picks: every Batch Items row must be for an item in
+		the Work Order's Required Items, and per item, the qty across all its
+		rows here (one item can be split over several batches) PLUS the qty
+		already held by other non-cancelled 'To Work Order' assignments for the
+		same Work Order must not exceed the required qty by more than
+		WORK_ORDER_QTY_TOLERANCE. Under-picking is allowed, so one Work Order
+		can still be split across several assignments."""
+		if self.pick_type != "To Work Order" or not self.work_order:
+			return
+
+		if not self.batch_items:
+			frappe.throw(
+				_("Batch Items cannot be empty for a 'To Work Order' pick."),
+				title=_("Batch Items Missing"),
+			)
+
+		required, uoms, _order = get_work_order_required_qty(self.work_order)
+
+		this_qty = {}
+		for row in self.batch_items:
+			if not row.item:
+				continue
+			if row.item not in required:
+				frappe.throw(
+					_("Row #{0}: Item {1} (from Batch {2}) is not in the Required Items of Work Order {3}").format(
+						row.idx,
+						frappe.bold(row.item),
+						frappe.bold(row.batch),
+						frappe.bold(self.work_order),
+					),
+					title=_("Item Not In Work Order"),
+				)
+			this_qty[row.item] = this_qty.get(row.item, 0) + flt(row.qty)
+
+		other_qty = get_work_order_assigned_qty(self.work_order, exclude=self.name)
+
+		errors = []
+		for item, qty in this_qty.items():
+			req = required[item]
+			others = other_qty.get(item, 0)
+			total = qty + others
+			allowed = req * (1 + WORK_ORDER_QTY_TOLERANCE)
+			if total > allowed + 0.001:
+				uom = uoms.get(item) or ""
+				errors.append(
+					_(
+						"Item {0}: Work Order qty {1} {2} (max {3} {2} with {4}% tolerance). "
+						"This assignment {5} {2} + other assignments {6} {2} = {7} {2}. Reduce by {8} {2}."
+					).format(
+						frappe.bold(item),
+						flt(req, 3),
+						uom,
+						flt(allowed, 3),
+						flt(WORK_ORDER_QTY_TOLERANCE * 100, 2),
+						flt(qty, 3),
+						flt(others, 3),
+						frappe.bold(flt(total, 3)),
+						flt(total - allowed, 3),
+					)
+				)
+
+		if errors:
+			frappe.throw("<br><br>".join(errors), title=_("Batch Qty exceeds Work Order Qty"))
+
 	def set_pick_qty_from_batch_items(self):
-		"""For 'From Batch' / 'To Sales Order' picks, pick_qty is derived from the
-		batch_items child table rather than entered directly."""
-		if self.pick_type in ("From Batch", "To Sales Order"):
+		"""For 'From Batch' / 'To Sales Order' / 'To Work Order' picks, pick_qty
+		is derived from the batch_items child table rather than entered directly."""
+		if self.pick_type in ("From Batch", "To Sales Order", "To Work Order"):
 			self.pick_qty = flt(sum(flt(row.qty) for row in self.batch_items or []))
 
 	def set_total_weight_from_scanned_rolls(self):
@@ -385,3 +455,75 @@ def get_sales_order_items(sales_order):
 		{"item_code": r.item_code, "stock_uom": r.stock_uom, "stock_qty": flt(r.stock_qty, 3)}
 		for r in rows
 	]
+
+
+# ---------------------------------------------------------------------------
+# "To Work Order" picks
+# ---------------------------------------------------------------------------
+
+def get_work_order_required_qty(work_order):
+	"""Required qty per item from the Work Order's Required Items (summed if
+	an item appears on more than one row). Returns (qty_by_item,
+	uom_by_item, items_in_row_order)."""
+	required, uoms, order = {}, {}, []
+	for r in frappe.get_all(
+		"Work Order Item",
+		filters={"parent": work_order, "parenttype": "Work Order"},
+		fields=["item_code", "required_qty", "stock_uom"],
+		order_by="idx asc",
+	):
+		if r.item_code not in required:
+			required[r.item_code] = 0.0
+			uoms[r.item_code] = r.stock_uom
+			order.append(r.item_code)
+		required[r.item_code] += flt(r.required_qty)
+	return required, uoms, order
+
+
+def get_work_order_assigned_qty(work_order, exclude=None):
+	"""Batch Items qty per item already held by non-cancelled (draft or
+	submitted) 'To Work Order' assignments for this Work Order, excluding
+	`exclude`. Drafts count too, so two drafts can't both claim the full qty."""
+	rows = frappe.db.sql(
+		"""
+		select bi.item as item, sum(bi.qty) as qty
+		from `tabRoll Pick Batch Item` bi
+		inner join `tabRoll Pick Assignment` rpa on rpa.name = bi.parent
+		where bi.parenttype = 'Roll Pick Assignment'
+			and rpa.work_order = %(work_order)s
+			and rpa.pick_type = 'To Work Order'
+			and rpa.docstatus < 2
+			and rpa.name != %(exclude)s
+		group by bi.item
+		""",
+		{"work_order": work_order, "exclude": exclude or ""},
+		as_dict=True,
+	)
+	return {r.item: flt(r.qty) for r in rows}
+
+
+@frappe.whitelist()
+def get_work_order_items(work_order, current=None):
+	"""Work Order Required Items with the qty still left to assign (required
+	minus what other 'To Work Order' assignments already hold), in WO row
+	order. Fully assigned items are skipped. Used by the form to pre-fill
+	Batch Items for 'To Work Order' picks."""
+	if not work_order:
+		return []
+	frappe.has_permission("Work Order", "read", doc=work_order, throw=True)
+
+	required, uoms, order = get_work_order_required_qty(work_order)
+	assigned = get_work_order_assigned_qty(work_order, exclude=current)
+
+	out = []
+	for item_code in order:
+		remaining = flt(required[item_code] - assigned.get(item_code, 0), 3)
+		if remaining > 0:
+			out.append({
+				"item_code": item_code,
+				"stock_uom": uoms[item_code],
+				"qty": remaining,
+				"required_qty": flt(required[item_code], 3),
+				"already_assigned": flt(assigned.get(item_code, 0), 3),
+			})
+	return out

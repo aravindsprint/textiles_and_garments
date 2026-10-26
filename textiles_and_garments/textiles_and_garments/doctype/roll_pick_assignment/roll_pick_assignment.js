@@ -5,12 +5,14 @@ frappe.ui.form.on("Roll Pick Assignment", {
 	pick_type(frm) {
 		update_pick_qty_from_batch_items(frm);
 		populate_batch_items_from_sales_order(frm);
+		populate_batch_items_from_work_order(frm, { replace_unpicked: true });
 	},
 	refresh(frm) {
 		update_pick_qty_from_batch_items(frm);
 		set_batch_item_warehouse_query(frm);
 		set_batch_item_batch_query(frm);
 		add_get_items_from_sales_order_button(frm);
+		add_get_items_from_work_order_button(frm);
 
 		// Existing drafts (e.g. created from the knit app, or saved before this
 		// feature) that already have a Sales Order but no Batch Items rows:
@@ -26,6 +28,7 @@ frappe.ui.form.on("Roll Pick Assignment", {
 	},
 	work_order(frm) {
 		update_pick_qty_from_manufactured_batch(frm);
+		populate_batch_items_from_work_order(frm, { replace_unpicked: true });
 	},
 	source_warehouse(frm) {
 		update_pick_qty_from_manufactured_batch(frm);
@@ -124,6 +127,89 @@ function populate_batch_items_from_sales_order(frm, opts = {}) {
 	});
 }
 
+function add_get_items_from_work_order_button(frm) {
+	if (frm.doc.docstatus !== 0 || frm.doc.pick_type !== "To Work Order" || !frm.doc.work_order) {
+		return;
+	}
+	frm.add_custom_button(__("Get Items from Work Order"), () => {
+		populate_batch_items_from_work_order(frm, { replace_unpicked: true });
+	});
+}
+
+function populate_batch_items_from_work_order(frm, opts = {}) {
+	// "To Work Order" picks: add one Batch Items row per Required Item of the
+	// linked Work Order, with Item, Stock UOM and the qty still left to assign
+	// (WO required qty minus what other assignments already hold). The
+	// supervisor then picks Batch (dropdown filtered to that item) and
+	// Warehouse, and can add more rows for the same item to split it across
+	// several batches. Rows that already have a Batch are never touched.
+	// Qty is validated server-side on save (validate_batch_items_against_work_order).
+	if (frm.doc.docstatus !== 0 || frm.doc.pick_type !== "To Work Order" || !frm.doc.work_order) {
+		return;
+	}
+	const work_order = frm.doc.work_order;
+
+	frappe.call({
+		method:
+			"textiles_and_garments.textiles_and_garments.doctype.roll_pick_assignment.roll_pick_assignment.get_work_order_items",
+		args: { work_order, current: frm.is_new() ? null : frm.doc.name },
+		freeze: true,
+		freeze_message: __("Fetching Work Order items..."),
+		callback(r) {
+			// Bail if pick_type / work_order changed while this was in flight.
+			if (frm.doc.pick_type !== "To Work Order" || frm.doc.work_order !== work_order) {
+				return;
+			}
+			const wo_items = r.message || [];
+
+			if (opts.replace_unpicked) {
+				// Drop placeholder rows (no batch chosen yet) — e.g. left over from
+				// a previously selected Work Order.
+				frm.doc.batch_items = (frm.doc.batch_items || []).filter((row) => row.batch);
+				frm.doc.batch_items.forEach((row, i) => (row.idx = i + 1));
+			}
+
+			const existing_items = new Set((frm.doc.batch_items || []).map((r) => r.item).filter(Boolean));
+			let added = 0;
+			wo_items.forEach((wo_item) => {
+				if (existing_items.has(wo_item.item_code)) {
+					return;
+				}
+				const row = frm.add_child("batch_items");
+				row.item = wo_item.item_code;
+				row.stock_uom = wo_item.stock_uom;
+				row.qty = wo_item.qty;
+				existing_items.add(wo_item.item_code);
+				added++;
+			});
+
+			frm.refresh_field("batch_items");
+			update_pick_qty_from_batch_items(frm);
+
+			if (!wo_items.length) {
+				frappe.show_alert({
+					message: __(
+						"All Required Items of {0} are already fully assigned in other Roll Pick Assignments",
+						[work_order]
+					),
+					indicator: "orange",
+				});
+			} else if (added) {
+				frappe.show_alert(
+					{
+						message: __(
+							"Added {0} item row(s) from {1}. Select Batch and Warehouse for each; add more rows for the same item to use multiple batches.",
+							[added, work_order]
+						),
+						indicator: "green",
+					},
+					7
+				);
+			}
+		},
+	});
+}
+
 function set_batch_item_warehouse_query(frm) {
 	// Shows, for each candidate warehouse, how much of THIS row's batch is
 	// actually sitting there right now — the same "value + qty" dropdown
@@ -142,12 +228,12 @@ function set_batch_item_batch_query(frm) {
 	// Shows each candidate batch's total qty (summed across all
 	// warehouses) in its own dropdown — same "value + qty" style as the
 	// warehouse field above.
-	// For "To Sales Order" picks the row's Item comes from the Sales Order, so
-	// only that item's batches are offered.
+	// For "To Sales Order" / "To Work Order" picks the row's Item comes from
+	// the Sales Order / Work Order, so only that item's batches are offered.
 	frm.set_query("batch", "batch_items", function (doc, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		const filters = {};
-		if (doc.pick_type === "To Sales Order" && row.item) {
+		if (["To Sales Order", "To Work Order"].includes(doc.pick_type) && row.item) {
 			filters.item = row.item;
 		}
 		return {
@@ -160,7 +246,7 @@ function set_batch_item_batch_query(frm) {
 
 function update_pick_qty_from_batch_items(frm) {
 	// Only auto-total when the child table is actually in play for this pick_type
-	if (!["From Batch", "To Sales Order"].includes(frm.doc.pick_type)) {
+	if (!["From Batch", "To Sales Order", "To Work Order"].includes(frm.doc.pick_type)) {
 		return;
 	}
 
