@@ -499,24 +499,29 @@ def calculate_summary(doc):
                 print(f"No raw items found for Work Order {work_order}")
                 continue
             
-            # Calculate total sent qty for proportional distribution
-            total_sent_qty = 0
-            raw_item_sent_map = {}
-            
+            # Calculate total NET consumed qty (sent - returned) for proportional distribution.
+            # Using gross sent qty here ignored returns and gave one raw item a positive
+            # loss and another an equal negative loss (e.g. PL/4985: +6.53% / -102.32%).
+            total_net_qty = 0
+            raw_item_net_map = {}
+
             for raw_item in raw_items:
                 key = (work_order, raw_item)
                 if key in summary_data:
-                    sent_qty = summary_data[key]['sent_qty']
-                    raw_item_sent_map[raw_item] = sent_qty
-                    total_sent_qty += sent_qty
-            
-            # Distribute received qty proportionally to raw materials based on sent qty
-            if total_sent_qty > 0:
-                for raw_item, sent_qty in raw_item_sent_map.items():
+                    net_qty = flt(summary_data[key]['sent_qty']) - flt(summary_data[key]['return_qty'])
+                    if net_qty <= 0:
+                        # Fully returned (or over-returned) item consumed nothing - gets no FG share
+                        continue
+                    raw_item_net_map[raw_item] = net_qty
+                    total_net_qty += net_qty
+
+            # Distribute received qty proportionally to raw materials based on net consumed qty
+            if total_net_qty > 0:
+                for raw_item, net_qty in raw_item_net_map.items():
                     key = (work_order, raw_item)
                     if key in summary_data:
                         # Proportional distribution
-                        proportion = sent_qty / total_sent_qty
+                        proportion = net_qty / total_net_qty
                         proportional_received_qty = received_qty * proportion
                         summary_data[key]['received_qty'] += proportional_received_qty
                         print(f"Added received_qty {proportional_received_qty} to raw item {raw_item} (proportion: {proportion:.2%})")
