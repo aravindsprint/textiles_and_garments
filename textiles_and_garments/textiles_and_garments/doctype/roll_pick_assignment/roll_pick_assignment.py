@@ -63,8 +63,9 @@ class RollPickAssignment(Document):
 		"""'To Work Order' picks: every Batch Items row must be for an item in
 		the Work Order's Required Items, and per item, the qty across all its
 		rows here (one item can be split over several batches) PLUS the qty
-		already held by other non-cancelled 'To Work Order' assignments for the
-		same Work Order must not exceed the required qty by more than
+		actually scanned on other OPEN 'To Work Order' assignments for the
+		same Work Order (see get_work_order_assigned_qty) must not exceed the
+		required qty by more than
 		WORK_ORDER_QTY_TOLERANCE. Under-picking is allowed, so one Work Order
 		can still be split across several assignments."""
 		if self.pick_type != "To Work Order" or not self.work_order:
@@ -107,7 +108,7 @@ class RollPickAssignment(Document):
 				errors.append(
 					_(
 						"Item {0}: Work Order qty {1} {2} (max {3} {2} with {4}% tolerance). "
-						"This assignment {5} {2} + other assignments {6} {2} = {7} {2}. Reduce by {8} {2}."
+						"This assignment {5} {2} + scanned on other open assignments {6} {2} = {7} {2}. Reduce by {8} {2}."
 					).format(
 						frappe.bold(item),
 						flt(req, 3),
@@ -480,26 +481,71 @@ def get_work_order_required_qty(work_order):
 	return required, uoms, order
 
 
+def get_amendment_chain(name):
+	"""All Roll Pick Assignments in `name`'s amended_from chain: its
+	ancestors (what it was amended from, recursively) and its descendants
+	(anything amended from it or from them). These are versions of the same
+	pick, so they must never count against each other."""
+	if not name:
+		return set()
+
+	chain = {name}
+
+	# Walk up: name -> amended_from -> amended_from ...
+	current = name
+	while current:
+		parent = frappe.db.get_value("Roll Pick Assignment", current, "amended_from")
+		if not parent or parent in chain:
+			break
+		chain.add(parent)
+		current = parent
+
+	# Walk down: anything amended from a doc already in the chain.
+	frontier = set(chain)
+	while frontier:
+		children = set(
+			frappe.get_all(
+				"Roll Pick Assignment",
+				filters={"amended_from": ["in", list(frontier)]},
+				pluck="name",
+			)
+		) - chain
+		chain |= children
+		frontier = children
+
+	return chain
+
+
 def get_work_order_assigned_qty(work_order, exclude=None):
-	"""Batch Items qty per item already held by non-cancelled (draft or
-	submitted) 'To Work Order' assignments for this Work Order, excluding
-	`exclude`. Drafts count too, so two drafts can't both claim the full qty."""
+	"""Qty per item already picked by other OPEN 'To Work Order' assignments
+	for this Work Order. Counts:
+	  - only assignments whose status is not Completed / Cancelled and whose
+	    docstatus is not cancelled (2); drafts count, so two open picks can't
+	    both claim the full qty;
+	  - ACTUAL qty from Scanned Rolls, not the planned Batch Items qty, so an
+	    assignment that was created but never executed doesn't block a new one;
+	  - nothing from `exclude` or its amended_from chain (ancestors and
+	    descendants), since those are versions of the same pick."""
+	excluded = get_amendment_chain(exclude) if exclude else set()
+
 	rows = frappe.db.sql(
 		"""
-		select bi.item as item, sum(bi.qty) as qty
-		from `tabRoll Pick Batch Item` bi
-		inner join `tabRoll Pick Assignment` rpa on rpa.name = bi.parent
-		where bi.parenttype = 'Roll Pick Assignment'
+		select sr.item_code as item, sum(sr.qty) as qty
+		from `tabRoll Pick Assignment Scan` sr
+		inner join `tabRoll Pick Assignment` rpa on rpa.name = sr.parent
+		where sr.parenttype = 'Roll Pick Assignment'
+			and sr.parentfield = 'scanned_rolls'
 			and rpa.work_order = %(work_order)s
 			and rpa.pick_type = 'To Work Order'
 			and rpa.docstatus < 2
-			and rpa.name != %(exclude)s
-		group by bi.item
+			and ifnull(rpa.status, '') not in ('Completed', 'Cancelled')
+			and rpa.name not in %(excluded)s
+		group by sr.item_code
 		""",
-		{"work_order": work_order, "exclude": exclude or ""},
+		{"work_order": work_order, "excluded": tuple(excluded) or ("",)},
 		as_dict=True,
 	)
-	return {r.item: flt(r.qty) for r in rows}
+	return {r.item: flt(r.qty) for r in rows if r.item}
 
 
 @frappe.whitelist()
