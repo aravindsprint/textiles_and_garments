@@ -55,10 +55,18 @@ def on_submit(doc, method=None):
                 workstation_doc = frappe.get_doc("Workstation", workstation)
                 workstation_type = workstation_doc.get("workstation_type") or ""
                 hour_rate = workstation_doc.get("hour_rate") or 0
-                
+
+                # Operation name from the linked BOM (first operation by idx)
+                operation = frappe.db.get_value(
+                    "BOM Operation",
+                    {"parent": item.bom_no, "parenttype": "BOM"},
+                    "operation",
+                    order_by="idx asc",
+                ) or "Knitting"
+
                 # Add operation to Work Order
                 wo.append("operations", {
-                    "operation": "Knitting",
+                    "operation": operation,
                     "workstation_type": workstation_type,
                     "workstation": workstation,
                     "status": "Pending",
