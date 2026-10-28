@@ -1,0 +1,421 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2026-08-29 17:30:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "title",
+  "gate_pass_no",
+  "column_break_hdr1",
+  "status",
+  "return_progress",
+  "sb_party",
+  "carried_by",
+  "carried_by_name",
+  "department",
+  "purpose",
+  "column_break_party1",
+  "party_type",
+  "party_name",
+  "other_party_name",
+  "approved_by",
+  "approved_by_name",
+  "approver_user",
+  "sb_dates",
+  "date_out",
+  "expected_return_date",
+  "column_break_dates1",
+  "actual_return_date",
+  "sb_items",
+  "items",
+  "sb_gate",
+  "gate_photo",
+  "exit_confirmed_by",
+  "exited_on",
+  "column_break_gate",
+  "return_photo",
+  "return_photo_by",
+  "sb_remarks",
+  "remarks",
+  "tracking_section",
+  "last_reminder_on",
+  "escalated_on",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "SMR-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SMR-.YYYY.-.#####",
+   "print_hide": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Title",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "columns": 2,
+   "description": "Generated when the manager approves. This is what security checks / scans.",
+   "fieldname": "gate_pass_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Gate Pass No",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hdr1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "columns": 2,
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nPending Approval\nApproved\nOut\nPartially Returned\nOverdue\nEscalated\nReturned\nWritten Off\nCancelled",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Not Returned",
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "return_progress",
+   "fieldtype": "Select",
+   "label": "Return Progress",
+   "no_copy": 1,
+   "options": "Not Returned\nPartially Returned\nFully Returned\nResolved with Write-off",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_party",
+   "fieldtype": "Section Break",
+   "label": "Employee & Party"
+  },
+  {
+   "description": "Any employee — not restricted to merchandisers. Defaults to the logged-in user but editable if someone is carrying samples on another employee's behalf.",
+   "fieldname": "carried_by",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Carried By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "carried_by.employee_name",
+   "fieldname": "carried_by_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "carried_by.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Department",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fieldname": "purpose",
+   "fieldtype": "Select",
+   "label": "Purpose",
+   "options": "Customer Presentation\nSupplier Reference\nTrade Show\nInternal Approval\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_party1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Customer",
+   "fieldname": "party_type",
+   "fieldtype": "Select",
+   "label": "Party Type",
+   "options": "Customer\nSupplier\nOther",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "depends_on": "eval:doc.party_type!='Other'",
+   "fieldname": "party_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Party Name",
+   "mandatory_depends_on": "eval:doc.party_type!='Other'",
+   "options": "party_type"
+  },
+  {
+   "depends_on": "eval:doc.party_type=='Other'",
+   "fieldname": "other_party_name",
+   "fieldtype": "Data",
+   "label": "Party Name (Other)",
+   "mandatory_depends_on": "eval:doc.party_type=='Other'"
+  },
+  {
+   "description": "Auto-set from the 'Reports To' of Carried By. Only this person can approve.",
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Reporting Manager",
+   "no_copy": 1,
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "approved_by.employee_name",
+   "fieldname": "approved_by_name",
+   "fieldtype": "Data",
+   "label": "Reporting Manager Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approver_user",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Approver (User)",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_dates",
+   "fieldtype": "Section Break",
+   "label": "Movement Dates"
+  },
+  {
+   "columns": 1,
+   "default": "Today",
+   "fieldname": "date_out",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date Out",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "expected_return_date",
+   "fieldtype": "Date",
+   "in_standard_filter": 1,
+   "label": "Expected Return Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_dates1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "actual_return_date",
+   "fieldtype": "Date",
+   "label": "Actual Return Date",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "sb_items",
+   "fieldtype": "Section Break",
+   "label": "Sample Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Sample Items",
+   "options": "Sample Movement Item",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "sb_gate",
+   "fieldtype": "Section Break",
+   "label": "Gate Check"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Mandatory before gate exit — photo of the actual outgoing samples, taken by security on the Gate Check page.",
+   "fieldname": "gate_photo",
+   "fieldtype": "Attach Image",
+   "label": "Gate Photo (Outgoing)",
+   "no_copy": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "exit_confirmed_by",
+   "fieldtype": "Link",
+   "label": "Exit Confirmed By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "exited_on",
+   "fieldtype": "Datetime",
+   "label": "Exited On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_gate",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Optional — photo of the samples when they come back, for comparison.",
+   "fieldname": "return_photo",
+   "fieldtype": "Attach Image",
+   "label": "Return Photo",
+   "no_copy": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "return_photo_by",
+   "fieldtype": "Link",
+   "label": "Return Photo By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_remarks",
+   "fieldtype": "Section Break",
+   "label": "Remarks"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Reminder Tracking"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "last_reminder_on",
+   "fieldtype": "Date",
+   "label": "Last Reminder On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "escalated_on",
+   "fieldtype": "Date",
+   "label": "Escalated On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Sample Movement Register",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "image_field": "gate_photo",
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-07 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Sample Movement Register",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Merchandising Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Merchandiser",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Viewer",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 0,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gate Security",
+   "share": 1
+  }
+ ],
+ "search_fields": "carried_by_name,party_name,gate_pass_no",
+ "show_title_field_in_link": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

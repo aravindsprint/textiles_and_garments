@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "creation": "2026-08-29 17:30:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "reminder_section",
+  "reminder_days_before",
+  "manager_cc_after_days",
+  "column_break_ladder",
+  "escalate_after_days",
+  "stop_daily_after_days",
+  "recipients_section",
+  "escalation_recipients",
+  "approval_section",
+  "fallback_approver_role"
+ ],
+ "fields": [
+  {
+   "fieldname": "reminder_section",
+   "fieldtype": "Section Break",
+   "label": "Reminder & Escalation Ladder"
+  },
+  {
+   "default": "1",
+   "fieldname": "reminder_days_before",
+   "fieldtype": "Int",
+   "label": "Reminder Days Before Due"
+  },
+  {
+   "default": "4",
+   "fieldname": "manager_cc_after_days",
+   "fieldtype": "Int",
+   "label": "Copy Reporting Manager After (Days Overdue)"
+  },
+  {
+   "fieldname": "column_break_ladder",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "8",
+   "fieldname": "escalate_after_days",
+   "fieldtype": "Int",
+   "label": "Escalate After (Days Overdue)"
+  },
+  {
+   "default": "14",
+   "description": "After this, the register stays Escalated and only appears in the weekly digest / Overdue Aging Report",
+   "fieldname": "stop_daily_after_days",
+   "fieldtype": "Int",
+   "label": "Stop Daily Mails After (Days Overdue)"
+  },
+  {
+   "fieldname": "recipients_section",
+   "fieldtype": "Section Break",
+   "label": "Escalation Recipients"
+  },
+  {
+   "fieldname": "escalation_recipients",
+   "fieldtype": "Table",
+   "label": "Department Heads / MD",
+   "options": "Sample Movement Escalation Recipient"
+  },
+  {
+   "fieldname": "approval_section",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "default": "Merchandising Manager",
+   "description": "Approves registers whose carrier has no 'Reports To' manager (or whose manager has no ERP login)",
+   "fieldname": "fallback_approver_role",
+   "fieldtype": "Link",
+   "label": "Fallback Approver Role",
+   "options": "Role"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-07 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Textiles And Garments",
+ "name": "Sample Movement Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Merchandising Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
