@@ -34,7 +34,7 @@ def on_submit(doc, method=None):
                 "fg_warehouse": item.warehouse,
                 "project": item.project,
                 "date": frappe.utils.today(),
-                "use_multi_level_bom": 1,
+                "use_multi_level_bom": 0,  # single-level: use the BOM's direct items, never explode sub-assemblies
                 "material_request": doc.name,
                 "custom_location": item.custom_location,
                 "material_request_item": item.name,
