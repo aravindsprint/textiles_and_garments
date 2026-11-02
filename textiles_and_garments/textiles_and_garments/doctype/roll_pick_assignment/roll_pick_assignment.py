@@ -351,6 +351,39 @@ def get_warehouses_for_batch(doctype, txt, searchfield, start, page_len, filters
 
 
 @frappe.whitelist()
+def get_batch_warehouse_qty(batch, warehouse):
+	"""Available qty of one batch in one warehouse — the same balance
+	get_warehouses_for_batch shows in the warehouse dropdown, so the row's
+	Qty auto-fills with exactly the number the user just saw."""
+	if not batch or not warehouse:
+		return 0
+
+	qty = frappe.db.sql(
+		"""
+		select sum(qty)
+		from (
+			select sle.actual_qty as qty
+			from `tabStock Ledger Entry` sle
+			where sle.is_cancelled = 0
+				and sle.docstatus = 1
+				and sle.batch_no = %(batch_no)s
+				and sle.warehouse = %(warehouse)s
+			union all
+			select sbe.qty as qty
+			from `tabSerial and Batch Entry` sbe
+			inner join `tabStock Ledger Entry` sle on sle.serial_and_batch_bundle = sbe.parent
+			where sle.is_cancelled = 0
+				and sle.docstatus = 1
+				and sbe.batch_no = %(batch_no)s
+				and sbe.warehouse = %(warehouse)s
+		) combined
+		""",
+		{"batch_no": batch, "warehouse": warehouse},
+	)[0][0]
+	return flt(qty, 3)
+
+
+@frappe.whitelist()
 def get_batches_with_qty(doctype, txt, searchfield, start, page_len, filters):
 	"""Link-field query for Roll Pick Batch Item.batch itself. Same
 	"value + qty" dropdown style as get_warehouses_for_batch above (and the

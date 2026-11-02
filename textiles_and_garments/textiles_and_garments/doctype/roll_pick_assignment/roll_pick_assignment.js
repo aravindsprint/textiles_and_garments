@@ -53,6 +53,21 @@ frappe.ui.form.on("Roll Pick Batch Item", {
 		// which batch is selected, so clear any stale value from the previous batch.
 		frappe.model.set_value(cdt, cdn, "warehouse", "");
 	},
+	warehouse(frm, cdt, cdn) {
+		// Auto-fill Qty with this batch's available balance in the chosen
+		// warehouse (same figure the warehouse dropdown shows).
+		const row = locals[cdt][cdn];
+		if (!row.batch || !row.warehouse) {
+			return;
+		}
+		frappe.call({
+			method: "textiles_and_garments.textiles_and_garments.doctype.roll_pick_assignment.roll_pick_assignment.get_batch_warehouse_qty",
+			args: { batch: row.batch, warehouse: row.warehouse },
+			callback(r) {
+				frappe.model.set_value(cdt, cdn, "qty", flt(r.message) || 0);
+			},
+		});
+	},
 });
 
 function add_get_items_from_sales_order_button(frm) {
