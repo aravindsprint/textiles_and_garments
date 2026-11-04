@@ -270,6 +270,13 @@ function update_pick_qty_from_batch_items(frm) {
 		total += flt(row.qty);
 	});
 
+	// Round to the field's precision: raw float sums (e.g. 50.1 + 170 + ... =
+	// 1670.1000000000001) never equal the saved value, so set_value on refresh
+	// would dirty the form every time and the Submit button would never show.
+	total = flt(total, precision("pick_qty"));
+	if (flt(frm.doc.pick_qty, precision("pick_qty")) === total) {
+		return;
+	}
 	frm.set_value("pick_qty", total);
 }
 
