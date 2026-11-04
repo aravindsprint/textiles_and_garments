@@ -211,6 +211,27 @@ def conditions(filters, parent, date_field, item_field, always_include_draft=Fal
 	return " AND " + " AND ".join(cond)
 
 
+def project_match(item_alias, item_dt, parent_alias, parent_dt):
+	"""Item-level project first, header-level project as fallback.
+
+	Only uses columns that exist on this site: the header `project` field is a
+	custom field on some benches (e.g. Material Request) and absent on others.
+	"""
+	has_item = bool(item_dt) and frappe.db.has_column(item_dt, "project")
+	has_parent = bool(parent_dt) and frappe.db.has_column(parent_dt, "project")
+
+	if has_item and has_parent:
+		return (
+			f"({item_alias}.project = %(project)s"
+			f" OR (IFNULL({item_alias}.project, '') = '' AND {parent_alias}.project = %(project)s))"
+		)
+	if has_item:
+		return f"{item_alias}.project = %(project)s"
+	if has_parent:
+		return f"{parent_alias}.project = %(project)s"
+	return "1 = 0"
+
+
 def run(sql, filters):
 	return frappe.db.sql(sql, filters, as_dict=True)
 
@@ -234,8 +255,7 @@ def get_material_requests(filters):
 			mr.status
 		FROM `tabMaterial Request Item` mri
 		INNER JOIN `tabMaterial Request` mr ON mr.name = mri.parent
-		WHERE (mri.project = %(project)s
-			OR (IFNULL(mri.project, '') = '' AND mr.project = %(project)s))
+		WHERE {project_match("mri", "Material Request Item", "mr", "Material Request")}
 			{cond}
 		ORDER BY mr.transaction_date, mr.name, mri.idx
 		""",
@@ -261,8 +281,7 @@ def get_purchase_orders(filters):
 		FROM `tabPurchase Order Item` poi
 		INNER JOIN `tabPurchase Order` po ON po.name = poi.parent
 		WHERE IFNULL(po.is_subcontracted, 0) = 0
-			AND (poi.project = %(project)s
-				OR (IFNULL(poi.project, '') = '' AND po.project = %(project)s))
+			AND {project_match("poi", "Purchase Order Item", "po", "Purchase Order")}
 			{cond}
 		ORDER BY po.transaction_date, po.name, poi.idx
 		""",
@@ -288,8 +307,7 @@ def get_purchase_receipts(filters):
 			pr.status
 		FROM `tabPurchase Receipt Item` pri
 		INNER JOIN `tabPurchase Receipt` pr ON pr.name = pri.parent
-		WHERE (pri.project = %(project)s
-			OR (IFNULL(pri.project, '') = '' AND pr.project = %(project)s))
+		WHERE {project_match("pri", "Purchase Receipt Item", "pr", "Purchase Receipt")}
 			{cond}
 		ORDER BY pr.posting_date, pr.name, pri.idx
 		""",
@@ -313,8 +331,7 @@ def get_subcontracting_orders(filters):
 			sco.status
 		FROM `tabSubcontracting Order Item` scoi
 		INNER JOIN `tabSubcontracting Order` sco ON sco.name = scoi.parent
-		WHERE (scoi.project = %(project)s
-			OR (IFNULL(scoi.project, '') = '' AND sco.project = %(project)s))
+		WHERE {project_match("scoi", "Subcontracting Order Item", "sco", "Subcontracting Order")}
 			{cond}
 		ORDER BY sco.transaction_date, sco.name, scoi.idx
 		""",
@@ -342,8 +359,7 @@ def get_sco_supplied_items(filters):
 		INNER JOIN `tabSubcontracting Order` sco ON sco.name = si.parent
 		LEFT JOIN `tabSubcontracting Order Item` scoi ON scoi.name = si.reference_name
 		LEFT JOIN `tabItem` rm ON rm.name = si.rm_item_code
-		WHERE (scoi.project = %(project)s
-			OR (IFNULL(scoi.project, '') = '' AND sco.project = %(project)s))
+		WHERE {project_match("scoi", "Subcontracting Order Item", "sco", "Subcontracting Order")}
 			{cond}
 		ORDER BY sco.transaction_date, sco.name, si.idx
 		""",
@@ -368,8 +384,7 @@ def get_subcontracting_receipts(filters):
 			scr.status
 		FROM `tabSubcontracting Receipt Item` scri
 		INNER JOIN `tabSubcontracting Receipt` scr ON scr.name = scri.parent
-		WHERE (scri.project = %(project)s
-			OR (IFNULL(scri.project, '') = '' AND scr.project = %(project)s))
+		WHERE {project_match("scri", "Subcontracting Receipt Item", "scr", "Subcontracting Receipt")}
 			{cond}
 		ORDER BY scr.posting_date, scr.name, scri.idx
 		""",
@@ -393,7 +408,7 @@ def get_work_orders(filters):
 			wo.material_transferred_for_manufacturing AS other_qty,
 			wo.status
 		FROM `tabWork Order` wo
-		WHERE wo.project = %(project)s
+		WHERE {project_match(None, None, "wo", "Work Order")}
 			{cond}
 		ORDER BY wo.planned_start_date, wo.name
 		""",
@@ -421,8 +436,7 @@ def get_job_cards(filters):
 			jc.status
 		FROM `tabJob Card` jc
 		LEFT JOIN `tabWork Order` wo ON wo.name = jc.work_order
-		WHERE (jc.project = %(project)s
-			OR (IFNULL(jc.project, '') = '' AND wo.project = %(project)s))
+		WHERE {project_match("jc", "Job Card", "wo", "Work Order")}
 			{cond}
 		ORDER BY jc.posting_date, jc.name
 		""",
@@ -451,8 +465,7 @@ def get_stock_entries(filters):
 			IF(se.docstatus = 1, 'Submitted', 'Draft') AS status
 		FROM `tabStock Entry Detail` sed
 		INNER JOIN `tabStock Entry` se ON se.name = sed.parent
-		WHERE (sed.project = %(project)s
-			OR (IFNULL(sed.project, '') = '' AND se.project = %(project)s))
+		WHERE {project_match("sed", "Stock Entry Detail", "se", "Stock Entry")}
 			{cond}
 		GROUP BY se.name, sed.item_code
 		ORDER BY se.posting_date, se.name
